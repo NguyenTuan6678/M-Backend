@@ -1,8 +1,6 @@
 import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateUsersDTO {
-  id: number;
-
   @IsString()
   @IsNotEmpty()
   username: string;

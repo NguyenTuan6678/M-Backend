@@ -43,6 +43,14 @@ export class UsersService {
     return user;
   }
 
+  findByUsername(username: string) {
+    const user = this.users.find((user) => user.username === username);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
   create(createUserDTO: CreateUsersDTO) {
     const usersByHighestId = [...this.users].sort((a, b) => b.id - a.id);
     const newUser = { id: usersByHighestId[0].id + 1, ...createUserDTO };
@@ -51,7 +59,7 @@ export class UsersService {
   }
 
   update(id: number, updateUserDTO: UpdateUsersDTO) {
-    const userIndex = this.users.map((user) => {
+    this.users.map((user) => {
       if (user.id === id) {
         return { ...user, ...updateUserDTO };
       }
