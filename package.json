@@ -1,8 +1,8 @@
 {
   "name": "minvoicebe",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "minvoice backend",
+  "author": "harrynguyen",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -22,7 +22,11 @@
   "dependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/mongoose": "^11.0.4",
     "@nestjs/platform-express": "^11.0.1",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "mongoose": "^9.5.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -30,6 +34,7 @@
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
+    "@nestjs/mapped-types": "^2.1.1",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
     "@swc/cli": "^0.8.1",
