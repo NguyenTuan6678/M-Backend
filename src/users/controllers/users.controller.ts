@@ -10,9 +10,9 @@ import {
   Query,
   ValidationPipe,
 } from '@nestjs/common';
-import { UpdateUsersDTO } from './dto/update-users.dto';
-import { CreateUsersDTO } from './dto/create-users.dto';
-import { UsersService } from './users.service';
+import { UpdateUsersDTO } from '@users/dto/update-users.dto';
+import { CreateUsersDTO } from '@users/dto/create-users.dto';
+import { UsersService } from '@users/services/users.service';
 
 @Controller('users')
 export class UsersController {

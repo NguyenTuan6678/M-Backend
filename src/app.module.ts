@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { UsersModule } from './module/users/users.module';
-import { DocumentsController } from './module/documents/documents.controller';
-import { DocumentsService } from './module/documents/documents.service';
-import { DocumentsModule } from './module/documents/documents.module';
-import { InformationModule } from './module/information/information.module';
+import { UsersModule } from './users/users.module';
+import { DocumentsController } from './documents/controllers/documents.controller';
+import { DocumentsService } from './documents/services/documents.service';
+import { DocumentsModule } from './documents/documents.module';
+import { InformationModule } from './information/information.module';
 import { AuthModule } from './auth/auth.module';
 import configuration from './config/configuration';
 
