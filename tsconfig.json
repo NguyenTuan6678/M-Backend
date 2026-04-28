@@ -16,6 +16,7 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
     "paths": {
       "*": ["./src/*"],
       "@users/*": ["./src/users/*"],

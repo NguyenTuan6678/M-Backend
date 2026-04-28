@@ -20,9 +20,9 @@ export class PaginationDto {
 }
 
 export class PaginatedResponseDto<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  data!: T[];
+  total!: number;
+  page!: number;
+  limit!: number;
+  totalPages!: number;
 }
