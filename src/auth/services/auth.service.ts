@@ -1,8 +1,8 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UsersService } from '../module/users/users.service';
-import { CreateUsersDTO } from '../module/users/dto/create-users.dto';
+import { UsersService } from '../users/users.service';
+import { CreateUsersDTO } from '../../users/dto/create-users.dto';
 @Injectable()
 export class AuthService {
   constructor(
