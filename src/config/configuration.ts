@@ -22,7 +22,7 @@ export default registerAs<AppConfig>('app', () => ({
     uri: process.env.MONGODB_URI || 'mongodb://localhost:27017',
   },
   jwt: {
-    secret: process.env.JWT_SECRET || 'your_jwt_secret',
+    secret: process.env.JWT_SECRET || '22v1jv2hv1h3v1uk3h1v23j1v1v3h1v2',
     expiresIn: process.env.JWT_EXPIRES_IN || '12h',
   },
   logging: {
