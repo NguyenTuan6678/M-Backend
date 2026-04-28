@@ -15,11 +15,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       secretOrKey: configService.get<string>('app.jwt.secret')!,
     });
   }
-  async validate(payload: any) {
-    const user = await this.usersService.findOne(+payload.sub);
-    if (!user) {
-      throw new Error('User not found');
-    }
-    return { userId: payload.sub, username: payload.username };
-  }
+  // async validate(payload: any) {
+  //   const user = await this.usersService.findOne(+payload.sub);
+  //   if (!user) {
+  //     throw new Error('User not found');
+  //   }
+  //   return { userId: payload.sub, username: payload.username };
+  // }
 }

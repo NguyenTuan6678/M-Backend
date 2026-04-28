@@ -18,31 +18,31 @@ import { UsersService } from '@users/services/users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get() // GET /users
-  findAll(@Query('role') role?: string) {
-    return this.usersService.findAll(role as 'ADMIN' | 'USER');
-  }
+  // @Get() // GET /users
+  // findAll(@Query('role') role?: string) {
+  //   return this.usersService.findAll(role as 'ADMIN' | 'USER');
+  // }
 
-  @Get(':id') // GET /users/:id
-  findOne(@Param('id', ParseIntPipe) id: string) {
-    return this.usersService.findOne(+id);
-  }
+  // @Get(':id') // GET /users/:id
+  // findOne(@Param('id', ParseIntPipe) id: string) {
+  //   return this.usersService.findOne(+id);
+  // }
 
-  @Post() // POST /users
-  create(@Body(ValidationPipe) createUserDTO: CreateUsersDTO) {
-    return this.usersService.create(createUserDTO);
-  }
+  // @Post() // POST /users
+  // create(@Body(ValidationPipe) createUserDTO: CreateUsersDTO) {
+  //   return this.usersService.create(createUserDTO);
+  // }
 
-  @Patch(':id') // PATCH /users/:id
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body(ValidationPipe) updateUserDTO: UpdateUsersDTO,
-  ) {
-    return this.usersService.update(id, updateUserDTO);
-  }
+  // @Patch(':id') // PATCH /users/:id
+  // update(
+  //   @Param('id', ParseIntPipe) id: number,
+  //   @Body(ValidationPipe) updateUserDTO: UpdateUsersDTO,
+  // ) {
+  //   return this.usersService.update(id, updateUserDTO);
+  // }
 
-  @Delete(':id') // DELETE /users/:id
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.remove(id);
-  }
+  // @Delete(':id') // DELETE /users/:id
+  // remove(@Param('id', ParseIntPipe) id: number) {
+  //   return this.usersService.remove(id);
+  // }
 }
