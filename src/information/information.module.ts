@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { InformationService } from './information.service';
-import { InformationController } from './controllers/information.controller';
+import { InformationService } from '@information/services/information.service';
+import { InformationController } from '@information/controllers/information.controller';
 
 @Module({
   providers: [InformationService],

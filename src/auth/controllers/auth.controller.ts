@@ -6,8 +6,8 @@ import {
   HttpStatus,
   ValidationPipe,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { CreateUsersDTO } from 'src/users/dto/create-users.dto';
+import { AuthService } from '@auth/services/auth.service';
+import { CreateUsersDTO } from '@users/dto/create-users.dto';
 
 @Controller('auth')
 export class AuthController {
