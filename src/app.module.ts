@@ -8,6 +8,8 @@ import { DocumentsModule } from './documents/documents.module';
 import { InformationModule } from './information/information.module';
 import { AuthModule } from './auth/auth.module';
 import configuration from './config/configuration';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -30,7 +32,7 @@ import configuration from './config/configuration';
     InformationModule,
     AuthModule,
   ],
-  controllers: [DocumentsController],
-  providers: [DocumentsService],
+  controllers: [AppController, DocumentsController],
+  providers: [AppService, DocumentsService],
 })
 export class AppModule {}
