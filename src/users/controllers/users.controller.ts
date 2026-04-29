@@ -1,48 +1,70 @@
 import {
-  Body,
   Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Patch,
   Post,
+  Get,
+  Patch,
+  Delete,
+  Body,
+  Param,
   Query,
+  HttpCode,
+  HttpStatus,
   ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
-import { UpdateUsersDTO } from '@users/dto/update-users.dto';
-import { CreateUsersDTO } from '@users/dto/create-users.dto';
-import { UsersService } from '@users/services/users.service';
-
+import { UsersService } from 'users/services/users.service';
+import { CreateUsersDTO } from 'users/dto/create-users.dto';
+import { UsersResponseDTO } from 'users/dto/users.res';
+import {
+  PaginationDto,
+  PaginatedResponseDto,
+} from 'common/dtos/pagination.dto';
+import { JwtAuthGuard } from 'auth/guards/auth.guard';
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // @Get() // GET /users
-  // findAll(@Query('role') role?: string) {
-  //   return this.usersService.findAll(role as 'ADMIN' | 'USER');
-  // }
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  async create(
+    @Body(ValidationPipe) createUserDto: CreateUsersDTO,
+  ): Promise<UsersResponseDTO> {
+    return this.usersService.createUser(createUserDto);
+  }
 
-  // @Get(':id') // GET /users/:id
-  // findOne(@Param('id', ParseIntPipe) id: string) {
-  //   return this.usersService.findOne(+id);
-  // }
+  @Get('stats')
+  @UseGuards(JwtAuthGuard)
+  async getStats(): Promise<{ totalUsers: number }> {
+    return this.usersService.getUserStats();
+  }
 
-  // @Post() // POST /users
-  // create(@Body(ValidationPipe) createUserDTO: CreateUsersDTO) {
-  //   return this.usersService.create(createUserDTO);
-  // }
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async findAll(
+    @Query(ValidationPipe) paginationDto: PaginationDto,
+  ): Promise<PaginatedResponseDto<UsersResponseDTO>> {
+    return this.usersService.getAllUsers(paginationDto);
+  }
 
-  // @Patch(':id') // PATCH /users/:id
-  // update(
-  //   @Param('id', ParseIntPipe) id: number,
-  //   @Body(ValidationPipe) updateUserDTO: UpdateUsersDTO,
-  // ) {
-  //   return this.usersService.update(id, updateUserDTO);
-  // }
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  async findOne(@Param('id') id: string): Promise<UsersResponseDTO> {
+    return this.usersService.getUserById(id);
+  }
 
-  // @Delete(':id') // DELETE /users/:id
-  // remove(@Param('id', ParseIntPipe) id: number) {
-  //   return this.usersService.remove(id);
-  // }
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  async update(
+    @Param('id') id: string,
+    @Body(ValidationPipe) updateUserDto: Partial<CreateUsersDTO>,
+  ): Promise<UsersResponseDTO> {
+    return this.usersService.updateUser(id, updateUserDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async remove(@Param('id') id: string): Promise<{ message: string }> {
+    return this.usersService.deleteUser(id);
+  }
 }
