@@ -31,7 +31,7 @@ export class AuthService {
     }
 
     const payload = {
-      id: isExitingUser?._id,
+      id: isExitingUser?._id.toString(),
       username: userInfo.username,
     };
 
