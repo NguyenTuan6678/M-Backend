@@ -3,7 +3,12 @@ import { HydratedDocument } from 'mongoose';
 import { createUserMethods } from 'hooks/users.hook';
 import { createUserPreSaveHooks } from 'middleware/users.middleware';
 
-export type UserDocument = HydratedDocument<User>;
+export interface IUserMethods {
+  comparePassword(candidatePassword: string): Promise<boolean>;
+  toJSON(): any;
+}
+
+export type UserDocument = HydratedDocument<User> & IUserMethods;
 @Schema({
   timestamps: true,
   collection: 'users',
