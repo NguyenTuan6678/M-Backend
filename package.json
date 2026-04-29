@@ -5,7 +5,6 @@
   "author": "harrynguyen",
   "private": true,
   "license": "UNLICENSED",
-  "type": "module",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
