@@ -20,6 +20,7 @@ import {
   PaginatedResponseDto,
 } from 'common/dtos/pagination.dto';
 import { JwtAuthGuard } from 'auth/guards/auth.guard';
+
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
