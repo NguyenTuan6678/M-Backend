@@ -1,4 +1,5 @@
 import { Exclude } from 'class-transformer';
+
 export class UsersResponseDTO {
   _id: string;
   username: string;

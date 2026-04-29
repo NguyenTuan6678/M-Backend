@@ -9,6 +9,7 @@ export interface IUserMethods {
 }
 
 export type UserDocument = HydratedDocument<User> & IUserMethods;
+
 @Schema({
   timestamps: true,
   collection: 'users',
