@@ -16,7 +16,7 @@ import { RefreshTokenDto } from 'auth/dto/refresh-token.req';
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel('users') private userModal: Model<User>,
+    @InjectModel(User.name) private userModal: Model<User>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}

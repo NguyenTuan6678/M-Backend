@@ -4,10 +4,13 @@ import { AuthService } from './services/auth.service';
 import { UsersModule } from '@users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from '../common/constants/jwt.const';
+import { MongooseModule } from '@nestjs/mongoose';
+import { User, UserSchema } from 'users/schemas/users.schema';
 
 @Module({
   imports: [
     UsersModule,
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,

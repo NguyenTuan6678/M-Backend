@@ -14,15 +14,15 @@ export type UserDocument = HydratedDocument<User> & IUserMethods;
   collection: 'users',
 })
 export class User {
-  @Prop({ required: true, trim: true })
+  @Prop({ required: true, trim: true, type: String })
   username: string;
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
   password: string;
-  @Prop({ default: true })
+  @Prop({ default: true, type: Boolean })
   isActive: boolean;
-  @Prop({ default: Date.now })
+  @Prop({ default: () => new Date(), type: Date })
   createdAt: Date;
-  @Prop({ default: Date.now })
+  @Prop({ default: () => new Date(), type: Date })
   updatedAt: Date;
 }
 
