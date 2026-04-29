@@ -8,10 +8,7 @@ import { CreateUsersDTO } from 'users/dto/create-users.dto';
 import { UsersResponseDTO } from 'users/dto/users.res';
 import { plainToClass } from 'class-transformer';
 import { LoggerService } from 'common/logs/logger.service';
-import {
-  PaginationDto,
-  PaginatedResponseDto,
-} from 'common/dtos/pagination.dto';
+import { PaginationDto, PaginatedResponseDto } from 'common/dto/pagination.dto';
 @Injectable()
 export class UsersService {
   constructor(

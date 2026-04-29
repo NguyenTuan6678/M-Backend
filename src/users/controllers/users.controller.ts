@@ -15,10 +15,7 @@ import {
 import { UsersService } from 'users/services/users.service';
 import { CreateUsersDTO } from 'users/dto/create-users.dto';
 import { UsersResponseDTO } from 'users/dto/users.res';
-import {
-  PaginationDto,
-  PaginatedResponseDto,
-} from 'common/dtos/pagination.dto';
+import { PaginationDto, PaginatedResponseDto } from 'common/dto/pagination.dto';
 import { JwtAuthGuard } from 'auth/guards/auth.guard';
 
 @Controller('users')
