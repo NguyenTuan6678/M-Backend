@@ -8,5 +8,5 @@ export class LoginResType {
 }
 
 export class LoginRes extends MessageResponse {
-  content: LoginResType;
+  content: LoginResType | null;
 }
