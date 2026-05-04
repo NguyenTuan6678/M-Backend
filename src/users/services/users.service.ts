@@ -3,12 +3,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { UsersRepository } from 'users/repositories/users.repository';
-import { CreateUsersDTO } from 'users/dto/create-users.dto';
-import { UsersResponseDTO } from 'users/dto/users.res';
+import { UsersRepository } from '@users/repositories/users.repository';
+import { CreateUsersDTO } from '@users/dto/create-users.dto';
+import { UsersResponseDTO } from '@users/dto/users.res';
 import { plainToClass } from 'class-transformer';
-import { LoggerService } from 'common/logs/logger.service';
-import { PaginationDto, PaginatedResponseDto } from 'common/dto/pagination.dto';
+import { LoggerService } from '@common/logs/logger.service';
+import {
+  PaginationDto,
+  PaginatedResponseDto,
+} from '@common/dto/pagination.dto';
 @Injectable()
 export class UsersService {
   constructor(

@@ -1,4 +1,4 @@
-import { MessageResponse } from 'types/message.res';
+import { MessageResponse } from '@app-types/message.res';
 
 /**
  * create common response object for application

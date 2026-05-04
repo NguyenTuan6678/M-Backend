@@ -4,15 +4,15 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from '@users/schemas/users.schema';
-import { RegisterAccountDto } from 'auth/dto/register.req';
-import { MessageResponse } from 'types/message.res';
-import { ERROR_RES, ERROR_INFO } from 'common/constants/error.const';
-import { hashPassword } from 'utils/hash-password';
-import { ChangePasswordDto } from 'auth/dto/change-password.req';
-import { LoginReqType } from 'auth/dto/login.req';
-import { LoginRes } from 'auth/dto/login.res';
-import { comparePassword } from 'utils/validate-password';
-import { RefreshTokenDto } from 'auth/dto/refresh-token.req';
+import { RegisterAccountDto } from '@auth/dto/register.req';
+import { MessageResponse } from '@app-types/message.res';
+import { ERROR_RES, ERROR_INFO } from '@common/constants/error.const';
+import { hashPassword } from '@utils/hash-password';
+import { ChangePasswordDto } from '@auth/dto/change-password.req';
+import { LoginReqType } from '@auth/dto/login.req';
+import { LoginRes } from '@auth/dto/login.res';
+import { comparePassword } from '@utils/validate-password';
+import { RefreshTokenDto } from '@auth/dto/refresh-token.req';
 @Injectable()
 export class AuthService {
   constructor(

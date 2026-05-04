@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
-import { createUserMethods } from 'hooks/users.hook';
-import { createUserPreSaveHooks } from 'middleware/users.middleware';
+import { createUserMethods } from '@hooks/users.hook';
+import { createUserPreSaveHooks } from '@middleware/users.middleware';
 
 export interface IUserMethods {
   comparePassword(candidatePassword: string): Promise<boolean>;

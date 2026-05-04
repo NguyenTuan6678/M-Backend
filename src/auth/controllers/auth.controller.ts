@@ -7,13 +7,13 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { RegisterAccountDto } from 'auth/dto/register.req';
-import { LoginReqType } from 'auth/dto/login.req';
-import { RefreshTokenDto } from 'auth/dto/refresh-token.req';
-import { JwtAuthGuard } from 'auth/guards/auth.guard';
-import { MessageResponse } from 'types/message.res';
-import { LoginRes } from 'auth/dto/login.res';
-import { ChangePasswordDto } from 'auth/dto/change-password.req';
+import { RegisterAccountDto } from '@auth/dto/register.req';
+import { LoginReqType } from '@auth/dto/login.req';
+import { RefreshTokenDto } from '@auth/dto/refresh-token.req';
+import { JwtAuthGuard } from '@auth/guards/auth.guard';
+import { MessageResponse } from '@app-types/message.res';
+import { LoginRes } from '@auth/dto/login.res';
+import { ChangePasswordDto } from '@auth/dto/change-password.req';
 
 @ApiTags('auth')
 @Controller('auth')
