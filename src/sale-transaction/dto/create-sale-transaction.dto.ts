@@ -27,7 +27,6 @@ export class CreateSalesTransactionDto {
   @IsOptional()
   employeeId?: string;
 
-  // Customer info (manual input)
   @IsString()
   @IsOptional()
   taxCode?: string;
@@ -44,7 +43,6 @@ export class CreateSalesTransactionDto {
   @IsOptional()
   address?: string;
 
-  // Payment
   @IsBoolean()
   @IsOptional()
   isPaid?: boolean;
