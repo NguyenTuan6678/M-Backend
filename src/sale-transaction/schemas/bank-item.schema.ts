@@ -3,10 +3,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 @Schema({ timestamps: true })
 export class Bank {
   @Prop({ required: true, unique: true })
-  code: string; // Mã ngân hàng
+  code: string;
 
   @Prop({ required: true })
-  name: string; // Tên ngân hàng
+  name: string;
 
   @Prop()
   accountNumber?: string;

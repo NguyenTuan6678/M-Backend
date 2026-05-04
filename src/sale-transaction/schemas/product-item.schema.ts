@@ -3,19 +3,19 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 @Schema({ timestamps: true })
 export class Product {
   @Prop({ required: true, unique: true })
-  code: string; // Mã SP
+  code: string;
 
   @Prop({ required: true })
-  name: string; // Tên SP
+  name: string;
 
   @Prop({ required: true })
-  price: number; // Đơn giá
+  price: number;
 
   @Prop({ required: true })
-  taxRate: number; // Thuế suất (%)
+  taxRate: number;
 
   @Prop()
-  accountCode?: string; // Mã tài khoản hạch toán
+  accountCode?: string;
 
   @Prop()
   description?: string;

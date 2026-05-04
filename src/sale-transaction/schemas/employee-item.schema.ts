@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose from 'mongoose';
+import { Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Employee {
   @Prop({ required: true, unique: true })
-  code: string; // Mã nhân viên
+  code: string;
 
   @Prop({ required: true })
   name: string;
@@ -15,7 +15,7 @@ export class Employee {
   @Prop()
   phone?: string;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Department' })
+  @Prop({ type: Types.ObjectId, ref: 'Department' })
   departmentId: string;
 
   @Prop({ default: true })

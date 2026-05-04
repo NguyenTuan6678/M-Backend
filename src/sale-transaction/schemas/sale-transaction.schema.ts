@@ -4,19 +4,19 @@ import { Types } from 'mongoose';
 @Schema({ timestamps: true })
 export class SalesTransaction {
   @Prop()
-  activationDate: Date; // Ngày kích hoạt
+  activationDate: Date;
 
   @Prop({ type: Types.ObjectId, ref: 'Agency' })
-  agencyId: string; // Đại lý
+  agencyId: string;
 
   @Prop({ type: Types.ObjectId, ref: 'Department' })
-  departmentId: string; // Phòng ban
+  departmentId: string;
 
   @Prop({ type: Types.ObjectId, ref: 'Employee' })
-  employeeId: string; // NVKD
+  employeeId: string;
 
   @Prop()
-  taxCode: string; // MST
+  taxCode: string;
 
   @Prop()
   companyName: string;
@@ -28,7 +28,7 @@ export class SalesTransaction {
   address: string;
 
   @Prop({ default: false })
-  isPaid: boolean; // Đã thu tiền
+  isPaid: boolean;
 
   @Prop()
   paidAmount: number;
