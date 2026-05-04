@@ -65,8 +65,8 @@ export class AuthService {
   ): Promise<MessageResponse | null> {
     let response: MessageResponse | null = null;
     try {
-      const { username, password } = registerAccountDTO;
-      if (!username || !password) {
+      const { username, password, role } = registerAccountDTO;
+      if (!username || !password || !role) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
@@ -101,6 +101,7 @@ export class AuthService {
       const newAdmin = new this.userModal({
         username,
         password: new_password,
+        role,
       });
 
       await newAdmin.save();
