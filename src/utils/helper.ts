@@ -1,7 +1,6 @@
 import { MessageResponse } from '@app-types/message.res';
 
 /**
- * create common response object for application
  * @param content
  * @param metadata
  * @returns

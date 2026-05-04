@@ -18,7 +18,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  // ✅ Uncomment and fix validate()
   async validate(payload: JwtPayload) {
     const user = await this.usersService.getUserById(payload.id);
 

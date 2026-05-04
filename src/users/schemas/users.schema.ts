@@ -24,10 +24,6 @@ export class User {
   isActive: boolean;
   @Prop({ type: String, enum: Role, required: true })
   role: Role;
-  @Prop({ default: () => new Date(), type: Date })
-  createdAt: Date;
-  @Prop({ default: () => new Date(), type: Date })
-  updatedAt: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -4,7 +4,6 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggerService } from './common/logs/logger.service';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { log } from 'console';
 declare const module: any;
 
 async function bootstrap() {
