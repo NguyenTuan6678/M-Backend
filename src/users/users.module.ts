@@ -12,10 +12,6 @@ import { User, UserSchema } from './schemas/users.schema';
   ],
   controllers: [UsersController],
   providers: [UsersService, UsersRepository, LoggerService],
-  exports: [
-    UsersService,
-    UsersRepository,
-    MongooseModule, // ← Export so AuthModule can use the model
-  ],
+  exports: [UsersService, UsersRepository],
 })
 export class UsersModule {}
