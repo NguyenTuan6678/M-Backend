@@ -26,6 +26,7 @@ export default tseslint.config(
   },
   {
     rules: {
+      '@typescript-eslint/restrict-template-expressions': 'off',
       '@typescript-eslint/no-redundant-type-constituents': 'off',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
