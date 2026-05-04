@@ -25,7 +25,7 @@ import { JwtAuthGuard } from '@auth/guards/auth.guard';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
+  @Post(':create')
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body(ValidationPipe) createUserDto: CreateUsersDTO,
