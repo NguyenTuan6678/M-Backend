@@ -20,12 +20,14 @@ import {
   PaginatedResponseDto,
 } from '@common/dto/pagination.dto';
 import { JwtAuthGuard } from '@auth/guards/auth.guard';
+import { ApiOperation } from '@nestjs/swagger';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post(':create')
+  @ApiOperation({ summary: 'Create a new user' })
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body(ValidationPipe) createUserDto: CreateUsersDTO,
@@ -34,12 +36,14 @@ export class UsersController {
   }
 
   @Get('stats')
+  @ApiOperation({ summary: 'Get user statistics' })
   @UseGuards(JwtAuthGuard)
   async getStats(): Promise<{ totalUsers: number }> {
     return this.usersService.getUserStats();
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get a paginated list of users' })
   @UseGuards(JwtAuthGuard)
   async findAll(
     @Query(ValidationPipe) paginationDto: PaginationDto,
@@ -48,12 +52,14 @@ export class UsersController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get user by ID' })
   @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: string): Promise<UsersResponseDTO> {
     return this.usersService.getUserById(id);
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update user by ID' })
   @UseGuards(JwtAuthGuard)
   async update(
     @Param('id') id: string,
@@ -63,6 +69,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete user by ID' })
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string): Promise<{ message: string }> {
