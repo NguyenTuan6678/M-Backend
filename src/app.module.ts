@@ -5,11 +5,11 @@ import { UsersModule } from './users/users.module';
 import { DocumentsController } from './documents/controllers/documents.controller';
 import { DocumentsService } from './documents/services/documents.service';
 import { DocumentsModule } from './documents/documents.module';
-import { InformationModule } from './information/information.module';
 import { AuthModule } from './auth/auth.module';
 import configuration from './config/configuration';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { SaleTransactionModule } from './sale-transaction/sale-transaction.module';
 
 @Module({
   imports: [
@@ -29,7 +29,7 @@ import { AppService } from './app.service';
     }),
     UsersModule,
     DocumentsModule,
-    InformationModule,
+    SaleTransactionModule,
     AuthModule,
   ],
   controllers: [AppController, DocumentsController],
