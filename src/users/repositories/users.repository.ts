@@ -33,11 +33,11 @@ export class UsersRepository {
     }
   }
 
-  async findByEmail(email: string): Promise<UserDocument | null> {
+  async findByUsername(username: string): Promise<UserDocument | null> {
     try {
-      return await this.userModel.findOne({ email }).exec();
+      return await this.userModel.findOne({ username }).exec();
     } catch (error: any) {
-      this.logger.error(`Error finding user by email: ${error.message}`);
+      this.logger.error(`Error finding user by username: ${error.message}`);
       throw error;
     }
   }

@@ -20,7 +20,7 @@ export class UsersService {
   ) {}
 
   async createUser(createUserDto: CreateUsersDTO): Promise<UsersResponseDTO> {
-    const existingUser = await this.userRepository.findByEmail(
+    const existingUser = await this.userRepository.findByUsername(
       createUserDto.username,
     );
     if (existingUser) {
@@ -81,7 +81,7 @@ export class UsersService {
     username: string,
     password: string,
   ): Promise<UsersResponseDTO | null> {
-    const user = await this.userRepository.findByEmail(username);
+    const user = await this.userRepository.findByUsername(username);
     if (!user) {
       return null;
     }
