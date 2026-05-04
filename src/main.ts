@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggerService } from './common/logs/logger.service';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { log } from 'console';
 declare const module: any;
 
 async function bootstrap() {
@@ -35,7 +36,7 @@ async function bootstrap() {
     .setTitle('M-Invoice API')
     .setDescription('The M-Invoice API')
     .setVersion('1.0')
-    .addTag('Catto')
+    .addTag('Cato')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
@@ -47,6 +48,7 @@ async function bootstrap() {
   // Logging
   logger.log(`🚀 Server running on port ${port}`, 'Bootstrap');
   logger.log(`📍 MongoDB: ${process.env.MONGODB_URI}`, 'Bootstrap');
+  logger.log(`📜 Swagger UI: http://localhost:${port}/api`, 'Bootstrap');
 
   if (module.hot) {
     module.hot.accept();
