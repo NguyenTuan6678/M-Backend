@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 
-@Schema()
+@Schema({ timestamps: true })
 export class TransactionItem {
   @Prop({ type: Types.ObjectId, ref: 'Product' })
   productId: string;
