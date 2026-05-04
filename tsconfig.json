@@ -18,11 +18,14 @@
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
     "paths": {
-      "*": ["./src/*"],
       "@users/*": ["./src/users/*"],
       "@common/*": ["./src/common/*"],
       "@auth/*": ["./src/auth/*"],
-      "@information/*": ["./src/information/*"]
+      "@information/*": ["./src/information/*"],
+      "@app-types/*": ["./src/types/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@middleware/*": ["./src/middleware/*"]
     }
   },
   "include": ["src"],
