@@ -7,12 +7,12 @@ import { User } from '@users/schemas/users.schema';
 import { RegisterAccountDto } from '@auth/dto/register.req';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_RES, ERROR_INFO } from '@common/constants/error.const';
-import { hashPassword } from '@utils/hash-password';
 import { ChangePasswordDto } from '@auth/dto/change-password.req';
 import { LoginReqType } from '@auth/dto/login.req';
 import { LoginRes } from '@auth/dto/login.res';
 import { comparePassword } from '@utils/validate-password';
 import { RefreshTokenDto } from '@auth/dto/refresh-token.req';
+import { LoggerService } from '@common/logs/logger.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +21,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
+
+  logger = new LoggerService(AuthService.name);
 
   async generateToken(userInfo: User) {
     const isExitingUser = await this.userModal.findOne({
@@ -75,7 +77,11 @@ export class AuthService {
         return response;
       }
 
-      const isExistingAdmin = await this.userModal.countDocuments();
+      const isExistingAdmin = await this.userModal.countDocuments({
+        role: 'ADMIN',
+      });
+
+      this.logger.log(`Existing admin count: ${isExistingAdmin}`);
       if (isExistingAdmin > 0) {
         response = {
           code: ERROR_RES.CONFLICT_ERROR.statusCode,
@@ -149,6 +155,7 @@ export class AuthService {
       }
 
       const isMatch = await comparePassword(password, admin.password);
+      this.logger.log(`Password match result: ${isMatch}`);
 
       if (!isMatch) {
         response = {
