@@ -8,6 +8,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SaleTransactionModule } from '@transaction/sale-transaction.module';
 import { AgencyModule } from '@agency/agency.module';
+import { BankModule } from '@bank/bank.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AgencyModule } from '@agency/agency.module';
     UsersModule,
     SaleTransactionModule,
     AgencyModule,
+    BankModule,
     AuthModule,
   ],
   controllers: [AppController],
