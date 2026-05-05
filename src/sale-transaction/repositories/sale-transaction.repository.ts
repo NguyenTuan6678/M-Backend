@@ -6,7 +6,7 @@ import {
   SalesTransactionDocument,
 } from '../schemas/sale-transaction.schema';
 import { Model } from 'mongoose';
-import { CreateSalesTransactionDto } from '../dto/create-sale-transaction.dto';
+import { CreateSalesTransactionDto } from '../dto/create-sale-transaction.req';
 
 @Injectable()
 export class SaleTransactionRepository {

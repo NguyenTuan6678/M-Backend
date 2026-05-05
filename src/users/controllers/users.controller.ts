@@ -13,7 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from '@users/services/users.service';
-import { CreateUsersDTO } from '@users/dto/create-users.dto';
+import { CreateUsersDTO } from '@users/dto/create-users.req';
 import { UsersResponseDTO } from '@users/dto/users.res';
 import {
   PaginationDto,

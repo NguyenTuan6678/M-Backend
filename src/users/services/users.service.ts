@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { UsersRepository } from '@users/repositories/users.repository';
-import { CreateUsersDTO } from '@users/dto/create-users.dto';
+import { CreateUsersDTO } from '@users/dto/create-users.req';
 import { UsersResponseDTO } from '@users/dto/users.res';
 import { plainToClass } from 'class-transformer';
 import { LoggerService } from '@common/logs/logger.service';
