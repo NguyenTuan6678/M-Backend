@@ -36,7 +36,6 @@ export class UsersService {
         return response;
       }
 
-      const existingUser = await this.userModel.findOne({ role });
       if (role === Role.ADMIN) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
