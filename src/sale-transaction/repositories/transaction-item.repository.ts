@@ -35,4 +35,15 @@ export class TransactionItemRepository {
       throw error;
     }
   }
+
+  async findById(id: string): Promise<TransactionItemDocument | null> {
+    try {
+      return await this.transactionItemModel.findById(id).exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding transaction item by ID: ${error.message}`,
+      );
+      throw error;
+    }
+  }
 }
