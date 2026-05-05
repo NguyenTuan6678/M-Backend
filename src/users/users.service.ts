@@ -113,13 +113,20 @@ export class UsersService {
     return this.mapToResponseDto(updatedUser);
   }
 
-  async deleteUser(id: string): Promise<{ message: string }> {
+  async deleteUser(id: string): Promise<MessageResponse> {
     const deletedUser = await this.userRepository.delete(id);
     if (!deletedUser) {
-      throw new NotFoundException(`User with ID ${id} does not in database`);
+      return {
+        code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+        info: 'FAIL',
+        message: `User with ID ${id} not found`,
+      };
     }
-    this.logger.log(`User deleted: ${deletedUser.username}`, 'UsersService');
-    return { message: `User ${deletedUser.username} deleted` };
+    return {
+      code: ERROR_RES.SUCCESS.statusCode,
+      info: 'SUCCESS',
+      message: `User ${deletedUser.username} deleted successfully`,
+    };
   }
 
   async validateUser(

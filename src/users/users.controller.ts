@@ -21,6 +21,7 @@ import {
 } from '@common/dto/pagination.dto';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { ApiOperation } from '@nestjs/swagger';
+import { MessageResponse } from '@app-types/message.res';
 
 @Controller('users')
 export class UsersController {
@@ -68,7 +69,7 @@ export class UsersController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete user by ID' })
   @HttpCode(HttpStatus.OK)
-  async remove(@Param('id') id: string): Promise<{ message: string }> {
+  async remove(@Param('id') id: string): Promise<MessageResponse> {
     return this.usersService.deleteUser(id);
   }
 }
