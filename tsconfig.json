@@ -32,7 +32,8 @@
       "@utils/*": ["./src/utils/*"],
       "@hooks/*": ["./src/hooks/*"],
       "@middleware/*": ["./src/middleware/*"],
-      "@schemas/*": ["./src/schemas/*"]
+      "@schemas/*": ["./src/schemas/*"],
+      "@config/*": ["./src/config/*"]
     }
   },
   "include": ["src"],

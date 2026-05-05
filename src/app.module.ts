@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { UsersModule } from './users/users.module';
-import { AuthModule } from './users/auth/auth.module';
-import configuration from './config/configuration';
+import { UsersModule } from '@users/users.module';
+import { AuthModule } from '@users/auth/auth.module';
+import configuration from '@config/configuration';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { SaleTransactionModule } from './sale-transaction/sale-transaction.module';
+import { SaleTransactionModule } from '@transaction/sale-transaction.module';
+import { AgencyModule } from '@agency/agency.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { SaleTransactionModule } from './sale-transaction/sale-transaction.modul
     }),
     UsersModule,
     SaleTransactionModule,
+    AgencyModule,
     AuthModule,
   ],
   controllers: [AppController],
