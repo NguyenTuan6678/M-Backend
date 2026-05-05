@@ -19,14 +19,20 @@
     "strictPropertyInitialization": false,
     "emitDecoratorMetadata": true,
     "paths": {
-      "@users/*": ["./src/users/*"],
+      "@agency/*": ["./src/agency/*"],
+      "@bank/*": ["./src/bank/*"],
+      "@department/*": ["./src/department/*"],
+      "@employee/*": ["./src/employee/*"],
+      "@product/*": ["./src/product/*"],
+      "@repositories/*": ["./src/repositories/*"],
       "@common/*": ["./src/common/*"],
-      "@auth/*": ["./src/auth/*"],
-      "@information/*": ["./src/information/*"],
+      "@users/*": ["./src/users/*"],
+      "@transaction/*": ["./src/sale-transaction/*"],
       "@app-types/*": ["./src/types/*"],
       "@utils/*": ["./src/utils/*"],
       "@hooks/*": ["./src/hooks/*"],
-      "@middleware/*": ["./src/middleware/*"]
+      "@middleware/*": ["./src/middleware/*"],
+      "@schemas/*": ["./src/schemas/*"]
     }
   },
   "include": ["src"],

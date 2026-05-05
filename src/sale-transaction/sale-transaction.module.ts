@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { SaleTransactionController } from './controllers/sale-transaction.controller';
-import { SaleTransactionService } from './services/sale-transaction.service';
+import { SaleTransactionController } from '@transaction/sale-transaction.controller';
+import { SaleTransactionService } from '@transaction/sale-transaction.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   SalesTransaction,
   SalesTransactionSchema,
-} from './schemas/sale-transaction.schema';
+} from '@schemas/sale-transaction.schema';
 import { LoggerService } from '@common/logs/logger.service';
-import { JwtAuthGuard } from '@auth/guards/auth.guard';
-import { SaleTransactionRepository } from './repositories/sale-transaction.repository';
+import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
+import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
 
 @Module({
   imports: [

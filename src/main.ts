@@ -1,8 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
-import { LoggerService } from './common/logs/logger.service';
+import { AllExceptionsFilter } from '@common/filters/all-exceptions.filter';
+import { LoggerService } from '@common/logs/logger.service';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 declare const module: any;
 
@@ -35,7 +35,6 @@ async function bootstrap() {
     .setTitle('M-Invoice API')
     .setDescription('The M-Invoice API')
     .setVersion('1.0')
-    .addTag('Cato')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);

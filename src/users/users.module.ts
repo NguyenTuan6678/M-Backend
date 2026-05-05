@@ -1,11 +1,11 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { UsersService } from '@users/services/users.service';
-import { UsersController } from '@users/controllers/users.controller';
+import { UsersService } from '@users/users.service';
+import { UsersController } from '@users/users.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UsersRepository } from './repositories/users.repository';
+import { UsersRepository } from '@repositories/users.repository';
 import { LoggerService } from '@common/logs/logger.service';
-import { User, UserSchema } from './schemas/users.schema';
-import { JwtAuthGuard } from '@auth/guards/auth.guard';
+import { User, UserSchema } from '@schemas/users.schema';
+import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 
 @Module({
   imports: [

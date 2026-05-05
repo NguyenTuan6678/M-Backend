@@ -2,10 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
-import { DocumentsController } from './documents/controllers/documents.controller';
-import { DocumentsService } from './documents/services/documents.service';
-import { DocumentsModule } from './documents/documents.module';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './users/auth/auth.module';
 import configuration from './config/configuration';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -28,11 +25,10 @@ import { SaleTransactionModule } from './sale-transaction/sale-transaction.modul
       }),
     }),
     UsersModule,
-    DocumentsModule,
     SaleTransactionModule,
     AuthModule,
   ],
-  controllers: [AppController, DocumentsController],
-  providers: [AppService, DocumentsService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
