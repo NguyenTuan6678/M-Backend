@@ -7,6 +7,8 @@ import {
 } from '../schemas/sale-transaction.schema';
 import { Model } from 'mongoose';
 import { CreateSalesTransactionDto } from '../dto/create-sale-transaction.req';
+import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
+import { MessageResponse } from '@app-types/message.res';
 
 @Injectable()
 export class SaleTransactionRepository {
@@ -18,12 +20,21 @@ export class SaleTransactionRepository {
 
   async createSaleTransaction(
     createSaleTransactionDto: CreateSalesTransactionDto,
-  ): Promise<SalesTransactionDocument> {
+  ): Promise<SalesTransactionDocument | null> {
     try {
-      const newTransaction = new this.saleTransactionModel(
+      const { agencyId, departmentId, employeeId, bankId } =
+        createSaleTransactionDto;
+      if (!agencyId || !departmentId || !employeeId || !bankId) {
+        this.logger.warn(
+          'Missing required fields for sale transaction creation',
+          'SaleTransactionRepository',
+        );
+        return null;
+      }
+      const newSaleTransaction = new this.saleTransactionModel(
         createSaleTransactionDto,
       );
-      const savedTransaction = await newTransaction.save();
+      const savedTransaction = await newSaleTransaction.save();
       this.logger.log(
         `Sale transaction created with ID: ${savedTransaction._id}`,
         'SaleTransactionRepository',
@@ -32,9 +43,9 @@ export class SaleTransactionRepository {
     } catch (error: any) {
       this.logger.error(
         `Error creating sale transaction: ${error.message}`,
-        undefined,
+        'SaleTransactionRepository',
       );
-      throw error;
+      return null;
     }
   }
 
