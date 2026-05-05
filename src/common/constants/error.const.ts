@@ -47,6 +47,10 @@ export const ERROR_RES = {
     name: 'INVALID_CREDENTIALS_ERROR',
     statusCode: 401,
   },
+  SUCCESS: {
+    name: 'SUCCESS',
+    statusCode: 200,
+  },
 };
 
 export const ERROR_TYPE = {
