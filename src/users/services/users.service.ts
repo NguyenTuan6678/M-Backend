@@ -12,26 +12,77 @@ import {
   PaginationDto,
   PaginatedResponseDto,
 } from '@common/dto/pagination.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { User } from '@users/schemas/users.schema';
+import { Model } from 'mongoose';
+import { ERROR_RES } from '@common/constants/error.const';
+import { MessageResponse } from '@app-types/message.res';
+import { Role } from '@utils/role.enum';
+import { hashPassword } from '@utils/hash-password';
 
 @Injectable()
 export class UsersService {
   constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
     private readonly userRepository: UsersRepository,
     private readonly logger: LoggerService,
   ) {}
 
   async createUser(createUserDto: CreateUsersDTO): Promise<UsersResponseDTO> {
-    const existingUser = await this.userRepository.findByUsername(
-      createUserDto.username,
-    );
-    if (existingUser) {
-      this.logger.warn(`User already exists: ${createUserDto.username}`);
-      throw new BadRequestException(
-        'Already have this Username, please take another one',
-      );
+    let response: MessageResponse | null = null;
+    try {
+      const { username, password, role } = createUserDto;
+      if (!username || !password || !role) {
+        response = {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: 'FAIL',
+          message: 'Missing required fields: username, password, or role',
+        };
+        return response;
+      }
+
+      const existingUser = await this.userModel.findOne({ role });
+      if (role === Role.ADMIN) {
+        response = {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: 'FAIL',
+          message: 'You cannot create admin user',
+        };
+        return response;
+      }
+
+      const duplicateUser = await this.userModel.findOne({ username });
+      if (duplicateUser) {
+        response = {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: 'FAIL',
+          message: 'Username already exists',
+        };
+        return response;
+      }
+
+      const newUser = new this.userModel({
+        username,
+        password,
+        role,
+      });
+
+      await newUser.save();
+
+      response = {
+        code: 200,
+        info: 'SUCCESS',
+        message: 'User created successfully',
+      };
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: 'FAIL',
+        message: 'An error occurred while creating the user',
+      };
     }
-    const newUser = await this.userRepository.create(createUserDto);
-    return this.mapToResponseDto(newUser);
+
+    return response;
   }
 
   async getUserById(id: string): Promise<UsersResponseDTO> {
