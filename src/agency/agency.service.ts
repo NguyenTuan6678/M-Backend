@@ -74,6 +74,41 @@ export class AgencyService {
     };
   }
 
+  async getAgencyById(id: string): Promise<AgencyResponseDto> {
+    const agency = await this.agencyRepository.findById(id);
+    if (!agency) {
+      throw new Error(`Agency with ID ${id} not found`);
+    }
+    return this.mapToResponseDto(agency);
+  }
+
+  async updateAgency(
+    id: string,
+    updateData: Partial<CreateAgencyDto>,
+  ): Promise<AgencyResponseDto> {
+    const updatedAgency = await this.agencyRepository.update(id, updateData);
+    if (!updatedAgency) {
+      throw new Error(`Agency with ID ${id} not found`);
+    }
+    return this.mapToResponseDto(updatedAgency);
+  }
+
+  async deleteAgency(id: string): Promise<MessageResponse> {
+    const deletedAgency = await this.agencyRepository.delete(id);
+    if (!deletedAgency) {
+      return {
+        code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+        info: 'FAIL',
+        message: `Agency with ID ${id} not found`,
+      };
+    }
+    return {
+      code: ERROR_RES.SUCCESS.statusCode,
+      info: 'SUCCESS',
+      message: 'Agency deleted successfully',
+    };
+  }
+
   private mapToResponseDto(agency: any): AgencyResponseDto {
     const response = new AgencyResponseDto();
     response.content = agency.toObject();

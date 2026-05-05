@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -18,6 +20,7 @@ import {
   PaginationDto,
 } from '@common/dto/pagination.dto';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
+import { MessageResponse } from '@app-types/message.res';
 
 @Controller('agencies')
 export class AgencyController {
@@ -38,5 +41,27 @@ export class AgencyController {
     @Query(ValidationPipe) paginationDto: PaginationDto,
   ): Promise<PaginatedResponseDto<AgencyResponseDto>> {
     return this.agencyService.getAllAgencies(paginationDto);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get agency by ID' })
+  async findOne(@Query('id') id: string): Promise<AgencyResponseDto> {
+    return this.agencyService.getAgencyById(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update agency by ID' })
+  async update(
+    @Query('id') id: string,
+    @Body(ValidationPipe) updateAgencyDto: CreateAgencyDto,
+  ): Promise<AgencyResponseDto> {
+    return this.agencyService.updateAgency(id, updateAgencyDto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete agency by ID' })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async delete(@Query('id') id: string): Promise<MessageResponse> {
+    return this.agencyService.deleteAgency(id);
   }
 }
