@@ -1,29 +1,7 @@
+import { MessageResponse } from '@app-types/message.res';
 import { Expose, Transform } from 'class-transformer';
+import { SalesTransaction } from '../schemas/sale-transaction.schema';
 
-export class SaleTransactionResponseDTO {
-  @Expose()
-  @Transform(({ obj }) => obj._id?.toString())
-  _id: string;
-
-  @Expose()
-  invoiceNumber: string;
-
-  @Expose()
-  customerName: string;
-
-  @Expose()
-  items: {
-    productId: string;
-    quantity: number;
-    price: number;
-  }[];
-
-  @Expose()
-  totalAmount: number;
-
-  @Expose()
-  createdAt: Date;
-
-  @Expose()
-  updatedAt: Date;
+export class SaleTransactionResponseDTO extends MessageResponse {
+  content: SalesTransaction;
 }
