@@ -9,7 +9,13 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { CreateTransactionItemDto } from './create-transaction-item.req';
+import { MessageResponse } from '@app-types/message.res';
+export class TransactionItemDto {
+  price: number;
+  taxRate: number;
+  quantity: number;
+  total: number;
+}
 
 export class CreateSalesTransactionDto {
   @IsDateString()
@@ -62,6 +68,6 @@ export class CreateSalesTransactionDto {
   // Items
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CreateTransactionItemDto)
-  items: CreateTransactionItemDto[];
+  @Type(() => TransactionItemDto)
+  items: TransactionItemDto[];
 }

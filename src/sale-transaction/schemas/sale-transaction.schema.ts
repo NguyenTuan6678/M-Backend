@@ -3,6 +3,20 @@ import { Document, Types } from 'mongoose';
 
 export type SalesTransactionDocument = SalesTransaction & Document;
 
+export class TransactionItem {
+  @Prop()
+  price: number;
+
+  @Prop()
+  taxRate: number;
+
+  @Prop()
+  quantity: number;
+
+  @Prop()
+  total: number;
+}
+
 @Schema({ timestamps: true })
 export class SalesTransaction {
   @Prop()
@@ -41,8 +55,8 @@ export class SalesTransaction {
   @Prop({ type: Types.ObjectId, ref: 'Bank' })
   bankId: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'TransactionItem' })
-  items: string[];
+  @Prop({ type: [Object] })
+  items: TransactionItem[];
 }
 
 export const SalesTransactionSchema =

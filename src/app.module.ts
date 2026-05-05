@@ -10,7 +10,6 @@ import configuration from './config/configuration';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SaleTransactionModule } from './sale-transaction/sale-transaction.module';
-import { TransactionItemModule } from './sale-transaction/transaction-item.module';
 
 @Module({
   imports: [
@@ -32,7 +31,6 @@ import { TransactionItemModule } from './sale-transaction/transaction-item.modul
     DocumentsModule,
     SaleTransactionModule,
     AuthModule,
-    TransactionItemModule,
   ],
   controllers: [AppController, DocumentsController],
   providers: [AppService, DocumentsService],
