@@ -91,7 +91,7 @@ export class AuthService {
         return response;
       }
 
-      const admin = await this.userModal.findOne({ username });
+      const admin = await this.userModal.findOne({ role: 'ADMIN' });
 
       if (admin) {
         response = {
