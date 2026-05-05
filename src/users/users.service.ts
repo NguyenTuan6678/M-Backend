@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { UsersRepository } from '@repositories/users.repository';
 import { CreateUsersDTO } from '@users/dto/create-users.req';
 import { UsersResponseDTO } from '@users/dto/users.res';
-import { plainToClass } from 'class-transformer';
 import { LoggerService } from '@common/logs/logger.service';
 import {
   PaginationDto,
@@ -144,8 +143,8 @@ export class UsersService {
   }
 
   private mapToResponseDto(user: any): UsersResponseDTO {
-    return plainToClass(UsersResponseDTO, user.toObject(), {
-      excludeExtraneousValues: true,
-    });
+    const response = new UsersResponseDTO();
+    response.content = user.toObject();
+    return response;
   }
 }
