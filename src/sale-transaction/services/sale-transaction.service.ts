@@ -1,10 +1,16 @@
 import { LoggerService } from '@common/logs/logger.service';
 import { Injectable } from '@nestjs/common';
 import { SaleTransactionRepository } from '../repositories/sale-transaction.repository';
-import { CreateSalesTransactionDto } from '../dto/create-sale-transaction.dto';
+import { CreateSalesTransactionDto } from '../dto/create-sale-transaction.req';
 import { CreateSalesTransactionResponseDto } from '../dto/create-sale-transaction.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { MessageResponse } from '@app-types/message.res';
+import { SaleTransactionResponseDTO } from '../dto/sale-transaction.res';
+import { plainToClass } from 'class-transformer';
+import {
+  PaginationDto,
+  PaginatedResponseDto,
+} from '@common/dto/pagination.dto';
 
 @Injectable()
 export class SaleTransactionService {
@@ -38,61 +44,67 @@ export class SaleTransactionService {
     return response;
   }
 
-  async getSaleTransactionById(id: string): Promise<any> {
+  async getSaleTransactionById(
+    createSalesTransactionDto: CreateSalesTransactionDto,
+  ): Promise<MessageResponse | null> {
+    let response: MessageResponse | null = null;
     try {
-      const transaction = await this.saleTransactionRepository.findById(id);
+      const transaction =
+        await this.saleTransactionRepository.createSaleTransaction(
+          createSalesTransactionDto,
+        );
       if (!transaction) {
-        this.logger.warn(`Sale transaction not found with ID: ${id}`);
-        return null;
+        response = {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Sale transaction not found',
+        };
+        return response;
       }
-      return transaction;
+      response = {
+        code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Sale transaction retrieved successfully',
+      };
     } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionById: ${error.message}`,
-        undefined,
-      );
-      throw error;
+      response = {
+        code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
     }
+    return response;
   }
 
   async getAllSaleTransactions(
-    skip: number = 0,
-    limit: number = 10,
-  ): Promise<{ data: any[]; total: number }> {
-    try {
-      return await this.saleTransactionRepository.findAll(skip, limit);
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getAllSaleTransactions: ${error.message}`,
-        undefined,
-      );
-      throw error;
-    }
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponseDto<SaleTransactionResponseDTO>> {
+    const { data, total } = await this.saleTransactionRepository.findAll(
+      paginationDto.skip,
+      paginationDto.limit,
+    );
+    return {
+      data: data.map((transaction) => this.mapToResponseDto(transaction)),
+      total,
+      page: paginationDto.page,
+      limit: paginationDto.limit,
+      totalPages: Math.ceil(total / paginationDto.limit),
+    };
   }
 
   async updateSaleTransaction(
     id: string,
     updateData: Partial<CreateSalesTransactionDto>,
-  ): Promise<any> {
-    try {
-      const updatedTransaction = await this.saleTransactionRepository.update(
-        id,
-        updateData,
-      );
-      if (!updatedTransaction) {
-        this.logger.warn(
-          `Sale transaction not found for update with ID: ${id}`,
-        );
-        return null;
-      }
-      return updatedTransaction;
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.updateSaleTransaction: ${error.message}`,
-        undefined,
-      );
-      throw error;
+  ): Promise<SaleTransactionResponseDTO> {
+    const updatedTransaction = await this.saleTransactionRepository.update(
+      id,
+      updateData,
+    );
+    if (!updatedTransaction) {
+      this.logger.warn(`Sale transaction not found for update with ID: ${id}`);
+      throw new Error('Sale transaction not found');
     }
+    return this.mapToResponseDto(updatedTransaction);
   }
 
   async deleteSaleTransaction(id: string): Promise<{ message: string }> {
@@ -257,4 +269,10 @@ export class SaleTransactionService {
   //       throw error;
   //     }
   //   }
+
+  private mapToResponseDto(transaction: any): SaleTransactionResponseDTO {
+    return plainToClass(SaleTransactionResponseDTO, transaction.toObject(), {
+      excludeExtraneousValues: true,
+    });
+  }
 }
