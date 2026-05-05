@@ -44,7 +44,6 @@ export class UsersController {
 
   @Get()
   @ApiOperation({ summary: 'Get a paginated list of users' })
-  @UseGuards(JwtAuthGuard)
   async findAll(
     @Query(ValidationPipe) paginationDto: PaginationDto,
   ): Promise<PaginatedResponseDto<UsersResponseDTO>> {
@@ -53,14 +52,12 @@ export class UsersController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID' })
-  @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: string): Promise<UsersResponseDTO> {
     return this.usersService.getUserById(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update user by ID' })
-  @UseGuards(JwtAuthGuard)
   async update(
     @Param('id') id: string,
     @Body(ValidationPipe) updateUserDto: Partial<CreateUsersDTO>,
@@ -70,7 +67,6 @@ export class UsersController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete user by ID' })
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string): Promise<{ message: string }> {
     return this.usersService.deleteUser(id);
