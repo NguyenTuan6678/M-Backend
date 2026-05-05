@@ -12,7 +12,6 @@ import {
   PaginatedResponseDto,
   PaginationDto,
 } from '@common/dto/pagination.dto';
-import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class AgencyService {
@@ -76,8 +75,8 @@ export class AgencyService {
   }
 
   private mapToResponseDto(agency: any): AgencyResponseDto {
-    return plainToClass(AgencyResponseDto, agency.toObject(), {
-      excludeExtraneousValues: true,
-    });
+    const response = new AgencyResponseDto();
+    response.content = agency.toObject();
+    return response;
   }
 }
