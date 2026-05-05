@@ -1,4 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+
+export type AgencyDocument = Agency & Document;
 
 @Schema({ timestamps: true })
 export class Agency {
