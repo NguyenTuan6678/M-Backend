@@ -26,7 +26,7 @@ import { ApiOperation } from '@nestjs/swagger';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post(':create')
+  @Post('create')
   @ApiOperation({ summary: 'Create a new user' })
   @HttpCode(HttpStatus.CREATED)
   async create(

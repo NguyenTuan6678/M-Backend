@@ -11,7 +11,7 @@ export class SaleTransactionController {
     private readonly saleTransactionService: SaleTransactionService,
   ) {}
 
-  @Post(':create')
+  @Post('create')
   @ApiOperation({ summary: 'Create a new sale transaction' })
   @ApiResponse({
     status: 201,
