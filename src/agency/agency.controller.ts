@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Post,
   Query,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { AgencyService } from '@agency/agency.service';
@@ -16,6 +17,7 @@ import {
   PaginatedResponseDto,
   PaginationDto,
 } from '@common/dto/pagination.dto';
+import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 
 @Controller('agencies')
 export class AgencyController {
