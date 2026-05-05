@@ -74,7 +74,6 @@ export class UsersService {
         message: 'An error occurred while creating the user',
       };
     }
-
     return response;
   }
 
