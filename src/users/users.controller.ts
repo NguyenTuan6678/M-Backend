@@ -33,14 +33,14 @@ export class UsersController {
   async create(
     @Body(ValidationPipe) createUserDto: CreateUsersDTO,
   ): Promise<UsersResponseDTO> {
-    return this.usersService.createUser(createUserDto);
+    return await this.usersService.createUser(createUserDto);
   }
 
   @Get('stats')
   @ApiOperation({ summary: 'Get user statistics' })
   @UseGuards(JwtAuthGuard)
   async getStats(): Promise<{ totalUsers: number }> {
-    return this.usersService.getUserStats();
+    return await this.usersService.getUserStats();
   }
 
   @Get()
@@ -48,13 +48,13 @@ export class UsersController {
   async findAll(
     @Query(ValidationPipe) paginationDto: PaginationDto,
   ): Promise<PaginatedResponseDto<UsersResponseDTO>> {
-    return this.usersService.getAllUsers(paginationDto);
+    return await this.usersService.getAllUsers(paginationDto);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID' })
   async findOne(@Param('id') id: string): Promise<UsersResponseDTO> {
-    return this.usersService.getUserById(id);
+    return await this.usersService.getUserById(id);
   }
 
   @Patch(':id')
@@ -63,13 +63,13 @@ export class UsersController {
     @Param('id') id: string,
     @Body(ValidationPipe) updateUserDto: Partial<CreateUsersDTO>,
   ): Promise<UsersResponseDTO> {
-    return this.usersService.updateUser(id, updateUserDto);
+    return await this.usersService.updateUser(id, updateUserDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete user by ID' })
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string): Promise<MessageResponse> {
-    return this.usersService.deleteUser(id);
+    return await this.usersService.deleteUser(id);
   }
 }
