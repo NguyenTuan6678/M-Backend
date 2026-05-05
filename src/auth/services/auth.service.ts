@@ -96,11 +96,9 @@ export class AuthService {
         return response;
       }
 
-      const new_password = await hashPassword(password);
-
       const newAdmin = new this.userModal({
         username,
-        password: new_password,
+        password,
         role,
       });
 
@@ -224,9 +222,7 @@ export class AuthService {
         return response;
       }
 
-      const password = await hashPassword(new_password);
-
-      user.password = password;
+      user.password = new_password;
 
       await user.save();
 
