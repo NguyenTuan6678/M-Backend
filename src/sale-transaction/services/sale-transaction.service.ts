@@ -21,27 +21,33 @@ export class SaleTransactionService {
 
   async createSaleTransaction(
     createSaleTransactionDto: CreateSalesTransactionDto,
-  ): Promise<MessageResponse | null> {
-    let response: CreateSalesTransactionResponseDto | null = null;
+  ): Promise<CreateSalesTransactionResponseDto | null> {
     try {
       const createdTransaction =
         await this.saleTransactionRepository.createSaleTransaction(
           createSaleTransactionDto,
         );
-      response = {
+      if (!createdTransaction) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Missing required fields or creation failed',
+        };
+      }
+      return {
         content: createdTransaction,
-        code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Sale transaction created successfully',
       };
     } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.createSaleTransaction: ${error.message}`,
-        undefined,
-      );
-      throw error;
+      this.logger.error(`Error creating sale transaction: ${error.message}`);
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: 'An error occurred while creating the sale transaction',
+      };
     }
-    return response;
   }
 
   async getSaleTransactionById(
