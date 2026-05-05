@@ -1,7 +1,7 @@
 import { IsMongoId, IsNumber, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class TransactionItemDto {
+export class CreateTransactionItemDto {
   @IsMongoId()
   productId: string;
 

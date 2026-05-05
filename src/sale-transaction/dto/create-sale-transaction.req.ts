@@ -9,7 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { TransactionItemDto } from './create-transaction-item.dto';
+import { CreateTransactionItemDto } from './create-transaction-item.req';
 
 export class CreateSalesTransactionDto {
   @IsDateString()
@@ -62,6 +62,6 @@ export class CreateSalesTransactionDto {
   // Items
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => TransactionItemDto)
-  items: TransactionItemDto[];
+  @Type(() => CreateTransactionItemDto)
+  items: CreateTransactionItemDto[];
 }
