@@ -2,19 +2,16 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema({ timestamps: true })
 export class Bank {
-  @Prop({ required: true, unique: true })
-  code: string;
-
   @Prop({ required: true })
   name: string;
 
-  @Prop()
+  @Prop({ required: true })
   accountNumber?: string;
 
-  @Prop()
+  @Prop({ required: true })
   accountName?: string;
 
-  @Prop()
+  @Prop({ required: true })
   branch?: string;
 
   @Prop({ default: true })

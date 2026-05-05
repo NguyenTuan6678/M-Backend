@@ -3,16 +3,13 @@ import { Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Employee {
-  @Prop({ required: true, unique: true })
-  code: string;
-
   @Prop({ required: true })
   name: string;
 
-  @Prop()
+  @Prop({ unique: true })
   email?: string;
 
-  @Prop()
+  @Prop({ unique: true })
   phone?: string;
 
   @Prop({ type: Types.ObjectId, ref: 'Department' })

@@ -2,13 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema({ timestamps: true })
 export class Agency {
-  @Prop()
-  code: string;
-
-  @Prop()
+  @Prop({ required: true, unique: true })
   name: string;
 
-  @Prop()
+  @Prop({ required: true })
   commissionPercent: number;
 }
 

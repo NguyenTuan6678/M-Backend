@@ -2,9 +2,6 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema({ timestamps: true })
 export class Department {
-  @Prop({ required: true, unique: true })
-  code: string;
-
   @Prop({ required: true })
   name: string;
 
