@@ -52,7 +52,7 @@ export class AgencyRepository {
       ]);
       return { data, total };
     } catch (error: any) {
-      this.logger.error(`Error finding all agencies: ${error.message}`);
+      this.logger.error(`Error fetching agencies: ${error.message}`);
       throw error;
     }
   }

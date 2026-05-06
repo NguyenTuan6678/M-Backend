@@ -49,7 +49,7 @@ export class BankRepository {
       ]);
       return { data, total };
     } catch (error: any) {
-      this.logger.error(`Error fetching users: ${error.message}`);
+      this.logger.error(`Error fetching banks: ${error.message}`);
       throw error;
     }
   }

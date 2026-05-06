@@ -58,7 +58,7 @@ export class DepartmentRepository {
       ]);
       return { data, total };
     } catch (error: any) {
-      this.logger.error(`Error fetching users: ${error.message}`);
+      this.logger.error(`Error fetching departments: ${error.message}`);
       throw error;
     }
   }
