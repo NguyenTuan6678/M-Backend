@@ -15,7 +15,7 @@ import {
 import { DepartmentService } from './department.service';
 import { CreateDepartmentDto } from './dto/create-department.req';
 import { DepartmentResponseDto } from './dto/department.res';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   PaginatedResponseDto,
   PaginationDto,
@@ -23,6 +23,7 @@ import {
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 
+@ApiTags('Department')
 @Controller('departments')
 @UseGuards(JwtAuthGuard)
 export class DepartmentController {

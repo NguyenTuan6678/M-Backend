@@ -27,7 +27,7 @@ export class DepartmentService {
   ): Promise<DepartmentResponseDto> {
     let response: MessageResponse | null = null;
     try {
-      const { name } = createDepartmentDto;
+      const { name, description } = createDepartmentDto;
       if (!name) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
@@ -49,6 +49,7 @@ export class DepartmentService {
 
       const newDepartment = new this.departmentModel({
         name,
+        description,
       });
 
       await newDepartment.save();
