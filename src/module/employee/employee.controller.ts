@@ -15,7 +15,7 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessageResponse } from '@app-types/message.res';
 import {
   PaginatedResponseDto,
@@ -23,6 +23,7 @@ import {
 } from '@common/dto/pagination.dto';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 
+@ApiTags('Employee')
 @Controller('employees')
 @UseGuards(JwtAuthGuard)
 export class EmployeeController {

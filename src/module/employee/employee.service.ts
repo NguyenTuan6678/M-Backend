@@ -27,11 +27,11 @@ export class EmployeeService {
     let response: MessageResponse | null = null;
     try {
       const { name, email, phone } = createEmployeeDto;
-      if (!name || !email || !phone) {
+      if (!name) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: 'FAIL',
-          message: 'Missing required fields: name, email or phone',
+          message: 'Missing required fields: name',
         };
         return response;
       }
