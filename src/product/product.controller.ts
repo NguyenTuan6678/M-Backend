@@ -1,4 +1,66 @@
-import { Controller } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  ValidationPipe,
+} from '@nestjs/common';
+import { ProductService } from './product.service';
+import { ApiOperation } from '@nestjs/swagger';
+import { CreateProductDto } from './dto/create-product.req';
+import { ProductResponseDto } from './dto/product.res';
+import {
+  PaginatedResponseDto,
+  PaginationDto,
+} from '@common/dto/pagination.dto';
+import { MessageResponse } from '@app-types/message.res';
 
 @Controller('products')
-export class ProductController {}
+export class ProductController {
+  constructor(private readonly productService: ProductService) {}
+
+  @Post('create')
+  @ApiOperation({ summary: 'Create a new bank' })
+  @HttpCode(HttpStatus.CREATED)
+  async create(
+    @Body(ValidationPipe) createProductDto: CreateProductDto,
+  ): Promise<ProductResponseDto> {
+    return await this.productService.createProduct(createProductDto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Get a paginated list of banks' })
+  async findAll(
+    @Query(ValidationPipe) paginationDto: PaginationDto,
+  ): Promise<PaginatedResponseDto<ProductResponseDto>> {
+    return await this.productService.getAllProducts(paginationDto);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get bank by ID' })
+  async findOne(@Param('id') id: string): Promise<ProductResponseDto> {
+    return await this.productService.getProductById(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Updated bank by ID' })
+  async update(
+    @Param('id') id: string,
+    @Body(ValidationPipe) updateProductDto: Partial<CreateProductDto>,
+  ): Promise<ProductResponseDto> {
+    return await this.productService.updateProduct(id, updateProductDto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete bank by ID' })
+  @HttpCode(HttpStatus.OK)
+  async remove(@Param('id') id: string): Promise<MessageResponse> {
+    return await this.productService.deleteProduct(id);
+  }
+}
