@@ -6,7 +6,7 @@ import {
   SalesTransactionDocument,
 } from '@schemas/sale-transaction.schema';
 import { Model, Types } from 'mongoose';
-import { CreateSalesTransactionDto } from '@transaction/dto/create-sale-transaction.req';
+import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
 
 @Injectable()
 export class SaleTransactionRepository {
@@ -20,9 +20,9 @@ export class SaleTransactionRepository {
     createSaleTransactionDto: CreateSalesTransactionDto,
   ): Promise<SalesTransactionDocument | null> {
     try {
-      const { agencyId, departmentId, employeeId, bankId } =
+      const { agencyId, departmentId, employeeId, bankId, productId } =
         createSaleTransactionDto;
-      if (!agencyId || !departmentId || !employeeId || !bankId) {
+      if (!agencyId || !departmentId || !employeeId || !bankId || !productId) {
         this.logger.warn(
           'Missing required fields for sale transaction creation',
           'SaleTransactionRepository',
@@ -35,6 +35,7 @@ export class SaleTransactionRepository {
         departmentId: new Types.ObjectId(departmentId),
         employeeId: new Types.ObjectId(employeeId),
         bankId: new Types.ObjectId(bankId),
+        productId: new Types.ObjectId(productId),
       };
       const newSaleTransaction = new this.saleTransactionModel(dataSubmit);
       const savedTransaction = await newSaleTransaction.save();
@@ -77,6 +78,7 @@ export class SaleTransactionRepository {
           .populate('departmentId')
           .populate('employeeId')
           .populate('bankId')
+          .populate('productId')
           .sort({ createdAt: -1 })
           .exec(),
         this.saleTransactionModel.countDocuments().exec(),

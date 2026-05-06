@@ -6,12 +6,12 @@ import { AuthModule } from '@users/auth/auth.module';
 import configuration from '@config/configuration';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { SaleTransactionModule } from '@transaction/sale-transaction.module';
-import { AgencyModule } from '@agency/agency.module';
-import { BankModule } from '@bank/bank.module';
-import { DepartmentModule } from '@department/department.module';
-import { EmployeeModule } from '@employee/employee.module';
-import { ProductModule } from '@product/product.module';
+import { SaleTransactionModule } from '@module/sale-transaction/sale-transaction.module';
+import { AgencyModule } from './module/agency/agency.module';
+import { BankModule } from './module/bank/bank.module';
+import { DepartmentModule } from './module/department/department.module';
+import { EmployeeModule } from './module/employee/employee.module';
+import { ProductModule } from './module/product/product.module';
 
 @Module({
   imports: [

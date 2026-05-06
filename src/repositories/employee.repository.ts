@@ -1,5 +1,5 @@
 import { LoggerService } from '@common/logs/logger.service';
-import { CreateEmployeeDto } from '@employee/dto/create.employee.req';
+import { CreateEmployeeDto } from '../module/employee/dto/create.employee.req';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Employee, EmployeeDocument } from '@schemas/employee.schema';

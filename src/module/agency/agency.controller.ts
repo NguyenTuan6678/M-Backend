@@ -11,10 +11,10 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { AgencyService } from '@agency/agency.service';
+import { AgencyService } from './agency.service';
 import { ApiOperation } from '@nestjs/swagger';
-import { AgencyResponseDto } from '@agency/dto/agency.res';
-import { CreateAgencyDto } from '@agency/dto/create-agency.req';
+import { AgencyResponseDto } from './dto/agency.res';
+import { CreateAgencyDto } from './dto/create-agency.req';
 import {
   PaginatedResponseDto,
   PaginationDto,

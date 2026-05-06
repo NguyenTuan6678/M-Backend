@@ -1,7 +1,7 @@
 import { LoggerService } from '@common/logs/logger.service';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { CreateProductDto } from '@product/dto/create-product.req';
+import { CreateProductDto } from '../module/product/dto/create-product.req';
 import { Product, ProductDocument } from '@schemas/product.schema';
 import { Model } from 'mongoose';
 

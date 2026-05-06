@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { Agency, AgencySchema } from '../schemas/agency.schema';
+import { Agency, AgencySchema } from '../../schemas/agency.schema';
 import { MongooseModule } from '@nestjs/mongoose/dist/mongoose.module';
-import { AgencyController } from '@agency/agency.controller';
-import { AgencyService } from '@agency/agency.service';
+import { AgencyController } from './agency.controller';
+import { AgencyService } from './agency.service';
 import { AgencyRepository } from '@repositories/agency.repository';
 import { LoggerService } from '@common/logs/logger.service';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';

@@ -1,4 +1,4 @@
-import { CreateBankDto } from '@bank/dto/create-bank.req';
+import { CreateBankDto } from '../module/bank/dto/create-bank.req';
 import { LoggerService } from '@common/logs/logger.service';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';

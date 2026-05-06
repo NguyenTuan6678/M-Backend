@@ -1,4 +1,4 @@
-import { CreateAgencyDto } from '@agency/dto/create-agency.req';
+import { CreateAgencyDto } from '../module/agency/dto/create-agency.req';
 import { LoggerService } from '@common/logs/logger.service';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';

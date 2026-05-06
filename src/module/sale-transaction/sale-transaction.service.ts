@@ -1,12 +1,9 @@
 import { LoggerService } from '@common/logs/logger.service';
 import { Injectable } from '@nestjs/common';
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
-import { CreateSalesTransactionDto } from '@transaction/dto/create-sale-transaction.req';
-import { CreateSalesTransactionResponseDto } from '@transaction/dto/create-sale-transaction.res';
+import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
-import { MessageResponse } from '@app-types/message.res';
-import { SaleTransactionResponseDTO } from '@transaction/dto/sale-transaction.res';
-import { plainToClass } from 'class-transformer';
+import { SaleTransactionResponseDTO } from '@module/sale-transaction/dto/sale-transaction.res';
 import {
   PaginationDto,
   PaginatedResponseDto,
@@ -15,6 +12,7 @@ import { AgencyRepository } from '@repositories/agency.repository';
 import { DepartmentRepository } from '@repositories/department.repository';
 import { EmployeeRepository } from '@repositories/employee.repository';
 import { BankRepository } from '@repositories/bank.repository';
+import { ProductRepository } from '@repositories/product.repository';
 
 @Injectable()
 export class SaleTransactionService {
@@ -24,6 +22,7 @@ export class SaleTransactionService {
     private readonly departmentRepository: DepartmentRepository,
     private readonly employeeRepository: EmployeeRepository,
     private readonly bankRepository: BankRepository,
+    private readonly productRepository: ProductRepository,
     private readonly logger: LoggerService,
   ) {}
 
@@ -32,36 +31,56 @@ export class SaleTransactionService {
     departmentId: string,
     employeeId: string,
     bankId: string,
+    productId: string,
   ) {
-    const [agency, department, employee, bank] = await Promise.all([
-      this.agencyRepository.findById(agencyId),
-      this.departmentRepository.findById(departmentId),
-      this.employeeRepository.findById(employeeId),
-      this.bankRepository.findById(bankId),
-    ]);
+    const promises: Promise<any>[] = [];
+    const entityNames: string[] = [];
 
-    const missingEntities = [];
-    if (!agency) missingEntities.push('Agency');
-    if (!department) missingEntities.push('Department');
-    if (!employee) missingEntities.push('Employee');
-    if (!bank) missingEntities.push('Bank');
+    if (agencyId) {
+      promises.push(this.agencyRepository.findById(agencyId));
+      entityNames.push('Agency');
+    }
+    if (departmentId) {
+      promises.push(this.departmentRepository.findById(departmentId));
+      entityNames.push('Department');
+    }
+    if (employeeId) {
+      promises.push(this.employeeRepository.findById(employeeId));
+      entityNames.push('Employee');
+    }
+    if (bankId) {
+      promises.push(this.bankRepository.findById(bankId));
+      entityNames.push('Bank');
+    }
+    if (productId) {
+      promises.push(this.productRepository.findById(productId));
+      entityNames.push('Product');
+    }
+
+    const results = await Promise.all(promises);
+
+    const missingEntities: string[] = [];
+    results.forEach((result, index) => {
+      if (!result) {
+        missingEntities.push(entityNames[index]);
+      }
+    });
 
     return missingEntities;
   }
 
   async createSaleTransaction(
     createSaleTransactionDto: CreateSalesTransactionDto,
-  ): Promise<CreateSalesTransactionResponseDto | null> {
+  ): Promise<SaleTransactionResponseDTO | null> {
     try {
-      const { agencyId, departmentId, employeeId, bankId } =
+      const { agencyId, departmentId, employeeId, bankId, productId } =
         createSaleTransactionDto;
 
-      if (!agencyId || !departmentId || !employeeId || !bankId) {
+      if (!agencyId) {
         return {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
-          message:
-            'The fields agencyId, departmentId, employeeId and bankId are required',
+          message: 'The field agencyId is required',
         };
       }
 
@@ -70,6 +89,7 @@ export class SaleTransactionService {
         departmentId,
         employeeId,
         bankId,
+        productId,
       );
 
       if (missingEntities.length > 0) {

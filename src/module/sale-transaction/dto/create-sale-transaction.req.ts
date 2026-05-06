@@ -60,16 +60,14 @@ export class CreateSalesTransactionDto {
     description: 'Department ID',
   })
   @IsMongoId()
-  @IsOptional()
-  departmentId?: string;
+  departmentId: string;
 
   @ApiPropertyOptional({
     example: '649a6f1e5f1234567890abcf',
     description: 'Employee ID',
   })
   @IsMongoId()
-  @IsOptional()
-  employeeId?: string;
+  employeeId: string;
 
   @ApiPropertyOptional({ example: 'TXN001', description: 'Tax code' })
   @IsString()
@@ -123,8 +121,14 @@ export class CreateSalesTransactionDto {
     description: 'Bank ID',
   })
   @IsMongoId()
-  @IsOptional()
-  bankId?: string;
+  bankId: string;
+
+  @ApiPropertyOptional({
+    example: '649a6f1e5f1234567890abd0',
+    description: 'Product ID',
+  })
+  @IsMongoId()
+  productId: string;
 
   @ApiProperty({
     type: [TransactionItemDto],

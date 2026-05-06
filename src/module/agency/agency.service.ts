@@ -4,10 +4,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { AgencyRepository } from '@repositories/agency.repository';
 import { Agency, AgencyDocument } from '@schemas/agency.schema';
 import { Model } from 'mongoose';
-import { CreateAgencyDto } from '@agency/dto/create-agency.req';
+import { CreateAgencyDto } from './dto/create-agency.req';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_RES } from '@common/constants/error.const';
-import { AgencyResponseDto } from '@agency/dto/agency.res';
+import { AgencyResponseDto } from './dto/agency.res';
 import {
   PaginatedResponseDto,
   PaginationDto,

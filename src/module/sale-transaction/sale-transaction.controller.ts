@@ -10,13 +10,13 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { SaleTransactionService } from '@transaction/sale-transaction.service';
-import { CreateSalesTransactionDto } from '@transaction/dto/create-sale-transaction.req';
+import { SaleTransactionService } from '@module/sale-transaction/sale-transaction.service';
+import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
 import {
   PaginatedResponseDto,
   PaginationDto,
 } from '@common/dto/pagination.dto';
-import { SaleTransactionResponseDTO } from '@transaction/dto/sale-transaction.res';
+import { SaleTransactionResponseDTO } from '@module/sale-transaction/dto/sale-transaction.res';
 
 @ApiTags('sale-transaction')
 @Controller('sale-transaction')

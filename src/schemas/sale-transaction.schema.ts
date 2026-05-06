@@ -55,6 +55,9 @@ export class SalesTransaction {
   @Prop({ type: Types.ObjectId, ref: 'Bank' })
   bankId: string;
 
+  @Prop({ type: Types.ObjectId, ref: 'Product' })
+  productId: string;
+
   @Prop({ type: [Object] })
   items: TransactionItem[];
 }
