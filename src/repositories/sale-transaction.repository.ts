@@ -5,7 +5,7 @@ import {
   SalesTransaction,
   SalesTransactionDocument,
 } from '@schemas/sale-transaction.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateSalesTransactionDto } from '@transaction/dto/create-sale-transaction.req';
 
 @Injectable()
@@ -29,9 +29,14 @@ export class SaleTransactionRepository {
         );
         return null;
       }
-      const newSaleTransaction = new this.saleTransactionModel(
-        createSaleTransactionDto,
-      );
+      const dataSubmit = {
+        ...createSaleTransactionDto,
+        agencyId: new Types.ObjectId(agencyId),
+        departmentId: new Types.ObjectId(departmentId),
+        employeeId: new Types.ObjectId(employeeId),
+        bankId: new Types.ObjectId(bankId),
+      };
+      const newSaleTransaction = new this.saleTransactionModel(dataSubmit);
       const savedTransaction = await newSaleTransaction.save();
       this.logger.log(
         `Sale transaction created with ID: ${savedTransaction._id}`,
@@ -68,6 +73,10 @@ export class SaleTransactionRepository {
           .find()
           .skip(skip)
           .limit(limit)
+          .populate('agencyId')
+          .populate('departmentId')
+          .populate('employeeId')
+          .populate('bankId')
           .sort({ createdAt: -1 })
           .exec(),
         this.saleTransactionModel.countDocuments().exec(),

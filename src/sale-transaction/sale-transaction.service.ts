@@ -343,8 +343,8 @@ export class SaleTransactionService {
   }
 
   private mapToResponseDto(transaction: any): SaleTransactionResponseDTO {
-    return plainToClass(SaleTransactionResponseDTO, transaction.toObject(), {
-      excludeExtraneousValues: true,
-    });
+    const response = new SaleTransactionResponseDTO();
+    response.content = transaction.toObject();
+    return response;
   }
 }
