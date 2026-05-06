@@ -11,6 +11,7 @@ import {
   HttpStatus,
   ValidationPipe,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from '@users/users.service';
 import { CreateUsersDTO } from '@users/dto/create-users.req';
@@ -32,9 +33,10 @@ export class UsersController {
   @ApiOperation({ summary: 'Create a new user' })
   @HttpCode(HttpStatus.CREATED)
   async create(
+    @Req() request: any,
     @Body(ValidationPipe) createUserDto: CreateUsersDTO,
   ): Promise<UsersResponseDTO> {
-    return await this.usersService.createUser(createUserDto);
+    return await this.usersService.createUser(createUserDto, request.user);
   }
 
   @Get('stats')
