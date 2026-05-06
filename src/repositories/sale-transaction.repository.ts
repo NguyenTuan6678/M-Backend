@@ -20,9 +20,15 @@ export class SaleTransactionRepository {
     createSaleTransactionDto: CreateSalesTransactionDto,
   ): Promise<SalesTransactionDocument | null> {
     try {
-      const { agencyId, departmentId, employeeId, bankId, productId } =
+      const { agencyId, departmentId, employeeId, bankId, items } =
         createSaleTransactionDto;
-      if (!agencyId || !departmentId || !employeeId || !bankId || !productId) {
+      if (
+        !agencyId ||
+        !departmentId ||
+        !employeeId ||
+        !bankId ||
+        !items?.length
+      ) {
         this.logger.warn(
           'Missing required fields for sale transaction creation',
           'SaleTransactionRepository',
@@ -35,7 +41,11 @@ export class SaleTransactionRepository {
         departmentId: new Types.ObjectId(departmentId),
         employeeId: new Types.ObjectId(employeeId),
         bankId: new Types.ObjectId(bankId),
-        productId: new Types.ObjectId(productId),
+
+        items: items.map((item) => ({
+          ...item,
+          productId: new Types.ObjectId(item.productId),
+        })),
       };
       const newSaleTransaction = new this.saleTransactionModel(dataSubmit);
       const savedTransaction = await newSaleTransaction.save();
@@ -78,7 +88,10 @@ export class SaleTransactionRepository {
           .populate('departmentId')
           .populate('employeeId')
           .populate('bankId')
-          .populate('productId')
+          .populate({
+            path: 'items.productId',
+            select: 'name price taxRate',
+          })
           .sort({ createdAt: -1 })
           .exec(),
         this.saleTransactionModel.countDocuments().exec(),

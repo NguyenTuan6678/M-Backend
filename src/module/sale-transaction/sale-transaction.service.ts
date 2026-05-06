@@ -31,8 +31,8 @@ export class SaleTransactionService {
     departmentId: string,
     employeeId: string,
     bankId: string,
-    productId: string,
-  ) {
+    items: { productId: string }[],
+  ): Promise<string[]> {
     const promises: Promise<any>[] = [];
     const entityNames: string[] = [];
 
@@ -40,28 +40,35 @@ export class SaleTransactionService {
       promises.push(this.agencyRepository.findById(agencyId));
       entityNames.push('Agency');
     }
+
     if (departmentId) {
       promises.push(this.departmentRepository.findById(departmentId));
       entityNames.push('Department');
     }
+
     if (employeeId) {
       promises.push(this.employeeRepository.findById(employeeId));
       entityNames.push('Employee');
     }
+
     if (bankId) {
       promises.push(this.bankRepository.findById(bankId));
       entityNames.push('Bank');
     }
-    if (productId) {
-      promises.push(this.productRepository.findById(productId));
-      entityNames.push('Product');
+
+    if (items?.length) {
+      const productIds = items.map((i) => i.productId);
+
+      promises.push(this.productRepository.findByIds(productIds));
+      entityNames.push('Products');
     }
 
     const results = await Promise.all(promises);
 
     const missingEntities: string[] = [];
+
     results.forEach((result, index) => {
-      if (!result) {
+      if (!result || (Array.isArray(result) && result.length === 0)) {
         missingEntities.push(entityNames[index]);
       }
     });
@@ -73,7 +80,7 @@ export class SaleTransactionService {
     createSaleTransactionDto: CreateSalesTransactionDto,
   ): Promise<SaleTransactionResponseDTO | null> {
     try {
-      const { agencyId, departmentId, employeeId, bankId, productId } =
+      const { agencyId, departmentId, employeeId, bankId, items } =
         createSaleTransactionDto;
 
       if (!agencyId) {
@@ -89,7 +96,7 @@ export class SaleTransactionService {
         departmentId,
         employeeId,
         bankId,
-        productId,
+        items,
       );
 
       if (missingEntities.length > 0) {

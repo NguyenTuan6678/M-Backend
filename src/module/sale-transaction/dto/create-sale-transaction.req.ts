@@ -14,6 +14,13 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class TransactionItemDto {
+  @ApiPropertyOptional({
+    example: '649a6f1e5f1234567890abd0',
+    description: 'Product ID',
+  })
+  @IsMongoId()
+  productId: string;
+
   @ApiProperty({ example: 100, description: 'Item price' })
   @IsNumber()
   @IsNotEmpty()
@@ -122,13 +129,6 @@ export class CreateSalesTransactionDto {
   })
   @IsMongoId()
   bankId: string;
-
-  @ApiPropertyOptional({
-    example: '649a6f1e5f1234567890abd0',
-    description: 'Product ID',
-  })
-  @IsMongoId()
-  productId: string;
 
   @ApiProperty({
     type: [TransactionItemDto],

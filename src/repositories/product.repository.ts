@@ -36,6 +36,12 @@ export class ProductRepository {
     }
   }
 
+  async findByIds(ids: string[]) {
+    return this.productModel.find({
+      _id: { $in: ids },
+    });
+  }
+
   async findAll(
     skip: number = 0,
     limit: number = 10,

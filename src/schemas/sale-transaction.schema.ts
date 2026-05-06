@@ -4,6 +4,9 @@ import { Document, Types } from 'mongoose';
 export type SalesTransactionDocument = SalesTransaction & Document;
 
 export class TransactionItem {
+  @Prop({ type: Types.ObjectId, ref: 'Product' })
+  productId: Types.ObjectId;
+
   @Prop()
   price: number;
 
@@ -54,9 +57,6 @@ export class SalesTransaction {
 
   @Prop({ type: Types.ObjectId, ref: 'Bank' })
   bankId: string;
-
-  @Prop({ type: Types.ObjectId, ref: 'Product' })
-  productId: string;
 
   @Prop({ type: [Object] })
   items: TransactionItem[];
