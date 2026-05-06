@@ -15,7 +15,7 @@ import { MessageResponse } from '@app-types/message.res';
 import { LoginRes } from '@users/auth/dto/login.res';
 import { ChangePasswordDto } from '@users/auth/dto/change-password.req';
 
-@ApiTags('auth')
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
