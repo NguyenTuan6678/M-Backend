@@ -11,6 +11,7 @@ import { AgencyModule } from '@agency/agency.module';
 import { BankModule } from '@bank/bank.module';
 import { DepartmentModule } from '@department/department.module';
 import { EmployeeModule } from '@employee/employee.module';
+import { ProductModule } from '@product/product.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { EmployeeModule } from '@employee/employee.module';
     BankModule,
     DepartmentModule,
     EmployeeModule,
+    ProductModule,
     AuthModule,
   ],
   controllers: [AppController],
