@@ -10,10 +10,6 @@ import { Type } from 'class-transformer';
 export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
-  code: string;
-
-  @IsString()
-  @IsNotEmpty()
   name: string;
 
   @Type(() => Number)
