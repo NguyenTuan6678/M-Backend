@@ -26,16 +26,17 @@ export class UsersService {
     let response: MessageResponse | null = null;
     try {
       const { username, password, role } = createUserDto;
-      if (!username || !password || !role) {
+      if (!username || !password) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: 'FAIL',
-          message: 'Missing required fields: username, password, or role',
+          message: 'Missing required fields: username or password',
         };
         return response;
       }
 
-      if (role === Role.ADMIN) {
+      const userRole = role ?? Role.USER;
+      if (userRole === Role.ADMIN) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: 'FAIL',
@@ -57,7 +58,7 @@ export class UsersService {
       const newUser = new this.userModel({
         username,
         password,
-        role,
+        role: userRole,
       });
 
       await newUser.save();
