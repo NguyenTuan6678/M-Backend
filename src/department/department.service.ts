@@ -2,7 +2,7 @@ import { LoggerService } from '@common/logs/logger.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { DepartmentRepository } from '@repositories/department.repository';
-import { Department } from '@schemas/department.schema';
+import { Department, DepartmentDocument } from '@schemas/department.schema';
 import { Model } from 'mongoose';
 import { CreateDepartmentDto } from './dto/create-department.req';
 import { DepartmentResponseDto } from './dto/department.res';
@@ -16,7 +16,8 @@ import {
 @Injectable()
 export class DepartmentService {
   constructor(
-    @InjectModel(Department.name) private departmentModel: Model<Department>,
+    @InjectModel(Department.name)
+    private departmentModel: Model<DepartmentDocument>,
     private readonly departmentRepository: DepartmentRepository,
     private readonly logger: LoggerService,
   ) {}

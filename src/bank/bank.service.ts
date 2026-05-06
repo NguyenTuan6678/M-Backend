@@ -2,7 +2,7 @@ import { LoggerService } from '@common/logs/logger.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { BankRepository } from '@repositories/bank.repository';
-import { Bank } from '@schemas/bank.schema';
+import { Bank, BankDocument } from '@schemas/bank.schema';
 import { Model } from 'mongoose';
 import { CreateBankDto } from './dto/create-bank.req';
 import { BankResponseDto } from './dto/bank.res';
@@ -16,7 +16,7 @@ import {
 @Injectable()
 export class BankService {
   constructor(
-    @InjectModel(Bank.name) private bankModel: Model<Bank>,
+    @InjectModel(Bank.name) private bankModel: Model<BankDocument>,
     private readonly bankRepository: BankRepository,
     private readonly logger: LoggerService,
   ) {}
