@@ -15,7 +15,7 @@ import {
 import { DepartmentService } from './department.service';
 import { CreateDepartmentDto } from './dto/create-department.req';
 import { DepartmentResponseDto } from './dto/department.res';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   PaginatedResponseDto,
   PaginationDto,
@@ -26,6 +26,7 @@ import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 @ApiTags('Department')
 @Controller('departments')
 @UseGuards(JwtAuthGuard)
+@ApiBearerAuth('authorization')
 export class DepartmentController {
   constructor(private readonly departmentService: DepartmentService) {}
 

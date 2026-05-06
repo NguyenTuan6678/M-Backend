@@ -10,7 +10,12 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { SaleTransactionService } from '@module/sale-transaction/sale-transaction.service';
 import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
 import {
@@ -23,6 +28,7 @@ import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 @ApiTags('Sale Transaction')
 @Controller('sale-transaction')
 @UseGuards(JwtAuthGuard)
+@ApiBearerAuth('authorization')
 export class SaleTransactionController {
   constructor(
     private readonly saleTransactionService: SaleTransactionService,

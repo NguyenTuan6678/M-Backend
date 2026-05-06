@@ -15,7 +15,7 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessageResponse } from '@app-types/message.res';
 import {
   PaginatedResponseDto,
@@ -26,6 +26,7 @@ import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 @ApiTags('Employee')
 @Controller('employees')
 @UseGuards(JwtAuthGuard)
+@ApiBearerAuth('authorization')
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
 

@@ -12,7 +12,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { AgencyService } from './agency.service';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AgencyResponseDto } from './dto/agency.res';
 import { CreateAgencyDto } from './dto/create-agency.req';
 import {
@@ -24,6 +24,7 @@ import { MessageResponse } from '@app-types/message.res';
 
 @ApiTags('Agency')
 @Controller('agencies')
+@ApiBearerAuth('authorization')
 @UseGuards(JwtAuthGuard)
 export class AgencyController {
   constructor(private readonly agencyService: AgencyService) {}
