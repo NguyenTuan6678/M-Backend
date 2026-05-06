@@ -23,6 +23,7 @@ import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { MessageResponse } from '@app-types/message.res';
 
 @Controller('agencies')
+@UseGuards(JwtAuthGuard)
 export class AgencyController {
   constructor(private readonly agencyService: AgencyService) {}
 

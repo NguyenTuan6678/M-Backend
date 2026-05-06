@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { BankService } from './bank.service';
@@ -20,8 +21,10 @@ import {
   PaginationDto,
 } from '@common/dto/pagination.dto';
 import { MessageResponse } from '@app-types/message.res';
+import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 
 @Controller('banks')
+@UseGuards(JwtAuthGuard)
 export class BankController {
   constructor(private readonly bankService: BankService) {}
 

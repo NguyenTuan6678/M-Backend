@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
@@ -20,8 +21,10 @@ import {
   PaginationDto,
 } from '@common/dto/pagination.dto';
 import { MessageResponse } from '@app-types/message.res';
+import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 
 @Controller('products')
+@UseGuards(JwtAuthGuard)
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 

@@ -24,6 +24,7 @@ import { ApiOperation } from '@nestjs/swagger';
 import { MessageResponse } from '@app-types/message.res';
 
 @Controller('users')
+@UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
