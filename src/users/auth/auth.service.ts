@@ -36,6 +36,7 @@ export class AuthService {
     const payload = {
       id: isExitingUser?._id.toString(),
       username: userInfo.username,
+      role: isExitingUser.role,
     };
 
     const accessToken = this.jwtService.sign(payload, {

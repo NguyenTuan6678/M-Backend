@@ -53,7 +53,7 @@ export class JwtAuthGuard implements CanActivate {
       if (!payload) {
         throw new ForbiddenException('Token not valid');
       }
-      request.user = payload.id;
+      request.user = payload;
 
       return true;
     } catch (error) {
