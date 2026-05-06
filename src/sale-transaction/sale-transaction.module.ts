@@ -9,12 +9,20 @@ import {
 import { LoggerService } from '@common/logs/logger.service';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
+import { AgencyModule } from '@agency/agency.module';
+import { DepartmentModule } from '@department/department.module';
+import { EmployeeModule } from '@employee/employee.module';
+import { BankModule } from '@bank/bank.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: SalesTransaction.name, schema: SalesTransactionSchema },
     ]),
+    AgencyModule,
+    DepartmentModule,
+    EmployeeModule,
+    BankModule,
   ],
   providers: [
     SaleTransactionService,
