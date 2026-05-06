@@ -42,6 +42,12 @@ export class BankController {
     return await this.bankService.getAllBanks(paginationDto);
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get bank by ID' })
+  async findOne(@Param('id') id: string): Promise<BankResponseDto> {
+    return await this.bankService.getBankById(id);
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Updated bank by ID' })
   async update(

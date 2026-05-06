@@ -76,12 +76,6 @@ export class BankService {
     return this.mapToResponseDto(bank);
   }
 
-  private mapToResponseDto(user: any): BankResponseDto {
-    const response = new BankResponseDto();
-    response.content = user.toObject();
-    return response;
-  }
-
   async getAllBanks(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResponseDto<BankResponseDto>> {
@@ -123,5 +117,11 @@ export class BankService {
       info: 'SUCCESS',
       message: `Bank ${deletedBank.name} deleted successfully`,
     };
+  }
+
+  private mapToResponseDto(bank: any): BankResponseDto {
+    const response = new BankResponseDto();
+    response.content = bank.toObject();
+    return response;
   }
 }
