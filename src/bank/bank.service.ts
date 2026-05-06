@@ -25,12 +25,12 @@ export class BankService {
     let response: MessageResponse | null = null;
     try {
       const { name, accountNumber, accountName } = createBankDto;
-      if (!name || !accountNumber || !accountName) {
+      console.log(createBankDto);
+      if (!name) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: 'FAIL',
-          message:
-            'Missing required fields: name, accountNumber or accountName',
+          message: 'Missing required field: name',
         };
         return response;
       }
@@ -47,8 +47,6 @@ export class BankService {
 
       const newBank = new this.bankModel({
         name,
-        accountNumber,
-        accountName,
       });
 
       await newBank.save();
