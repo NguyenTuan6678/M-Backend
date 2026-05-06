@@ -12,7 +12,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { AgencyService } from './agency.service';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AgencyResponseDto } from './dto/agency.res';
 import { CreateAgencyDto } from './dto/create-agency.req';
 import {
@@ -22,6 +22,7 @@ import {
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { MessageResponse } from '@app-types/message.res';
 
+@ApiTags('Agency')
 @Controller('agencies')
 @UseGuards(JwtAuthGuard)
 export class AgencyController {
