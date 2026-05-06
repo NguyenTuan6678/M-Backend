@@ -110,6 +110,155 @@ export class SaleTransactionRepository {
     }
   }
 
+  async findByEmployeeId(
+    employeeId: string,
+  ): Promise<SalesTransactionDocument[]> {
+    try {
+      return await this.saleTransactionModel
+        .find({ employeeId })
+        .sort({ createdAt: -1 })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transactions by employee ID: ${error.message}`,
+        undefined,
+      );
+      throw error;
+    }
+  }
+
+  async findByAgencyId(agencyId: string): Promise<SalesTransactionDocument[]> {
+    try {
+      return await this.saleTransactionModel
+        .find({ agencyId })
+        .sort({ createdAt: -1 })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transactions by agency ID: ${error.message}`,
+        undefined,
+      );
+      throw error;
+    }
+  }
+
+  async findByDepartmentId(
+    departmentId: string,
+  ): Promise<SalesTransactionDocument[]> {
+    try {
+      return await this.saleTransactionModel
+        .find({ departmentId })
+        .sort({ createdAt: -1 })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transactions by department ID: ${error.message}`,
+        undefined,
+      );
+      throw error;
+    }
+  }
+
+  async findPaidTransactions(): Promise<SalesTransactionDocument[]> {
+    try {
+      return await this.saleTransactionModel
+        .find({ isPaid: true })
+        .sort({ createdAt: -1 })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding paid sale transactions: ${error.message}`,
+        undefined,
+      );
+      throw error;
+    }
+  }
+
+  async findUnpaidTransactions(): Promise<SalesTransactionDocument[]> {
+    try {
+      return await this.saleTransactionModel
+        .find({ isPaid: false })
+        .sort({ createdAt: -1 })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding unpaid sale transactions: ${error.message}`,
+        undefined,
+      );
+      throw error;
+    }
+  }
+
+  async findByDateRange(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<SalesTransactionDocument[]> {
+    try {
+      return await this.saleTransactionModel
+        .find({
+          activationDate: {
+            $gte: startDate,
+            $lte: endDate,
+          },
+        })
+        .sort({ activationDate: -1 })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transactions by date range: ${error.message}`,
+        undefined,
+      );
+      throw error;
+    }
+  }
+
+  async findByTaxCode(taxCode: string): Promise<SalesTransactionDocument[]> {
+    try {
+      return await this.saleTransactionModel
+        .find({ taxCode })
+        .sort({ createdAt: -1 })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transactions by tax code: ${error.message}`,
+        undefined,
+      );
+      throw error;
+    }
+  }
+
+  async findByCompanyName(
+    companyName: string,
+  ): Promise<SalesTransactionDocument[]> {
+    try {
+      return await this.saleTransactionModel
+        .find({ companyName })
+        .sort({ createdAt: -1 })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transactions by company name: ${error.message}`,
+        undefined,
+      );
+      throw error;
+    }
+  }
+
+  async findByEmail(email: string): Promise<SalesTransactionDocument[]> {
+    try {
+      return await this.saleTransactionModel
+        .find({ email })
+        .sort({ createdAt: -1 })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transactions by email: ${error.message}`,
+        undefined,
+      );
+      throw error;
+    }
+  }
+
   async delete(id: string): Promise<SalesTransactionDocument | null> {
     try {
       return await this.saleTransactionModel.findByIdAndDelete(id).exec();
