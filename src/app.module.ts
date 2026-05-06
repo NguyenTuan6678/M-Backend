@@ -10,6 +10,7 @@ import { SaleTransactionModule } from '@transaction/sale-transaction.module';
 import { AgencyModule } from '@agency/agency.module';
 import { BankModule } from '@bank/bank.module';
 import { DepartmentModule } from '@department/department.module';
+import { EmployeeModule } from '@employee/employee.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { DepartmentModule } from '@department/department.module';
     AgencyModule,
     BankModule,
     DepartmentModule,
+    EmployeeModule,
     AuthModule,
   ],
   controllers: [AppController],

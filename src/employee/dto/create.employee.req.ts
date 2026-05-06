@@ -9,10 +9,6 @@ import {
 export class CreateEmployeeDto {
   @IsString()
   @IsNotEmpty()
-  code: string;
-
-  @IsString()
-  @IsNotEmpty()
   name: string;
 
   @IsEmail()
