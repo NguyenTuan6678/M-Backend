@@ -33,20 +33,31 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('M-Invoice API')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'authorization',
+    )
     .setDescription('The M-Invoice API')
     .setVersion('1.0')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory);
+  SwaggerModule.setup('api/docs', app, documentFactory);
 
   // Start server
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 4000;
   await app.listen(port);
 
   // Logging
   logger.log(`🚀 Server running on port ${port}`, 'Bootstrap');
   logger.log(`📍 MongoDB: ${process.env.MONGODB_URI}`, 'Bootstrap');
-  logger.log(`📜 Swagger UI: http://localhost:${port}/api`, 'Bootstrap');
+  logger.log(`📜 Swagger UI: http://localhost:${port}/api/docs`, 'Bootstrap');
 
   if (module.hot) {
     module.hot.accept();
