@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -17,9 +18,11 @@ import {
   PaginationDto,
 } from '@common/dto/pagination.dto';
 import { SaleTransactionResponseDTO } from '@module/sale-transaction/dto/sale-transaction.res';
+import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 
-@ApiTags('sale-transaction')
+@ApiTags('Sale Transaction')
 @Controller('sale-transaction')
+@UseGuards(JwtAuthGuard)
 export class SaleTransactionController {
   constructor(
     private readonly saleTransactionService: SaleTransactionService,
