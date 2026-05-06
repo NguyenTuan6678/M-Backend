@@ -1,22 +1,16 @@
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateBankDto {
+  @ApiProperty({ example: 'Vietcombank', description: 'Bank name' })
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @IsString()
-  @IsOptional()
-  accountNumber?: string;
-
-  @IsString()
-  @IsOptional()
-  accountName?: string;
-
-  @IsString()
-  @IsOptional()
-  branch?: string;
-
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Whether the bank is active',
+  })
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;

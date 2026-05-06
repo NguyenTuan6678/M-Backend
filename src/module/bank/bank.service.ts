@@ -24,7 +24,7 @@ export class BankService {
   async createBank(createBankDto: CreateBankDto): Promise<BankResponseDto> {
     let response: MessageResponse | null = null;
     try {
-      const { name, accountNumber, accountName } = createBankDto;
+      const { name } = createBankDto;
       console.log(createBankDto);
       if (!name) {
         response = {

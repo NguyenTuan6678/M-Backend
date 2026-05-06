@@ -7,15 +7,6 @@ export class Bank {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ unique: true })
-  accountNumber?: string;
-
-  @Prop()
-  accountName?: string;
-
-  @Prop()
-  branch?: string;
-
   @Prop({ default: true })
   isActive: boolean;
 }
