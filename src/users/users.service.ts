@@ -10,7 +10,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '@schemas/users.schema';
 import { Model } from 'mongoose';
-import { ERROR_RES } from '@common/constants/error.const';
+import { ERROR_RES, ERROR_INFO } from '@common/constants/error.const';
 import { MessageResponse } from '@app-types/message.res';
 import { Role } from '@utils/role.enum';
 
@@ -22,14 +22,26 @@ export class UsersService {
     private readonly logger: LoggerService,
   ) {}
 
-  async createUser(createUserDto: CreateUsersDTO): Promise<UsersResponseDTO> {
+  async createUser(
+    createUserDto: CreateUsersDTO,
+    currentUser: { id: string; username: string; role: Role },
+  ): Promise<UsersResponseDTO> {
     let response: MessageResponse | null = null;
     try {
+      if (currentUser.role !== Role.ADMIN) {
+        response = {
+          code: ERROR_RES.FORBIDDEN_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Only ADMIN can create user accounts',
+        };
+        return response;
+      }
+
       const { username, password, role } = createUserDto;
       if (!username || !password) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
+          info: ERROR_INFO.FAIL,
           message: 'Missing required fields: username or password',
         };
         return response;
@@ -39,7 +51,7 @@ export class UsersService {
       if (userRole === Role.ADMIN) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
+          info: ERROR_INFO.FAIL,
           message: 'You cannot create admin user',
         };
         return response;
