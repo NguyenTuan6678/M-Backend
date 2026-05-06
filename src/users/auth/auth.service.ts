@@ -13,6 +13,7 @@ import { LoginRes } from '@users/auth/dto/login.res';
 import { comparePassword } from '@utils/validate-password';
 import { RefreshTokenDto } from '@users/auth/dto/refresh-token.req';
 import { LoggerService } from '@common/logs/logger.service';
+import { Role } from '@utils/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -69,7 +70,7 @@ export class AuthService {
     let response: MessageResponse | null = null;
     try {
       const { username, password, role } = registerAccountDTO;
-      if (!username || !password || !role) {
+      if (!username || !password) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
@@ -103,10 +104,12 @@ export class AuthService {
         return response;
       }
 
+      const adminRole = role ?? Role.ADMIN;
+
       const newAdmin = new this.userModal({
         username,
         password,
-        role,
+        role: adminRole,
       });
 
       await newAdmin.save();
@@ -156,7 +159,7 @@ export class AuthService {
       }
 
       const isMatch = await comparePassword(password, admin.password);
-      this.logger.log(`Password match result: ${isMatch}`);
+      // this.logger.log(`Password match result: ${isMatch}`);
 
       if (!isMatch) {
         response = {
