@@ -46,6 +46,10 @@ export class SaleTransactionController {
 
   @Get()
   @ApiOperation({ summary: 'Get a paginated list of sale transactions' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns paginated sale transactions.',
+  })
   async getAllSaleTransactions(
     @Query(ValidationPipe) paginationDto: PaginationDto,
   ): Promise<PaginatedResponseDto<SaleTransactionResponseDTO>> {
@@ -56,12 +60,18 @@ export class SaleTransactionController {
 
   @Get('stats')
   @ApiOperation({ summary: 'Get sale transaction statistics' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns sale transaction statistics.',
+  })
   async getSaleTransactionStats(): Promise<{ totalTransactions: number }> {
     return await this.saleTransactionService.getSaleTransactionStats();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get sale transaction by ID' })
+  @ApiResponse({ status: 200, description: 'Returns sale transaction by ID.' })
+  @ApiResponse({ status: 404, description: 'Sale transaction not found.' })
   async getSaleTransactionById(
     @Param('id') id: string,
   ): Promise<SaleTransactionResponseDTO> {
@@ -70,6 +80,10 @@ export class SaleTransactionController {
 
   @Get('employee/:employeeId')
   @ApiOperation({ summary: 'Get sale transactions by employee ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns sale transactions for an employee.',
+  })
   async getSaleTransactionsByEmployee(
     @Param('employeeId') employeeId: string,
   ): Promise<SaleTransactionResponseDTO[]> {
@@ -80,6 +94,10 @@ export class SaleTransactionController {
 
   @Get('agency/:agencyId')
   @ApiOperation({ summary: 'Get sale transactions by agency ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns sale transactions for an agency.',
+  })
   async getSaleTransactionsByAgency(
     @Param('agencyId') agencyId: string,
   ): Promise<SaleTransactionResponseDTO[]> {
@@ -90,6 +108,10 @@ export class SaleTransactionController {
 
   @Get('department/:departmentId')
   @ApiOperation({ summary: 'Get sale transactions by department ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns sale transactions for a department.',
+  })
   async getSaleTransactionsByDepartment(
     @Param('departmentId') departmentId: string,
   ): Promise<SaleTransactionResponseDTO[]> {
@@ -100,18 +122,30 @@ export class SaleTransactionController {
 
   @Get('paid')
   @ApiOperation({ summary: 'Get all paid sale transactions' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns all paid sale transactions.',
+  })
   async getPaidSaleTransactions(): Promise<SaleTransactionResponseDTO[]> {
     return await this.saleTransactionService.getPaidSaleTransactions();
   }
 
   @Get('unpaid')
   @ApiOperation({ summary: 'Get all unpaid sale transactions' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns all unpaid sale transactions.',
+  })
   async getUnpaidSaleTransactions(): Promise<SaleTransactionResponseDTO[]> {
     return await this.saleTransactionService.getUnpaidSaleTransactions();
   }
 
   @Get('search/date-range')
   @ApiOperation({ summary: 'Get sale transactions by date range' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns sale transactions within a date range.',
+  })
   async getSaleTransactionsByDateRange(
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
@@ -124,6 +158,10 @@ export class SaleTransactionController {
 
   @Get('search/tax-code')
   @ApiOperation({ summary: 'Get sale transactions by tax code' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns sale transactions for a tax code.',
+  })
   async getSaleTransactionsByTaxCode(
     @Query('taxCode') taxCode: string,
   ): Promise<SaleTransactionResponseDTO[]> {
@@ -134,6 +172,10 @@ export class SaleTransactionController {
 
   @Get('search/company-name')
   @ApiOperation({ summary: 'Get sale transactions by company name' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns sale transactions for a company name.',
+  })
   async getSaleTransactionsByCompanyName(
     @Query('companyName') companyName: string,
   ): Promise<SaleTransactionResponseDTO[]> {
@@ -144,6 +186,10 @@ export class SaleTransactionController {
 
   @Get('search/email')
   @ApiOperation({ summary: 'Get sale transactions by email' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns sale transactions for an email address.',
+  })
   async getSaleTransactionsByEmail(
     @Query('email') email: string,
   ): Promise<SaleTransactionResponseDTO[]> {
