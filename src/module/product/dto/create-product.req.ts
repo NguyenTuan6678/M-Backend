@@ -9,36 +9,32 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateProductDto {
-  @ApiProperty({ example: 'Basic Plan', description: 'Product name' })
+  @ApiProperty({ example: 'HH001', description: 'Product code' })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  inv_itemCode: string;
 
-  @ApiProperty({ example: 100, description: 'Product price' })
-  @Type(() => Number)
-  @IsNumber()
-  price: number;
-
-  @ApiProperty({ example: 0.1, description: 'Product tax rate (decimal)' })
-  @Type(() => Number)
-  @IsNumber()
-  taxRate: number;
-
-  @ApiPropertyOptional({ example: 'ACCT001', description: 'Accounting code' })
+  @ApiProperty({ example: 'Basic Plan', description: 'Product name' })
   @IsString()
   @IsOptional()
-  accountCode?: string;
+  inv_itemName: string;
 
-  @ApiPropertyOptional({
-    example: 'Monthly subscription plan',
-    description: 'Product description',
+  @ApiPropertyOptional({ example: 'Phan', description: 'Product unit code' })
+  @IsString()
+  @IsOptional()
+  inv_unitCode?: string;
+
+  @ApiProperty({ example: 245000, description: 'Product price' })
+  @Type(() => Number)
+  @IsOptional()
+  @IsNumber()
+  inv_unitPrice: number;
+
+  @ApiProperty({
+    example: '8',
+    description: 'Product tax code',
   })
   @IsString()
-  @IsOptional()
-  description?: string;
-
-  @ApiPropertyOptional({ example: true, description: 'Is the product active?' })
-  @IsBoolean()
-  @IsOptional()
-  isActive?: boolean;
+  @IsNotEmpty()
+  ma_thue?: string;
 }
