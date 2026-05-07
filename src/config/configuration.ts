@@ -13,6 +13,9 @@ interface AppConfig {
   logging: {
     level: string;
   };
+  mInvoiceToken: {
+    mToken: string;
+  };
 }
 
 export default registerAs<AppConfig>('app', () => ({
@@ -27,5 +30,8 @@ export default registerAs<AppConfig>('app', () => ({
   },
   logging: {
     level: process.env.LOG_LEVEL || 'debug',
+  },
+  mInvoiceToken: {
+    mToken: process.env.MINVOICE_RECEIPT_TOKEN || 'ywuigeiuaehgawgeage',
   },
 }));
