@@ -12,6 +12,8 @@ import { BankModule } from './module/bank/bank.module';
 import { DepartmentModule } from './module/department/department.module';
 import { EmployeeModule } from './module/employee/employee.module';
 import { ProductModule } from './module/product/product.module';
+import { MInvoiceReceiptGetModule } from './api/m-invoice-receipt-get/m-invoice-receipt-get.module';
+import { MInvoiceReceptPostModule } from './api/m-invoice-recept-post/m-invoice-recept-post.module';
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { ProductModule } from './module/product/product.module';
     EmployeeModule,
     ProductModule,
     AuthModule,
+    MInvoiceReceiptGetModule,
+    MInvoiceReceptPostModule,
   ],
   controllers: [AppController],
   providers: [AppService],
