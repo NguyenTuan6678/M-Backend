@@ -17,7 +17,7 @@ export class ProductRepository {
       const newProduct = new this.productModel(createProductDto);
       const savedProduct = await newProduct.save();
       this.logger.log(
-        `Product created: ${savedProduct.name}`,
+        `Product created: ${savedProduct.inv_itemCode}`,
         'ProductRepository',
       );
       return savedProduct;
@@ -84,7 +84,7 @@ export class ProductRepository {
         .exec();
       if (deletedProduct) {
         this.logger.log(
-          `Product deleted: ${deletedProduct.name}`,
+          `Product deleted: ${deletedProduct.inv_itemCode}`,
           'ProductRepository',
         );
       }

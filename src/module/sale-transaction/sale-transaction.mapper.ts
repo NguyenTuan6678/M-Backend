@@ -21,22 +21,21 @@ type PopulatedSalesTransaction = Omit<SalesTransaction, 'items'> & {
 export function mapTransactionToInvoice(
   transaction: PopulatedSalesTransaction,
 ): CreateInvoiceDto {
-  // Map mỗi item trong transaction sang InvoiceItemDataDto
-  // capitalPrice, totalSalary, accountingAccountCode chỉ lưu nội bộ — không đưa vào invoice
   const invoiceItems: InvoiceItemDataDto[] = transaction.items.map((item) => {
     const product = item.productId;
-    const vatAmount = item.revenue * (product.taxRate / 100);
+    const vatAmount = item.revenue;
 
     return {
-      inv_itemCode: product.accountCode,
-      inv_itemName: product.name,
-      inv_unitPrice: product.price,
+      inv_itemCode: product.inv_itemCode,
+      inv_itemName: product.inv_itemName,
+      inv_unitPrice: product.inv_unitPrice,
+      inv_unitCode: product.inv_unitCode,
       inv_quantity: transaction.inv_quantity,
       inv_discountPercentage: transaction.inv_discountPercentage,
       inv_discountAmount: transaction.inv_discountAmount,
       inv_TotalAmountWithoutVat: item.revenue,
       inv_vatAmount: vatAmount,
-      inv_TotalAmount: item.revenue + vatAmount,
+      inv_TotalAmount: item.revenue,
     };
   });
 

@@ -19,7 +19,7 @@ export class EmployeeRepository {
       const newEmployee = new this.employeeModel(createEmployeeDto);
       const savedEmployee = await newEmployee.save();
       this.logger.log(
-        `Employee created: ${savedEmployee.name}`,
+        `Employee created: ${savedEmployee.employeeName}`,
         'BankRepository',
       );
       return savedEmployee;
@@ -80,7 +80,7 @@ export class EmployeeRepository {
         .exec();
       if (deletedEmployee) {
         this.logger.log(
-          `Employee deleted: ${deletedEmployee.name}`,
+          `Employee deleted: ${deletedEmployee.employeeName}`,
           'EmployeeRepository',
         );
       }

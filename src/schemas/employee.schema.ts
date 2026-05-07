@@ -6,16 +6,16 @@ export type EmployeeDocument = Employee & Document;
 @Schema({ timestamps: true })
 export class Employee {
   @Prop({ required: true })
-  name: string;
+  employeeName: string;
 
   @Prop({ unique: true })
-  email?: string;
+  employeeEmail?: string;
 
   @Prop({ unique: true })
-  phone?: string;
+  employeePhone?: string;
 
   @Prop({ type: Types.ObjectId, ref: 'Department' })
-  departmentId: string;
+  departmentId: Types.ObjectId;
 
   @Prop({ default: true })
   isActive: boolean;

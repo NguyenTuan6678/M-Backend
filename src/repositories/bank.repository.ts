@@ -16,7 +16,10 @@ export class BankRepository {
     try {
       const newBank = new this.bankModel(createBankDto);
       const savedBank = await newBank.save();
-      this.logger.log(`Bank created: ${savedBank.name}`, 'BankRepository');
+      this.logger.log(
+        `Bank created: ${savedBank.inv_buyerBankName}`,
+        'BankRepository',
+      );
       return savedBank;
     } catch (error: any) {
       this.logger.error(`Error creating bank: ${error.message}`, undefined);
@@ -72,7 +75,10 @@ export class BankRepository {
     try {
       const deletedBank = await this.bankModel.findByIdAndDelete(id).exec();
       if (deletedBank) {
-        this.logger.log(`Bank deleted: ${deletedBank.name}`, 'BankRepository');
+        this.logger.log(
+          `Bank deleted: ${deletedBank.inv_buyerBankName}`,
+          'BankRepository',
+        );
       }
       return deletedBank;
     } catch (error: any) {

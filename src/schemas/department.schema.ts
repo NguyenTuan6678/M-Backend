@@ -6,10 +6,10 @@ export type DepartmentDocument = Department & Document;
 @Schema({ timestamps: true })
 export class Department {
   @Prop({ required: true })
-  name: string;
+  departmentName: string;
 
   @Prop()
-  description?: string;
+  departmentDescription?: string;
 
   @Prop({ default: true })
   isActive: boolean;

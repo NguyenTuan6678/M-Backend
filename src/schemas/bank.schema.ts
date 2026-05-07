@@ -5,7 +5,7 @@ export type BankDocument = Bank & Document;
 @Schema({ timestamps: true })
 export class Bank {
   @Prop({ required: true })
-  name: string;
+  inv_buyerBankName: string;
 
   @Prop({ default: true })
   isActive: boolean;

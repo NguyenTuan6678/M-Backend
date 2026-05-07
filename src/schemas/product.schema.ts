@@ -6,19 +6,19 @@ export type ProductDocument = Product & Document;
 @Schema({ timestamps: true })
 export class Product {
   @Prop({ required: true })
-  name: string;
-
-  @Prop({ required: true })
-  price: number;
-
-  @Prop({ required: true })
-  taxRate: number;
+  inv_itemCode: string;
 
   @Prop()
-  accountCode?: string;
+  inv_itemName: string;
 
   @Prop()
-  description?: string;
+  inv_unitCode: string;
+
+  @Prop()
+  inv_unitPrice: number;
+
+  @Prop()
+  ma_thue: string;
 
   @Prop({ default: true })
   isActive: boolean;

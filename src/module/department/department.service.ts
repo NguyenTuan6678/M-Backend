@@ -27,8 +27,8 @@ export class DepartmentService {
   ): Promise<DepartmentResponseDto> {
     let response: MessageResponse | null = null;
     try {
-      const { name, description } = createDepartmentDto;
-      if (!name) {
+      const { departmentName, departmentDescription } = createDepartmentDto;
+      if (!departmentName) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: 'FAIL',
@@ -37,7 +37,9 @@ export class DepartmentService {
         return response;
       }
 
-      const duplicatedDepartment = await this.departmentModel.findOne({ name });
+      const duplicatedDepartment = await this.departmentModel.findOne({
+        departmentName,
+      });
       if (duplicatedDepartment) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
@@ -48,8 +50,8 @@ export class DepartmentService {
       }
 
       const newDepartment = new this.departmentModel({
-        name,
-        description,
+        departmentName,
+        departmentDescription,
       });
 
       await newDepartment.save();
@@ -123,7 +125,7 @@ export class DepartmentService {
     return {
       code: ERROR_RES.SUCCESS.statusCode,
       info: 'SUCCESS',
-      message: `Department ${deletedDepartment.name} deleted successfully`,
+      message: `Department ${deletedDepartment.departmentName} deleted successfully`,
     };
   }
 

@@ -24,9 +24,9 @@ export class BankService {
   async createBank(createBankDto: CreateBankDto): Promise<BankResponseDto> {
     let response: MessageResponse | null = null;
     try {
-      const { name } = createBankDto;
+      const { inv_buyerBankName } = createBankDto;
       console.log(createBankDto);
-      if (!name) {
+      if (!inv_buyerBankName) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: 'FAIL',
@@ -35,7 +35,9 @@ export class BankService {
         return response;
       }
 
-      const duplicatedBank = await this.bankModel.findOne({ name });
+      const duplicatedBank = await this.bankModel.findOne({
+        inv_buyerBankName,
+      });
       if (duplicatedBank) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
@@ -46,7 +48,7 @@ export class BankService {
       }
 
       const newBank = new this.bankModel({
-        name,
+        inv_buyerBankName,
       });
 
       await newBank.save();
@@ -113,7 +115,7 @@ export class BankService {
     return {
       code: ERROR_RES.SUCCESS.statusCode,
       info: 'SUCCESS',
-      message: `Bank ${deletedBank.name} deleted successfully`,
+      message: `Bank ${deletedBank.inv_buyerBankName} deleted successfully`,
     };
   }
 

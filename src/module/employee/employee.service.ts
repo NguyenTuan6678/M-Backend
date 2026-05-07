@@ -26,8 +26,8 @@ export class EmployeeService {
   ): Promise<EmployeeResponseDto> {
     let response: MessageResponse | null = null;
     try {
-      const { name, email, phone } = createEmployeeDto;
-      if (!name) {
+      const { employeeName, employeeEmail, employeePhone } = createEmployeeDto;
+      if (!employeeName) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: 'FAIL',
@@ -36,7 +36,9 @@ export class EmployeeService {
         return response;
       }
 
-      const duplicatedEmployee = await this.employeeModel.findOne({ name });
+      const duplicatedEmployee = await this.employeeModel.findOne({
+        employeeName,
+      });
       if (duplicatedEmployee) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
@@ -47,9 +49,9 @@ export class EmployeeService {
       }
 
       const newEmployee = new this.employeeModel({
-        name,
-        email,
-        phone,
+        employeeName,
+        employeeEmail,
+        employeePhone,
       });
 
       await newEmployee.save();
@@ -123,7 +125,7 @@ export class EmployeeService {
     return {
       code: ERROR_RES.SUCCESS.statusCode,
       info: 'SUCCESS',
-      message: `Employee ${deletedEmployee.name} deleted successfully`,
+      message: `Employee ${deletedEmployee.employeeName} deleted successfully`,
     };
   }
 

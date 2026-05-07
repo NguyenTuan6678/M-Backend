@@ -13,6 +13,8 @@ import { DepartmentRepository } from '@repositories/department.repository';
 import { EmployeeRepository } from '@repositories/employee.repository';
 import { BankRepository } from '@repositories/bank.repository';
 import { ProductRepository } from '@repositories/product.repository';
+import { mapTransactionToInvoice } from '@module/sale-transaction/sale-transaction.mapper';
+import { CreateInvoiceDto } from '../../api/m-invoice-receipt-post/dto/send-receipt.req';
 
 @Injectable()
 export class SaleTransactionService {
@@ -27,11 +29,11 @@ export class SaleTransactionService {
   ) {}
 
   private async validateRelatedEntities(
-    agencyId: string,
-    departmentId: string,
-    employeeId: string,
-    bankId: string,
-    items: { productId: string }[],
+    agencyId: string | undefined,
+    departmentId: string | undefined,
+    employeeId: string | undefined,
+    bankId: string | undefined,
+    items: { productId?: string }[],
   ): Promise<string[]> {
     const promises: Promise<any>[] = [];
     const entityNames: string[] = [];
@@ -56,9 +58,12 @@ export class SaleTransactionService {
       entityNames.push('Bank');
     }
 
-    if (items?.length) {
-      const productIds = items.map((i) => i.productId);
+    // productId là optional — chỉ validate những item có productId
+    const productIds = items
+      ?.map((i) => i.productId)
+      .filter((id): id is string => !!id);
 
+    if (productIds?.length) {
       promises.push(this.productRepository.findByIds(productIds));
       entityNames.push('Products');
     }
@@ -66,7 +71,6 @@ export class SaleTransactionService {
     const results = await Promise.all(promises);
 
     const missingEntities: string[] = [];
-
     results.forEach((result, index) => {
       if (!result || (Array.isArray(result) && result.length === 0)) {
         missingEntities.push(entityNames[index]);
@@ -82,14 +86,6 @@ export class SaleTransactionService {
     try {
       const { agencyId, departmentId, employeeId, bankId, items } =
         createSaleTransactionDto;
-
-      if (!agencyId) {
-        return {
-          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: ERROR_INFO.FAIL,
-          message: 'The field agencyId is required',
-        };
-      }
 
       const missingEntities = await this.validateRelatedEntities(
         agencyId,
@@ -111,6 +107,7 @@ export class SaleTransactionService {
         await this.saleTransactionRepository.createSaleTransaction(
           createSaleTransactionDto,
         );
+
       if (!createdTransaction) {
         return {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
@@ -118,6 +115,7 @@ export class SaleTransactionService {
           message: 'Missing required fields or creation failed',
         };
       }
+
       return {
         content: createdTransaction,
         code: ERROR_RES.SUCCESS.statusCode,
@@ -189,7 +187,6 @@ export class SaleTransactionService {
     } catch (error: any) {
       this.logger.error(
         `Error in SaleTransactionService.deleteSaleTransaction: ${error.message}`,
-        undefined,
       );
       throw error;
     }
@@ -202,7 +199,6 @@ export class SaleTransactionService {
     } catch (error: any) {
       this.logger.error(
         `Error in SaleTransactionService.getSaleTransactionStats: ${error.message}`,
-        undefined,
       );
       throw error;
     }
@@ -214,13 +210,10 @@ export class SaleTransactionService {
     try {
       const transactions =
         await this.saleTransactionRepository.findByEmployeeId(employeeId);
-      return transactions.map((transaction) =>
-        this.mapToResponseDto(transaction),
-      );
+      return transactions.map((t) => this.mapToResponseDto(t));
     } catch (error: any) {
       this.logger.error(
         `Error in SaleTransactionService.getSaleTransactionsByEmployee: ${error.message}`,
-        undefined,
       );
       throw error;
     }
@@ -232,13 +225,10 @@ export class SaleTransactionService {
     try {
       const transactions =
         await this.saleTransactionRepository.findByAgencyId(agencyId);
-      return transactions.map((transaction) =>
-        this.mapToResponseDto(transaction),
-      );
+      return transactions.map((t) => this.mapToResponseDto(t));
     } catch (error: any) {
       this.logger.error(
         `Error in SaleTransactionService.getSaleTransactionsByAgency: ${error.message}`,
-        undefined,
       );
       throw error;
     }
@@ -250,45 +240,10 @@ export class SaleTransactionService {
     try {
       const transactions =
         await this.saleTransactionRepository.findByDepartmentId(departmentId);
-      return transactions.map((transaction) =>
-        this.mapToResponseDto(transaction),
-      );
+      return transactions.map((t) => this.mapToResponseDto(t));
     } catch (error: any) {
       this.logger.error(
         `Error in SaleTransactionService.getSaleTransactionsByDepartment: ${error.message}`,
-        undefined,
-      );
-      throw error;
-    }
-  }
-
-  async getPaidSaleTransactions(): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findPaidTransactions();
-      return transactions.map((transaction) =>
-        this.mapToResponseDto(transaction),
-      );
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getPaidSaleTransactions: ${error.message}`,
-        undefined,
-      );
-      throw error;
-    }
-  }
-
-  async getUnpaidSaleTransactions(): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findUnpaidTransactions();
-      return transactions.map((transaction) =>
-        this.mapToResponseDto(transaction),
-      );
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getUnpaidSaleTransactions: ${error.message}`,
-        undefined,
       );
       throw error;
     }
@@ -303,67 +258,31 @@ export class SaleTransactionService {
         startDate,
         endDate,
       );
-      return transactions.map((transaction) =>
-        this.mapToResponseDto(transaction),
-      );
+      return transactions.map((t) => this.mapToResponseDto(t));
     } catch (error: any) {
       this.logger.error(
         `Error in SaleTransactionService.getSaleTransactionsByDateRange: ${error.message}`,
-        undefined,
       );
       throw error;
     }
   }
 
-  async getSaleTransactionsByTaxCode(
-    taxCode: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
+  // Fetch transaction, populate product data, map sang CreateInvoiceDto để gửi hoá đơn
+  async buildInvoicePayload(transactionId: string): Promise<CreateInvoiceDto> {
     try {
-      const transactions =
-        await this.saleTransactionRepository.findByTaxCode(taxCode);
-      return transactions.map((transaction) =>
-        this.mapToResponseDto(transaction),
-      );
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByTaxCode: ${error.message}`,
-        undefined,
-      );
-      throw error;
-    }
-  }
+      const transaction =
+        await this.saleTransactionRepository.findByIdWithPopulate(
+          transactionId,
+        );
 
-  async getSaleTransactionsByCompanyName(
-    companyName: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findByCompanyName(companyName);
-      return transactions.map((transaction) =>
-        this.mapToResponseDto(transaction),
-      );
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByCompanyName: ${error.message}`,
-        undefined,
-      );
-      throw error;
-    }
-  }
+      if (!transaction) {
+        throw new Error(`Transaction ${transactionId} not found`);
+      }
 
-  async getSaleTransactionsByEmail(
-    email: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findByEmail(email);
-      return transactions.map((transaction) =>
-        this.mapToResponseDto(transaction),
-      );
+      return mapTransactionToInvoice(transaction as any);
     } catch (error: any) {
       this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByEmail: ${error.message}`,
-        undefined,
+        `Error in SaleTransactionService.buildInvoicePayload: ${error.message}`,
       );
       throw error;
     }
@@ -371,7 +290,9 @@ export class SaleTransactionService {
 
   private mapToResponseDto(transaction: any): SaleTransactionResponseDTO {
     const response = new SaleTransactionResponseDTO();
-    response.content = transaction.toObject();
+    response.content = transaction.toObject
+      ? transaction.toObject()
+      : transaction;
     return response;
   }
 }

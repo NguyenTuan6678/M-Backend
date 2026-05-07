@@ -20,7 +20,7 @@ export class DepartmentRepository {
       const newDepartment = new this.departmentModel(createDepartmentDto);
       const savedDepartment = await newDepartment.save();
       this.logger.log(
-        `Department created: ${savedDepartment.name}`,
+        `Department created: ${savedDepartment.departmentName}`,
         `DepartmentRepository`,
       );
       return savedDepartment;
@@ -84,7 +84,7 @@ export class DepartmentRepository {
         .exec();
       if (deletedBank) {
         this.logger.log(
-          `Department deleted: ${deletedBank.name}`,
+          `Department deleted: ${deletedBank.departmentName}`,
           'DepartmentRepository',
         );
       }

@@ -26,8 +26,14 @@ export class ProductService {
   ): Promise<ProductResponseDto> {
     let response: MessageResponse | null = null;
     try {
-      const { name, price, taxRate } = createProductDto;
-      if (!name || !price || !taxRate) {
+      const {
+        inv_itemCode,
+        inv_itemName,
+        inv_unitCode,
+        inv_unitPrice,
+        ma_thue,
+      } = createProductDto;
+      if (!inv_itemCode || !ma_thue) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: 'FAIL',
@@ -36,7 +42,9 @@ export class ProductService {
         return response;
       }
 
-      const duplicatedProduct = await this.productModel.findOne({ name });
+      const duplicatedProduct = await this.productModel.findOne({
+        inv_itemCode,
+      });
       if (duplicatedProduct) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
@@ -47,10 +55,14 @@ export class ProductService {
       }
 
       const newProduct = new this.productModel({
-        name,
-        price,
-        taxRate,
+        inv_itemCode,
+        inv_itemName,
+        inv_unitCode,
+        inv_unitPrice,
+        ma_thue,
       });
+
+      console.log(newProduct);
 
       await newProduct.save();
 
@@ -116,7 +128,7 @@ export class ProductService {
     return {
       code: ERROR_RES.SUCCESS.statusCode,
       info: 'SUCCESS',
-      message: `Product ${deletedProduct.name} deleted successfully`,
+      message: `Product ${deletedProduct.inv_itemCode} deleted successfully`,
     };
   }
 

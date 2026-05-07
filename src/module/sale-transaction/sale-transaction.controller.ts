@@ -1,11 +1,13 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
   UseGuards,
   ValidationPipe,
@@ -36,14 +38,8 @@ export class SaleTransactionController {
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new sale transaction' })
-  @ApiResponse({
-    status: 201,
-    description: 'The sale transaction has been successfully created.',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad Request. Missing required fields or invalid data.',
-  })
+  @ApiResponse({ status: 201, description: 'Sale transaction created.' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
   @HttpCode(HttpStatus.CREATED)
   async createSaleTransaction(
     @Body(ValidationPipe) createSalesTransactionDto: CreateSalesTransactionDto,
@@ -52,6 +48,8 @@ export class SaleTransactionController {
       createSalesTransactionDto,
     );
   }
+
+  // --- Đặt các static route TRƯỚC route động :id để tránh NestJS match nhầm ---
 
   @Get()
   @ApiOperation({ summary: 'Get a paginated list of sale transactions' })
@@ -77,78 +75,6 @@ export class SaleTransactionController {
     return await this.saleTransactionService.getSaleTransactionStats();
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get sale transaction by ID' })
-  @ApiResponse({ status: 200, description: 'Returns sale transaction by ID.' })
-  @ApiResponse({ status: 404, description: 'Sale transaction not found.' })
-  async getSaleTransactionById(
-    @Param('id') id: string,
-  ): Promise<SaleTransactionResponseDTO> {
-    return await this.saleTransactionService.getSaleTransactionById(id);
-  }
-
-  @Get('employee/:employeeId')
-  @ApiOperation({ summary: 'Get sale transactions by employee ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns sale transactions for an employee.',
-  })
-  async getSaleTransactionsByEmployee(
-    @Param('employeeId') employeeId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    return await this.saleTransactionService.getSaleTransactionsByEmployee(
-      employeeId,
-    );
-  }
-
-  @Get('agency/:agencyId')
-  @ApiOperation({ summary: 'Get sale transactions by agency ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns sale transactions for an agency.',
-  })
-  async getSaleTransactionsByAgency(
-    @Param('agencyId') agencyId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    return await this.saleTransactionService.getSaleTransactionsByAgency(
-      agencyId,
-    );
-  }
-
-  @Get('department/:departmentId')
-  @ApiOperation({ summary: 'Get sale transactions by department ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns sale transactions for a department.',
-  })
-  async getSaleTransactionsByDepartment(
-    @Param('departmentId') departmentId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    return await this.saleTransactionService.getSaleTransactionsByDepartment(
-      departmentId,
-    );
-  }
-
-  @Get('paid')
-  @ApiOperation({ summary: 'Get all paid sale transactions' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns all paid sale transactions.',
-  })
-  async getPaidSaleTransactions(): Promise<SaleTransactionResponseDTO[]> {
-    return await this.saleTransactionService.getPaidSaleTransactions();
-  }
-
-  @Get('unpaid')
-  @ApiOperation({ summary: 'Get all unpaid sale transactions' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns all unpaid sale transactions.',
-  })
-  async getUnpaidSaleTransactions(): Promise<SaleTransactionResponseDTO[]> {
-    return await this.saleTransactionService.getUnpaidSaleTransactions();
-  }
-
   @Get('search/date-range')
   @ApiOperation({ summary: 'Get sale transactions by date range' })
   @ApiResponse({
@@ -165,43 +91,93 @@ export class SaleTransactionController {
     );
   }
 
-  @Get('search/tax-code')
-  @ApiOperation({ summary: 'Get sale transactions by tax code' })
+  @Get('by-employee/:employeeId')
+  @ApiOperation({ summary: 'Get sale transactions by employee ID' })
   @ApiResponse({
     status: 200,
-    description: 'Returns sale transactions for a tax code.',
+    description: 'Returns sale transactions for an employee.',
   })
-  async getSaleTransactionsByTaxCode(
-    @Query('taxCode') taxCode: string,
+  async getSaleTransactionsByEmployee(
+    @Param('employeeId') employeeId: string,
   ): Promise<SaleTransactionResponseDTO[]> {
-    return await this.saleTransactionService.getSaleTransactionsByTaxCode(
-      taxCode,
+    return await this.saleTransactionService.getSaleTransactionsByEmployee(
+      employeeId,
     );
   }
 
-  @Get('search/company-name')
-  @ApiOperation({ summary: 'Get sale transactions by company name' })
+  @Get('by-agency/:agencyId')
+  @ApiOperation({ summary: 'Get sale transactions by agency ID' })
   @ApiResponse({
     status: 200,
-    description: 'Returns sale transactions for a company name.',
+    description: 'Returns sale transactions for an agency.',
   })
-  async getSaleTransactionsByCompanyName(
-    @Query('companyName') companyName: string,
+  async getSaleTransactionsByAgency(
+    @Param('agencyId') agencyId: string,
   ): Promise<SaleTransactionResponseDTO[]> {
-    return await this.saleTransactionService.getSaleTransactionsByCompanyName(
-      companyName,
+    return await this.saleTransactionService.getSaleTransactionsByAgency(
+      agencyId,
     );
   }
 
-  @Get('search/email')
-  @ApiOperation({ summary: 'Get sale transactions by email' })
+  @Get('by-department/:departmentId')
+  @ApiOperation({ summary: 'Get sale transactions by department ID' })
   @ApiResponse({
     status: 200,
-    description: 'Returns sale transactions for an email address.',
+    description: 'Returns sale transactions for a department.',
   })
-  async getSaleTransactionsByEmail(
-    @Query('email') email: string,
+  async getSaleTransactionsByDepartment(
+    @Param('departmentId') departmentId: string,
   ): Promise<SaleTransactionResponseDTO[]> {
-    return await this.saleTransactionService.getSaleTransactionsByEmail(email);
+    return await this.saleTransactionService.getSaleTransactionsByDepartment(
+      departmentId,
+    );
+  }
+
+  // --- Route động :id luôn đặt sau tất cả static route ---
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get sale transaction by ID' })
+  @ApiResponse({ status: 200, description: 'Returns sale transaction by ID.' })
+  @ApiResponse({ status: 404, description: 'Sale transaction not found.' })
+  async getSaleTransactionById(
+    @Param('id') id: string,
+  ): Promise<SaleTransactionResponseDTO> {
+    return await this.saleTransactionService.getSaleTransactionById(id);
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update a sale transaction' })
+  @ApiResponse({ status: 200, description: 'Sale transaction updated.' })
+  @ApiResponse({ status: 404, description: 'Sale transaction not found.' })
+  async updateSaleTransaction(
+    @Param('id') id: string,
+    @Body(ValidationPipe) updateData: Partial<CreateSalesTransactionDto>,
+  ): Promise<SaleTransactionResponseDTO> {
+    return await this.saleTransactionService.updateSaleTransaction(
+      id,
+      updateData,
+    );
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a sale transaction' })
+  @ApiResponse({ status: 200, description: 'Sale transaction deleted.' })
+  @ApiResponse({ status: 404, description: 'Sale transaction not found.' })
+  async deleteSaleTransaction(
+    @Param('id') id: string,
+  ): Promise<{ message: string }> {
+    return await this.saleTransactionService.deleteSaleTransaction(id);
+  }
+
+  @Post(':id/send-receipt')
+  @ApiOperation({ summary: 'Build and send invoice payload for a transaction' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the mapped invoice payload.',
+  })
+  @ApiResponse({ status: 404, description: 'Sale transaction not found.' })
+  @HttpCode(HttpStatus.OK)
+  async sendReceipt(@Param('id') id: string) {
+    return await this.saleTransactionService.buildInvoicePayload(id);
   }
 }

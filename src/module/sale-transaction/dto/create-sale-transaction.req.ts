@@ -1,7 +1,5 @@
 import {
   IsArray,
-  IsBoolean,
-  IsDateString,
   IsEmail,
   IsMongoId,
   IsNotEmpty,
@@ -18,8 +16,9 @@ export class TransactionItemDto {
     example: '649a6f1e5f1234567890abd0',
     description: 'Product ID',
   })
+  @IsOptional()
   @IsMongoId()
-  productId: string;
+  productId?: string;
 
   @ApiProperty({ example: 100, description: 'Revenue' })
   @IsNumber()
@@ -238,80 +237,37 @@ export class CreateSalesTransactionDto {
   @IsNumber()
   inv_discountPercentage: number;
 
-  // @ApiProperty({
-  //   example: '649a6f1e5f1234567890abcd',
-  //   description: 'Agency ID',
-  // })
-  // @IsMongoId()
-  // agencyId: string;
+  @ApiPropertyOptional({
+    example: '649a6f1e5f1234567890abcd',
+    description: 'Agency ID',
+  })
+  @IsMongoId()
+  @IsOptional()
+  agencyId?: string;
 
-  // @ApiPropertyOptional({
-  //   example: '649a6f1e5f1234567890abce',
-  //   description: 'Department ID',
-  // })
-  // @IsMongoId()
-  // departmentId: string;
+  @ApiPropertyOptional({
+    example: '649a6f1e5f1234567890abce',
+    description: 'Department ID',
+  })
+  @IsMongoId()
+  @IsOptional()
+  departmentId?: string;
 
-  // @ApiPropertyOptional({
-  //   example: '649a6f1e5f1234567890abcf',
-  //   description: 'Employee ID',
-  // })
-  // @IsMongoId()
-  // employeeId: string;
+  @ApiPropertyOptional({
+    example: '649a6f1e5f1234567890abcf',
+    description: 'Employee ID',
+  })
+  @IsMongoId()
+  @IsOptional()
+  employeeId?: string;
 
-  // @ApiPropertyOptional({ example: 'TXN001', description: 'Tax code' })
-  // @IsString()
-  // @IsOptional()
-  // taxCode?: string;
-
-  // @ApiPropertyOptional({ example: 'Acme Co.', description: 'Company name' })
-  // @IsString()
-  // @IsOptional()
-  // companyName?: string;
-
-  // @ApiPropertyOptional({
-  //   example: 'user@example.com',
-  //   description: 'Customer email',
-  // })
-  // @IsEmail()
-  // @IsOptional()
-  // email?: string;
-
-  // @ApiPropertyOptional({
-  //   example: '123 Main St',
-  //   description: 'Customer address',
-  // })
-  // @IsString()
-  // @IsOptional()
-  // address?: string;
-
-  // @ApiPropertyOptional({
-  //   example: true,
-  //   description: 'Whether the transaction is paid',
-  // })
-  // @IsBoolean()
-  // @IsOptional()
-  // isPaid?: boolean;
-
-  // @ApiPropertyOptional({ example: 1000, description: 'Paid amount' })
-  // @Type(() => Number)
-  // @IsOptional()
-  // paidAmount?: number;
-
-  // @ApiPropertyOptional({
-  //   example: '2026-05-06T00:00:00.000Z',
-  //   description: 'Paid date',
-  // })
-  // @IsDateString()
-  // @IsOptional()
-  // paidDate?: string;
-
-  // @ApiPropertyOptional({
-  //   example: '649a6f1e5f1234567890abd0',
-  //   description: 'Bank ID',
-  // })
-  // @IsMongoId()
-  // bankId: string;
+  @ApiPropertyOptional({
+    example: '649a6f1e5f1234567890abd0',
+    description: 'Bank ID',
+  })
+  @IsMongoId()
+  @IsOptional()
+  bankId?: string;
 
   @ApiProperty({
     type: [TransactionItemDto],

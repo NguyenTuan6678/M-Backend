@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 
 export class LoginReqType {
-  @ApiProperty({ example: 'phuclh', description: 'username', type: String })
+  @ApiProperty({ example: 'tuanNd', description: 'username', type: String })
   @IsString()
   @IsNotEmpty()
   username: string;

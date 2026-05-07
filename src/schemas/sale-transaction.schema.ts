@@ -8,16 +8,16 @@ export class TransactionItem {
   productId: Types.ObjectId;
 
   @Prop()
-  price: number;
+  revenue: number;
 
   @Prop()
-  taxRate: number;
+  capitalPrice: number;
 
   @Prop()
-  quantity: number;
+  totalSalary: number;
 
   @Prop()
-  total: number;
+  accountingAccountCode: number;
 }
 
 @Schema({ timestamps: true })
@@ -25,38 +25,92 @@ export class SalesTransaction {
   @Prop()
   activationDate: Date;
 
+  @Prop()
+  inv_invoiceSeries: string;
+
+  @Prop()
+  inv_invoiceIssuedDate: string;
+
+  @Prop()
+  inv_currencyCode: string;
+
+  @Prop()
+  inv_exchangeRate: number;
+
+  @Prop()
+  so_benh_an: string;
+
+  @Prop()
+  inv_buyerDisplayName: string;
+
+  @Prop()
+  inv_buyerLegalName: string;
+
+  @Prop()
+  inv_buyerTaxCode: string;
+
+  @Prop()
+  inv_buyerAddressLine: string;
+
+  @Prop()
+  inv_buyerEmail: string;
+
+  @Prop()
+  inv_buyerBankAccount: string;
+
+  @Prop()
+  inv_buyerBankName: string;
+
+  @Prop()
+  inv_paymentMethodName: string;
+
+  @Prop()
+  inv_discountAmount: number;
+
+  @Prop()
+  inv_TotalAmountWithoutVAT: number;
+
+  @Prop()
+  inv_vatAmount: number;
+
+  @Prop()
+  inv_TotalAmount: number;
+
+  @Prop()
+  key_api: string;
+
+  @Prop()
+  cccdan: string;
+
+  @Prop()
+  so_hchieu: string;
+
+  @Prop()
+  mdvqhnsach_nmua: string;
+
+  @Prop()
+  ma_ch: string;
+
+  @Prop()
+  ten_ch: string;
+
+  @Prop()
+  inv_quantity: number;
+
+  @Prop()
+  inv_discountPercentage: number;
+
   @Prop({ type: Types.ObjectId, ref: 'Agency' })
-  agencyId: string;
+  agencyId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Department' })
-  departmentId: string;
+  departmentId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Employee' })
-  employeeId: string;
-
-  @Prop()
-  taxCode: string;
-
-  @Prop()
-  companyName: string;
-
-  @Prop()
-  email: string;
-
-  @Prop()
-  address: string;
-
-  @Prop({ default: false })
-  isPaid: boolean;
-
-  @Prop()
-  paidAmount: number;
-
-  @Prop()
-  paidDate: Date;
+  employeeId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Bank' })
-  bankId: string;
+  bankId: Types.ObjectId;
 
   @Prop({ type: [Object] })
   items: TransactionItem[];
