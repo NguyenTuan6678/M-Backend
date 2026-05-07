@@ -15,7 +15,7 @@ export class CreateEmployeeDto {
   })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  employeeName: string;
 
   @ApiPropertyOptional({
     example: 'employee@example.com',
@@ -23,7 +23,7 @@ export class CreateEmployeeDto {
   })
   @IsEmail()
   @IsOptional()
-  email?: string;
+  employeeEmail?: string;
 
   @ApiPropertyOptional({
     example: '0987654321',
@@ -31,7 +31,7 @@ export class CreateEmployeeDto {
   })
   @Matches(/^[0-9]{10}$/)
   @IsOptional()
-  phone?: string;
+  employeePhone?: string;
 
   @ApiPropertyOptional({
     example: '649a6f1e5f1234567890abce',

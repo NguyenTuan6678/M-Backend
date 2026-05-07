@@ -5,7 +5,7 @@ export class CreateBankDto {
   @ApiProperty({ example: 'Vietcombank', description: 'Bank name' })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  inv_buyerBankName: string;
 
   @ApiPropertyOptional({
     example: true,

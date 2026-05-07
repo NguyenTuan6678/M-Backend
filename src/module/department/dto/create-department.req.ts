@@ -5,7 +5,7 @@ export class CreateDepartmentDto {
   @ApiProperty({ example: 'Sales', description: 'Department name' })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  departmentName: string;
 
   @ApiPropertyOptional({
     example: 'Handles customer sales',
@@ -13,7 +13,7 @@ export class CreateDepartmentDto {
   })
   @IsString()
   @IsOptional()
-  description?: string;
+  departmentDescription?: string;
 
   @ApiPropertyOptional({
     example: true,
