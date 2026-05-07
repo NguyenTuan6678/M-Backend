@@ -13,7 +13,7 @@ import { DepartmentModule } from './module/department/department.module';
 import { EmployeeModule } from './module/employee/employee.module';
 import { ProductModule } from './module/product/product.module';
 import { MInvoiceReceiptGetModule } from './api/m-invoice-receipt-get/m-invoice-receipt-get.module';
-import { MInvoiceReceptPostModule } from './api/m-invoice-recept-post/m-invoice-recept-post.module';
+import { MInvoiceReceiptPostModule } from './api/m-invoice-receipt-post/m-invoice-receipt-post.module';
 
 @Module({
   imports: [
@@ -40,7 +40,7 @@ import { MInvoiceReceptPostModule } from './api/m-invoice-recept-post/m-invoice-
     ProductModule,
     AuthModule,
     MInvoiceReceiptGetModule,
-    MInvoiceReceptPostModule,
+    MInvoiceReceiptPostModule,
   ],
   controllers: [AppController],
   providers: [AppService],
