@@ -59,11 +59,12 @@ export class CreateSalesTransactionDto {
   @IsOptional()
   inv_invoiceSeries?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: '15/01/2026 12:00:00 SA',
-    description: 'Invoice date',
+    description:
+      'Invoice date — neu khong truyen se tu dong lay thoi diem hien tai',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   inv_invoiceIssuedDate?: string;
 

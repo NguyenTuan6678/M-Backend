@@ -31,8 +31,17 @@ export class SaleTransactionRepository {
         return null;
       }
 
+      // Format datetime hiện tại theo pattern DD/MM/YYYY HH:mm:ss SA/CH
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const hours = now.getHours();
+      const formattedNow = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(hours % 12 || 12)}:${pad(now.getMinutes())}:${pad(now.getSeconds())} ${hours < 12 ? 'SA' : 'CH'}`;
+
       const dataSubmit = {
         ...createSaleTransactionDto,
+        // Nếu không truyền inv_invoiceIssuedDate thì lấy thời điểm hiện tại
+        inv_invoiceIssuedDate:
+          createSaleTransactionDto.inv_invoiceIssuedDate ?? formattedNow,
         // Chỉ convert sang ObjectId nếu field tồn tại (tất cả là optional)
         ...(agencyId && { agencyId: new Types.ObjectId(agencyId) }),
         ...(departmentId && { departmentId: new Types.ObjectId(departmentId) }),
