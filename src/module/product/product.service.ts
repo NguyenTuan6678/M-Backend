@@ -1,9 +1,9 @@
-import { LoggerService } from '@common/logs/logger.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ProductRepository } from '@repositories/product.repository';
-import { Product } from '@schemas/product.schema';
 import { Model } from 'mongoose';
+import { ProductRepository } from '@repositories/product.repository';
+import { Product, ProductDocument } from '@schemas/product.schema';
+import { LoggerService } from '@common/logs/logger.service';
 import { CreateProductDto } from './dto/create-product.req';
 import { ProductResponseDto } from './dto/product.res';
 import { MessageResponse } from '@app-types/message.res';
@@ -16,75 +16,109 @@ import {
 @Injectable()
 export class ProductService {
   constructor(
-    @InjectModel(Product.name) private productModel: Model<ProductService>,
+    @InjectModel(Product.name) private productModel: Model<ProductDocument>,
     private readonly productRepository: ProductRepository,
     private readonly logger: LoggerService,
   ) {}
 
+  private calculateFields(
+    inv_unitPrice: number,
+    inv_quantity: number,
+    inv_discountAmount: number,
+    ma_thue: string,
+  ) {
+    const A = inv_unitPrice;
+    const B = inv_quantity;
+    const C = inv_discountAmount;
+    const D = parseFloat(ma_thue) / 100;
+
+    const G = A * B - C; // inv_TotalAmountWithoutVat
+    const F = G * D; // inv_vatAmount
+    const E = G + F; // inv_TotalAmount
+
+    return {
+      inv_TotalAmountWithoutVat: G,
+      inv_vatAmount: F,
+      inv_TotalAmount: E,
+    };
+  }
+
   async createProduct(
     createProductDto: CreateProductDto,
   ): Promise<ProductResponseDto> {
-    let response: MessageResponse | null = null;
     try {
       const {
         inv_itemCode,
         inv_itemName,
         inv_unitCode,
         inv_unitPrice,
+        inv_quantity,
+        inv_discountAmount,
         ma_thue,
       } = createProductDto;
+
       if (!inv_itemCode || !ma_thue) {
-        response = {
+        return {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: 'FAIL',
-          message: 'Missing required fields: name, price or taxRate',
+          message: 'Missing required fields: inv_itemCode or ma_thue',
         };
-        return response;
       }
 
       const duplicatedProduct = await this.productModel.findOne({
         inv_itemCode,
       });
       if (duplicatedProduct) {
-        response = {
+        return {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: 'FAIL',
-          message: 'Product already exists',
+          message: `Product with code ${inv_itemCode} already exists`,
         };
-        return response;
       }
+
+      const calculated = this.calculateFields(
+        inv_unitPrice,
+        inv_quantity,
+        inv_discountAmount,
+        ma_thue,
+      );
 
       const newProduct = new this.productModel({
         inv_itemCode,
         inv_itemName,
         inv_unitCode,
         inv_unitPrice,
+        inv_quantity,
+        inv_discountAmount,
         ma_thue,
+        ...calculated, // inv_TotalAmountWithoutVat, inv_vatAmount, inv_TotalAmount
       });
 
-      console.log(newProduct);
-
       await newProduct.save();
+      this.logger.log(`Product created: ${inv_itemCode}`, 'ProductService');
 
-      response = {
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: 'SUCCESS',
         message: 'Product created successfully',
       };
     } catch (error: any) {
-      response = {
+      this.logger.error(
+        `Error creating product: ${error.message}`,
+        'ProductService',
+      );
+      return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: 'FAIL',
         message: 'An error occurred while creating the product',
       };
     }
-    return response;
   }
 
   async getProductById(id: string): Promise<ProductResponseDto> {
     const product = await this.productRepository.findById(id);
     if (!product) {
-      throw new NotFoundException(`Product with ID ${id} dose not in database`);
+      throw new NotFoundException(`Product with ID ${id} does not exist`);
     }
     return this.mapToResponseDto(product);
   }
@@ -109,10 +143,29 @@ export class ProductService {
     id: string,
     updateData: Partial<CreateProductDto>,
   ): Promise<ProductResponseDto> {
-    const updatedProduct = await this.productRepository.update(id, updateData);
-    if (!updatedProduct) {
-      throw new NotFoundException(`Product with ID ${id} does not in database`);
+    // ✅ Nếu update bất kỳ field nào ảnh hưởng tính toán → recalculate
+    if (
+      updateData.inv_unitPrice !== undefined ||
+      updateData.inv_quantity !== undefined ||
+      updateData.inv_discountAmount !== undefined ||
+      updateData.ma_thue !== undefined
+    ) {
+      const existing = await this.productRepository.findById(id);
+      if (!existing)
+        throw new NotFoundException(`Product with ID ${id} does not exist`);
+
+      const calculated = this.calculateFields(
+        updateData.inv_unitPrice ?? existing.inv_unitPrice,
+        updateData.inv_quantity ?? existing.inv_quantity,
+        updateData.inv_discountAmount ?? existing.inv_discountAmount,
+        updateData.ma_thue ?? existing.ma_thue,
+      );
+      updateData = { ...updateData, ...calculated };
     }
+
+    const updatedProduct = await this.productRepository.update(id, updateData);
+    if (!updatedProduct)
+      throw new NotFoundException(`Product with ID ${id} does not exist`);
     return this.mapToResponseDto(updatedProduct);
   }
 
