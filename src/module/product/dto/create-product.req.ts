@@ -1,40 +1,43 @@
-import {
-  IsBoolean,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateProductDto {
-  @ApiProperty({ example: 'HH001', description: 'Product code' })
+  @ApiProperty({ example: 'HH001' })
   @IsString()
   @IsNotEmpty()
   inv_itemCode: string;
 
-  @ApiProperty({ example: 'Basic Plan', description: 'Product name' })
+  @ApiPropertyOptional({ example: 'Hang hoa 001' })
   @IsString()
   @IsOptional()
-  inv_itemName: string;
+  inv_itemName?: string;
 
-  @ApiPropertyOptional({ example: 'Phan', description: 'Product unit code' })
+  @ApiPropertyOptional({ example: 'Phan' })
   @IsString()
   @IsOptional()
   inv_unitCode?: string;
 
-  @ApiProperty({ example: 245000, description: 'Product price' })
+  @ApiProperty({ example: 245000, description: 'A — Giá sản phẩm' })
   @Type(() => Number)
-  @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
   inv_unitPrice: number;
 
-  @ApiProperty({
-    example: '8',
-    description: 'Product tax code',
-  })
+  @ApiProperty({ example: 2, description: 'B — Số lượng' })
+  @Type(() => Number)
+  @IsNotEmpty()
+  @IsNumber()
+  inv_quantity: number;
+
+  @ApiProperty({ example: 0, description: 'C — Chiết khấu' })
+  @Type(() => Number)
+  @IsNotEmpty()
+  @IsNumber()
+  inv_discountAmount: number;
+
+  @ApiProperty({ example: '8', description: 'D — Thuế suất (%)' })
   @IsString()
   @IsNotEmpty()
-  ma_thue?: string;
+  ma_thue: string;
 }
