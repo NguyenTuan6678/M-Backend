@@ -21,31 +21,29 @@ type PopulatedSalesTransaction = Omit<SalesTransaction, 'items'> & {
 export function mapTransactionToInvoice(
   transaction: PopulatedSalesTransaction,
 ): CreateInvoiceDto {
-  const invoiceItems: InvoiceItemDataDto[] = transaction.items.map((item) => {
-    const product = item.productId;
-    const vatAmount = item.revenue;
+  const invoiceItems: InvoiceItemDataDto[] = transaction.items.map(
+    (item, index) => {
+      const product = item.productId as any; // ✅ sau khi fix populate, đây là object đầy đủ
+      return {
+        tchat: 1,
+        stt_rec0: index + 1,
+        inv_itemCode: product.inv_itemCode,
+        inv_itemName: product.inv_itemName,
+        inv_unitCode: product.inv_unitCode,
+        inv_discountPercentage: transaction.inv_discountPercentage,
+        price: product.inv_unitPrice, // A
+        inv_quantity: product.inv_quantity, // B — ✅ lấy từ product
+        inv_discountAmount: product.inv_discountAmount, // C — ✅ lấy từ product
+        ma_thue: parseFloat(product.ma_thue), // D
+      };
+    },
+  );
 
-    return {
-      inv_itemCode: product.inv_itemCode,
-      inv_itemName: product.inv_itemName,
-      inv_unitPrice: product.inv_unitPrice,
-      inv_unitCode: product.inv_unitCode,
-      inv_quantity: transaction.inv_quantity,
-      inv_discountPercentage: transaction.inv_discountPercentage,
-      inv_discountAmount: transaction.inv_discountAmount,
-      inv_TotalAmountWithoutVat: item.revenue,
-      inv_vatAmount: vatAmount,
-      inv_TotalAmount: item.revenue,
-    };
-  });
+  console.log('raw item[0]:', JSON.stringify(transaction.items?.[0], null, 2));
 
-  const invoiceDetail: InvoiceDetailDto = {
-    data: invoiceItems,
-  };
+  const invoiceDetail: InvoiceDetailDto = { data: invoiceItems };
 
   const invoiceData: InvoiceDataDto = {
-    inv_invoiceSeries: transaction.inv_invoiceSeries,
-    inv_invoiceIssuedDate: transaction.inv_invoiceIssuedDate,
     inv_currencyCode: transaction.inv_currencyCode,
     inv_exchangeRate: transaction.inv_exchangeRate,
     so_benh_an: transaction.so_benh_an,
@@ -57,10 +55,6 @@ export function mapTransactionToInvoice(
     inv_buyerBankAccount: transaction.inv_buyerBankAccount,
     inv_buyerBankName: transaction.inv_buyerBankName,
     inv_paymentMethodName: transaction.inv_paymentMethodName,
-    inv_discountAmount: transaction.inv_discountAmount,
-    inv_TotalAmountWithoutVat: transaction.inv_TotalAmountWithoutVAT,
-    inv_vatAmount: transaction.inv_vatAmount,
-    inv_TotalAmount: transaction.inv_TotalAmount,
     key_api: transaction.key_api,
     cccdan: transaction.cccdan,
     so_hchieu: transaction.so_hchieu,
@@ -70,7 +64,5 @@ export function mapTransactionToInvoice(
     details: [invoiceDetail],
   };
 
-  return {
-    data: [invoiceData],
-  };
+  return { data: [invoiceData] };
 }
