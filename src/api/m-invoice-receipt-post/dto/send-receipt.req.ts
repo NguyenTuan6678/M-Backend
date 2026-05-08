@@ -1,7 +1,7 @@
 import {
   IsArray,
-  IsDateString,
   IsInt,
+  IsMongoId,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -12,118 +12,66 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class InvoiceItemDataDto {
-  @ApiPropertyOptional({ example: 1, description: 'Item type' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: 1 })
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   tchat?: number;
 
-  @ApiPropertyOptional({ example: 1, description: 'Record order' })
-  @IsNotEmpty()
-  @IsString()
-  stt_rec0?: string;
+  @ApiPropertyOptional({ example: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  stt_rec0?: number;
 
-  @ApiPropertyOptional({
-    example: 'SP001',
-    description: 'Item code',
-  })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: 'SP001' })
+  @IsOptional()
   @IsString()
   inv_itemCode?: string;
 
-  @ApiPropertyOptional({
-    example: 'Medical Service',
-    description: 'Item name',
-  })
+  @ApiPropertyOptional({ example: 'Medical Service' })
   @IsOptional()
   @IsString()
   inv_itemName?: string;
 
-  @ApiPropertyOptional({
-    example: 'PCS',
-    description: 'Unit code',
-  })
+  @ApiPropertyOptional({ example: 'PCS' })
   @IsOptional()
   @IsString()
   inv_unitCode?: string;
 
-  @ApiPropertyOptional({
-    example: 2,
-    description: 'Quantity',
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  inv_quantity?: number;
-
-  @ApiPropertyOptional({
-    example: 100,
-    description: 'Unit price',
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  inv_unitPrice?: number;
-
-  @ApiPropertyOptional({
-    example: 10,
-    description: 'Discount percentage',
-  })
+  @ApiProperty({ example: 100000, description: 'A — Giá sản phẩm' })
   @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  price: number;
+
+  @ApiProperty({ example: 2, description: 'B — Số lượng' })
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  inv_quantity: number;
+
+  @ApiProperty({ example: 10000, description: 'C — Chiết khấu' })
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  inv_discountAmount: number;
+
+  @ApiPropertyOptional({ example: 10 })
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   inv_discountPercentage?: number;
 
-  @ApiPropertyOptional({
-    example: 20,
-    description: 'Discount amount',
-  })
+  @ApiProperty({ example: 8, description: 'D — Thuế suất (%)' })
   @IsNotEmpty()
   @Type(() => Number)
   @IsNumber()
-  inv_discountAmount?: number;
-
-  @ApiPropertyOptional({
-    example: 180,
-    description: 'Total amount without VAT',
-  })
-  @IsNotEmpty()
-  @Type(() => Number)
-  @IsNumber()
-  inv_TotalAmountWithoutVat?: number;
-
-  @ApiPropertyOptional({
-    example: 10,
-    description: 'Tax code',
-  })
-  @IsNotEmpty()
-  @IsString()
-  ma_thue?: string;
-
-  @ApiPropertyOptional({
-    example: 18,
-    description: 'VAT amount',
-  })
-  @IsNotEmpty()
-  @Type(() => Number)
-  @IsNumber()
-  inv_vatAmount?: number;
-
-  @ApiPropertyOptional({
-    example: 198,
-    description: 'Total amount',
-  })
-  @IsNotEmpty()
-  @Type(() => Number)
-  @IsNumber()
-  inv_TotalAmount?: number;
+  ma_thue: number;
 }
 
 export class InvoiceDetailDto {
-  @ApiProperty({
-    type: [InvoiceItemDataDto],
-    description: 'Invoice item details',
-  })
+  @ApiProperty({ type: [InvoiceItemDataDto] })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => InvoiceItemDataDto)
@@ -131,199 +79,35 @@ export class InvoiceDetailDto {
 }
 
 export class InvoiceDataDto {
-  @ApiPropertyOptional({
-    example: 'AA/26E',
-    description: 'Invoice series',
-  })
-  @IsNotEmpty()
-  @IsString()
-  inv_invoiceSeries?: string;
-
-  @ApiPropertyOptional({
-    example: '15/01/2026 12:00:00 SA',
-    description: 'Invoice issued date',
-  })
-  @IsNotEmpty()
-  @IsString()
-  inv_invoiceIssuedDate?: string;
-
-  @ApiPropertyOptional({
-    example: 'VND',
-    description: 'Currency code',
-  })
-  @IsNotEmpty()
-  @IsString()
-  inv_currencyCode?: string;
-
-  @ApiPropertyOptional({
-    example: 1,
-    description: 'Exchange rate',
-  })
+  @IsOptional() @IsString() inv_invoiceSeries?: string;
+  @IsOptional() @IsString() KHHD?: string;
+  @IsOptional() @IsString() inv_invoiceIssuedDate?: string;
+  @IsOptional() @IsString() inv_currencyCode?: string;
+  @IsOptional() @Type(() => Number) @IsNumber() inv_exchangeRate?: number;
+  @IsOptional() @IsString() so_benh_an?: string;
+  @IsOptional() @IsString() inv_buyerDisplayName?: string;
+  @IsOptional() @IsString() inv_buyerLegalName?: string;
+  @IsOptional() @IsString() inv_buyerTaxCode?: string;
+  @IsOptional() @IsString() inv_buyerAddressLine?: string;
+  @IsOptional() @IsString() inv_buyerEmail?: string;
+  @IsOptional() @IsString() inv_buyerBankAccount?: string;
+  @IsOptional() @IsString() inv_buyerBankName?: string;
+  @IsOptional() @IsString() inv_paymentMethodName?: string;
+  @IsOptional() @Type(() => Number) @IsNumber() inv_discountAmount?: number;
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  inv_exchangeRate?: number;
-
-  @ApiPropertyOptional({
-    example: 'BA001',
-    description: 'Medical record number',
-  })
-  @IsOptional()
-  @IsString()
-  so_benh_an?: string;
-
-  @ApiPropertyOptional({
-    example: 'Nguyen Van A',
-    description: 'Buyer display name',
-  })
-  @IsOptional()
-  @IsString()
-  inv_buyerDisplayName?: string;
-
-  @ApiPropertyOptional({
-    example: 'Company ABC',
-    description: 'Buyer legal name',
-  })
-  @IsOptional()
-  @IsString()
-  inv_buyerLegalName?: string;
-
-  @ApiPropertyOptional({
-    example: '0123456789',
-    description: 'Buyer tax code',
-  })
-  @IsOptional()
-  @IsString()
-  inv_buyerTaxCode?: string;
-
-  @ApiPropertyOptional({
-    example: '123 Main Street',
-    description: 'Buyer address',
-  })
-  @IsOptional()
-  @IsString()
-  inv_buyerAddressLine?: string;
-
-  @ApiPropertyOptional({
-    example: 'user@example.com',
-    description: 'Buyer email',
-  })
-  @IsOptional()
-  @IsString()
-  inv_buyerEmail?: string;
-
-  @ApiPropertyOptional({
-    example: '123456789',
-    description: 'Buyer bank account',
-  })
-  @IsOptional()
-  @IsString()
-  inv_buyerBankAccount?: string;
-
-  @ApiPropertyOptional({
-    example: 'VCB',
-    description: 'Buyer bank name',
-  })
-  @IsOptional()
-  @IsString()
-  inv_buyerBankName?: string;
-
-  @ApiPropertyOptional({
-    example: 'Cash',
-    description: 'Payment method',
-  })
-  @IsNotEmpty()
-  @IsString()
-  inv_paymentMethodName?: string;
-
-  @ApiPropertyOptional({
-    example: 10,
-    description: 'Discount amount',
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  inv_discountAmount?: number;
-
-  @ApiPropertyOptional({
-    example: 1000,
-    description: 'Total amount without VAT',
-  })
-  @IsNotEmpty()
   @Type(() => Number)
   @IsNumber()
   inv_TotalAmountWithoutVat?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() inv_vatAmount?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() inv_TotalAmount?: number;
+  @IsOptional() @IsString() key_api?: string;
+  @IsOptional() @IsString() cccdan?: string;
+  @IsOptional() @IsString() so_hchieu?: string;
+  @IsOptional() @IsString() mdvqhnsach_nmua?: string;
+  @IsOptional() @IsString() ma_ch?: string;
+  @IsOptional() @IsString() ten_ch?: string;
 
-  @ApiPropertyOptional({
-    example: 100,
-    description: 'VAT amount',
-  })
-  @IsNotEmpty()
-  @Type(() => Number)
-  @IsNumber()
-  inv_vatAmount?: number;
-
-  @ApiPropertyOptional({
-    example: 1100,
-    description: 'Total amount',
-  })
-  @IsNotEmpty()
-  @Type(() => Number)
-  @IsNumber()
-  inv_TotalAmount?: number;
-
-  @ApiPropertyOptional({
-    example: 'apikey123',
-    description: 'API key',
-  })
-  @IsOptional()
-  @IsString()
-  key_api?: string;
-
-  @ApiPropertyOptional({
-    example: '077216367178321',
-    description: 'Can cuoc cong dan',
-  })
-  @IsOptional()
-  @IsString()
-  cccdan?: string;
-
-  @ApiPropertyOptional({
-    example: 'G123412A2',
-    description: 'So ho chieu',
-  })
-  @IsOptional()
-  @IsString()
-  so_hchieu?: string;
-
-  @ApiPropertyOptional({
-    example: '20000005',
-    description: 'Ma don vi quan he',
-  })
-  @IsOptional()
-  @IsString()
-  mdvqhnsach_nmua?: string;
-
-  @ApiPropertyOptional({
-    example: 'CUAHANG001',
-    description: 'Ma cua hang',
-  })
-  @IsOptional()
-  @IsString()
-  ma_ch?: string;
-
-  @ApiPropertyOptional({
-    example: 'Cua hang xan dau',
-    description: 'Ten cua hang',
-  })
-  @IsOptional()
-  @IsString()
-  ten_ch?: string;
-
-  @ApiProperty({
-    type: [InvoiceDetailDto],
-    description: 'Invoice details',
-  })
+  @ApiProperty({ type: [InvoiceDetailDto] })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => InvoiceDetailDto)
@@ -331,20 +115,40 @@ export class InvoiceDataDto {
 }
 
 export class CreateInvoiceDto {
-  @ApiPropertyOptional({
-    example: 0,
-    description: 'Edit mode',
-  })
-  @IsNotEmpty()
-  @IsString()
-  editmode?: string;
+  @IsOptional() @Type(() => Number) @IsNumber() editmode?: number;
 
-  @ApiProperty({
-    type: [InvoiceDataDto],
-    description: 'Invoice data',
-  })
+  @ApiProperty({ type: [InvoiceDataDto] })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => InvoiceDataDto)
   data: InvoiceDataDto[];
+}
+
+export class CreateInvoiceFromTransactionDto {
+  @ApiProperty({ example: '649a6f1e5f1234567890abcd' })
+  @IsMongoId()
+  @IsNotEmpty()
+  saleTransactionId: string;
+
+  @ApiPropertyOptional({ example: '1C26TYY', description: 'Invoice series' })
+  @IsOptional()
+  @IsString()
+  inv_invoiceSeries?: string;
+
+  @ApiPropertyOptional({
+    example: '2026-01-15',
+    description: 'Invoice Issued Date',
+  })
+  @IsOptional()
+  @IsString()
+  inv_invoiceIssuedDate?: string;
+
+  @ApiPropertyOptional({
+    example: 1,
+    description: '1 = Add, 2 = Edit, 3 = Delete',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  editmode?: number;
 }
