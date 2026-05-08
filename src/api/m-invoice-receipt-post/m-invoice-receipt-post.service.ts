@@ -18,6 +18,7 @@ export class MInvoiceReceiptPostService {
       tax_code === '0106026495-999' ? 'minvoice.site' : 'minvoice.app';
     const token =
       tax_code === '0106026495-999' ? defaultToken + tax_code : tax_code;
+    console.log('payload', payload);
     const response = await firstValueFrom(
       this.httpService.post(
         `https://${tax_code}.${baseIUrl}/api/InvoiceApi78/Save`,
