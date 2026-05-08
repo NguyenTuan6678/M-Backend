@@ -15,6 +15,20 @@ import { BankRepository } from '@repositories/bank.repository';
 import { ProductRepository } from '@repositories/product.repository';
 import { mapTransactionToInvoice } from '@module/sale-transaction/sale-transaction.mapper';
 import { CreateInvoiceDto } from '../../api/m-invoice-receipt-post/dto/send-receipt.req';
+import { Agency } from '@schemas/agency.schema';
+import { Department } from '@schemas/department.schema';
+import { Employee } from '@schemas/employee.schema';
+import { Bank } from '@schemas/bank.schema';
+import { Product } from '@schemas/product.schema';
+
+interface ValidatedEntities {
+  missing: string[];
+  agency?: Agency;
+  department?: Department;
+  employee?: Employee;
+  bank?: Bank;
+  products?: Product[];
+}
 
 @Injectable()
 export class SaleTransactionService {
@@ -34,50 +48,39 @@ export class SaleTransactionService {
     employeeId: string | undefined,
     bankId: string | undefined,
     items: { productId?: string }[],
-  ): Promise<string[]> {
-    const promises: Promise<any>[] = [];
-    const entityNames: string[] = [];
-
-    if (agencyId) {
-      promises.push(this.agencyRepository.findById(agencyId));
-      entityNames.push('Agency');
-    }
-
-    if (departmentId) {
-      promises.push(this.departmentRepository.findById(departmentId));
-      entityNames.push('Department');
-    }
-
-    if (employeeId) {
-      promises.push(this.employeeRepository.findById(employeeId));
-      entityNames.push('Employee');
-    }
-
-    if (bankId) {
-      promises.push(this.bankRepository.findById(bankId));
-      entityNames.push('Bank');
-    }
-
-    // productId là optional — chỉ validate những item có productId
+  ): Promise<ValidatedEntities> {
     const productIds = items
       ?.map((i) => i.productId)
       .filter((id): id is string => !!id);
 
-    if (productIds?.length) {
-      promises.push(this.productRepository.findByIds(productIds));
-      entityNames.push('Products');
-    }
+    const [agency, department, employee, bank, products] = await Promise.all([
+      agencyId ? this.agencyRepository.findById(agencyId) : undefined,
+      departmentId
+        ? this.departmentRepository.findById(departmentId)
+        : undefined,
+      employeeId ? this.employeeRepository.findById(employeeId) : undefined,
+      bankId ? this.bankRepository.findById(bankId) : undefined,
+      productIds?.length
+        ? this.productRepository.findByIds(productIds)
+        : undefined,
+    ]);
 
-    const results = await Promise.all(promises);
+    const missing: string[] = [];
+    if (agencyId && !agency) missing.push('Agency');
+    if (departmentId && !department) missing.push('Department');
+    if (employeeId && !employee) missing.push('Employee');
+    if (bankId && !bank) missing.push('Bank');
+    if (productIds?.length && (!products || products.length === 0))
+      missing.push('Products');
 
-    const missingEntities: string[] = [];
-    results.forEach((result, index) => {
-      if (!result || (Array.isArray(result) && result.length === 0)) {
-        missingEntities.push(entityNames[index]);
-      }
-    });
-
-    return missingEntities;
+    return {
+      missing,
+      ...(agency && { agency }),
+      ...(department && { department }),
+      ...(employee && { employee }),
+      ...(bank && { bank }),
+      ...(products?.length && { products }),
+    };
   }
 
   async createSaleTransaction(
@@ -87,21 +90,27 @@ export class SaleTransactionService {
       const { agencyId, departmentId, employeeId, bankId, items } =
         createSaleTransactionDto;
 
-      const missingEntities = await this.validateRelatedEntities(
-        agencyId,
-        departmentId,
-        employeeId,
-        bankId,
-        items,
-      );
+      const { missing, agency, department, employee, bank, products } =
+        await this.validateRelatedEntities(
+          agencyId,
+          departmentId,
+          employeeId,
+          bankId,
+          items,
+        );
 
-      if (missingEntities.length > 0) {
+      if (missing.length > 0) {
         return {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
-          message: `Missing entities: ${missingEntities.join(', ')}`,
+          message: `Missing entities: ${missing.join(', ')}`,
         };
       }
+
+      this.logger.log(
+        `Validated entities — Agency: ${agency?.name}, Department: ${department?.departmentName}, Employee: ${employee?.employeeName}, Bank: ${bank?.inv_buyerBankName}, Products: ${products?.map((p) => p.inv_itemCode).join(', ')}`,
+        'SaleTransactionService',
+      );
 
       const createdTransaction =
         await this.saleTransactionRepository.createSaleTransaction(
@@ -267,7 +276,6 @@ export class SaleTransactionService {
     }
   }
 
-  // Fetch transaction, populate product data, map sang CreateInvoiceDto để gửi hoá đơn
   async buildInvoicePayload(transactionId: string): Promise<CreateInvoiceDto> {
     try {
       const transaction =
