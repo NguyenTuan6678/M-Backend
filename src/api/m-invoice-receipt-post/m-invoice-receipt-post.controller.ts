@@ -2,7 +2,7 @@ import { Body, Controller, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { MInvoiceReceiptPostService } from './m-invoice-receipt-post.service';
-import { CreateInvoiceDto } from './dto/send-receipt.req';
+import { CreateInvoiceFromTransactionDto } from './dto/send-receipt.req';
 
 @ApiTags('M-Invoice Receipt Post')
 @Controller('m-invoice-receipt-post')
@@ -14,8 +14,14 @@ export class MInvoiceReceiptPostController {
   @Post()
   async createInvoice(
     @Query('tax_code') tax_code: string,
-    @Body() dto: CreateInvoiceDto,
+    @Body() body: CreateInvoiceFromTransactionDto,
   ) {
-    return this.receiptPostService.createInvoice(tax_code, dto);
+    return this.receiptPostService.createInvoice(
+      tax_code,
+      body.saleTransactionId,
+      body.inv_invoiceSeries,
+      body.inv_invoiceIssuedDate,
+      body.editmode,
+    );
   }
 }
