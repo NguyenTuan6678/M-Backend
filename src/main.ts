@@ -50,11 +50,9 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, documentFactory);
 
-  // Start server
   const port = process.env.PORT || 4000;
   await app.listen(port);
 
-  // Logging
   logger.log(`🚀 Server running on port ${port}`, 'Bootstrap');
   logger.log(`📍 MongoDB: ${process.env.MONGODB_URI}`, 'Bootstrap');
   logger.log(`📜 Swagger UI: http://localhost:${port}/api/docs`, 'Bootstrap');

@@ -25,7 +25,7 @@ export class BankService {
     let response: MessageResponse | null = null;
     try {
       const { inv_buyerBankName } = createBankDto;
-      console.log(createBankDto);
+      // console.log(createBankDto);
       if (!inv_buyerBankName) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
