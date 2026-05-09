@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { CacheModule, CacheInterceptor } from '@nestjs/cache-manager';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from '@users/users.module';
@@ -17,6 +19,7 @@ import { MInvoiceReceiptPostModule } from './api/m-invoice-receipt-post/m-invoic
 
 @Module({
   imports: [
+    CacheModule.register({ ttl: 5000, isGlobal: true }),
     ConfigModule.forRoot({
       load: [configuration],
       isGlobal: true,
@@ -43,6 +46,12 @@ import { MInvoiceReceiptPostModule } from './api/m-invoice-receipt-post/m-invoic
     MInvoiceReceiptPostModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
+    },
+  ],
 })
 export class AppModule {}
