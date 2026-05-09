@@ -17,19 +17,6 @@ export class JwtAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
-    //   context.getHandler(),
-    //   context.getClass(),
-    // ]);
-    // console.log(
-    //   '🚀 ~ RolesGuard ~ canActivate ~ requiredRoles:',
-    //   requiredRoles,
-    // );
-
-    // if (!requiredRoles) {
-    //   return true;
-    // }
-
     const request = context.switchToHttp().getRequest();
 
     const authHeader = request.headers['authorization'];
