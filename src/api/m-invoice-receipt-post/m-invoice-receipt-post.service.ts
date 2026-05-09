@@ -118,7 +118,7 @@ export class MInvoiceReceiptPostService {
       data: builtPayload.data,
     };
 
-    console.log('payload', JSON.stringify(payload, null, 2));
+    // console.log('payload', JSON.stringify(payload, null, 2));
 
     const response = await firstValueFrom(
       this.httpService.post(
