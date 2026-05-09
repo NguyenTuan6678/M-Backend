@@ -143,7 +143,7 @@ export class ProductService {
     id: string,
     updateData: Partial<CreateProductDto>,
   ): Promise<ProductResponseDto> {
-    // ✅ Nếu update bất kỳ field nào ảnh hưởng tính toán → recalculate
+    // Nếu update bất kỳ field nào ảnh hưởng tính toán → recalculate
     if (
       updateData.inv_unitPrice !== undefined ||
       updateData.inv_quantity !== undefined ||

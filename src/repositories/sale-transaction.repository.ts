@@ -31,7 +31,6 @@ export class SaleTransactionRepository {
         return null;
       }
 
-      // Format datetime hiện tại theo pattern DD/MM/YYYY HH:mm:ss SA/CH
       const now = new Date();
       const pad = (n: number) => String(n).padStart(2, '0');
       const hours = now.getHours();

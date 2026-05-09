@@ -23,7 +23,7 @@ export function mapTransactionToInvoice(
 ): CreateInvoiceDto {
   const invoiceItems: InvoiceItemDataDto[] = transaction.items.map(
     (item, index) => {
-      const product = item.productId as any; // ✅ sau khi fix populate, đây là object đầy đủ
+      const product = item.productId as any;
       return {
         tchat: 1,
         stt_rec0: index + 1,
@@ -39,7 +39,7 @@ export function mapTransactionToInvoice(
     },
   );
 
-  console.log('raw item[0]:', JSON.stringify(transaction.items?.[0], null, 2));
+  // console.log('raw item[0]:', JSON.stringify(transaction.items?.[0], null, 2));
 
   const invoiceDetail: InvoiceDetailDto = { data: invoiceItems };
 
