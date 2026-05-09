@@ -10,6 +10,7 @@ import {
   Put,
   Query,
   UseGuards,
+  UseInterceptors,
   ValidationPipe,
 } from '@nestjs/common';
 import {
@@ -26,10 +27,12 @@ import {
 } from '@common/dto/pagination.dto';
 import { SaleTransactionResponseDTO } from '@module/sale-transaction/dto/sale-transaction.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @ApiTags('Sale Transaction')
 @Controller('sale-transaction')
 @UseGuards(JwtAuthGuard)
+@UseInterceptors(CacheInterceptor)
 @ApiBearerAuth('authorization')
 export class SaleTransactionController {
   constructor(
@@ -48,8 +51,6 @@ export class SaleTransactionController {
       createSalesTransactionDto,
     );
   }
-
-  // --- Đặt các static route TRƯỚC route động :id để tránh NestJS match nhầm ---
 
   @Get()
   @ApiOperation({ summary: 'Get a paginated list of sale transactions' })
@@ -132,8 +133,6 @@ export class SaleTransactionController {
       departmentId,
     );
   }
-
-  // --- Route động :id luôn đặt sau tất cả static route ---
 
   @Get(':id')
   @ApiOperation({ summary: 'Get sale transaction by ID' })
