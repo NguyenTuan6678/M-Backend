@@ -80,7 +80,7 @@ export class AuthService {
       }
 
       const isExistingAdmin = await this.userModal.countDocuments({
-        role: 'ADMIN',
+        role: Role.ADMIN,
       });
 
       this.logger.log(`Existing admin count: ${isExistingAdmin}`);
@@ -93,7 +93,7 @@ export class AuthService {
         return response;
       }
 
-      const admin = await this.userModal.findOne({ role: 'ADMIN' });
+      const admin = await this.userModal.findOne({ role: Role.ADMIN });
 
       if (admin) {
         response = {
@@ -199,7 +199,7 @@ export class AuthService {
     userId: string,
   ): Promise<MessageResponse | null> {
     let response: MessageResponse | null = null;
-    console.log('🚀 ~ AuthService ~ userId:', userId);
+    // console.log('🚀 ~ AuthService ~ userId:', userId);
     try {
       const { new_password, old_password } = changePasswordDto;
       if (!new_password && !old_password) {
