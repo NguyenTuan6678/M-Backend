@@ -47,7 +47,6 @@ export class MInvoiceReceiptPostService {
 
         const allItems = calculatedDetails.flatMap((detail) => detail.data);
 
-        // ✅ 4 trường này tự sum từ items — FE không cần truyền
         const inv_discountAmount = allItems.reduce(
           (sum, item) => sum + (item.inv_discountAmount ?? 0),
           0,
