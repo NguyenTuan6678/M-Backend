@@ -78,7 +78,7 @@ export class AgencyController {
   @ApiOperation({ summary: 'Delete agency by ID' })
   @ApiResponse({ status: 404, description: 'Agency not found.' })
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Query('id') id: string): Promise<MessageResponse> {
+  async delete(@Param('id') id: string): Promise<MessageResponse> {
     return this.agencyService.deleteAgency(id);
   }
 }
