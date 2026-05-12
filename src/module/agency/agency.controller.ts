@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Patch,
   Post,
   Query,
@@ -12,7 +13,12 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { AgencyService } from './agency.service';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AgencyResponseDto } from './dto/agency.res';
 import { CreateAgencyDto } from './dto/create-agency.req';
 import {
@@ -31,6 +37,7 @@ export class AgencyController {
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new agency' })
+  @ApiResponse({ status: 404, description: 'Can not create agency.' })
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body(ValidationPipe) createAgencyDto: CreateAgencyDto,
@@ -40,6 +47,8 @@ export class AgencyController {
 
   @Get()
   @ApiOperation({ summary: 'Get a paginated list of agencies' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  @ApiResponse({ status: 404, description: 'Agency not found.' })
   async findAll(
     @Query(ValidationPipe) paginationDto: PaginationDto,
   ): Promise<PaginatedResponseDto<AgencyResponseDto>> {
@@ -48,14 +57,18 @@ export class AgencyController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get agency by ID' })
-  async findOne(@Query('id') id: string): Promise<AgencyResponseDto> {
+  @ApiResponse({ status: 200, description: 'Success.' })
+  @ApiResponse({ status: 404, description: 'Agency not found.' })
+  async findOne(@Param('id') id: string): Promise<AgencyResponseDto> {
     return this.agencyService.getAgencyById(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update agency by ID' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  @ApiResponse({ status: 404, description: 'Agency not found.' })
   async update(
-    @Query('id') id: string,
+    @Param('id') id: string,
     @Body(ValidationPipe) updateAgencyDto: CreateAgencyDto,
   ): Promise<AgencyResponseDto> {
     return this.agencyService.updateAgency(id, updateAgencyDto);
@@ -63,6 +76,7 @@ export class AgencyController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete agency by ID' })
+  @ApiResponse({ status: 404, description: 'Agency not found.' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Query('id') id: string): Promise<MessageResponse> {
     return this.agencyService.deleteAgency(id);
