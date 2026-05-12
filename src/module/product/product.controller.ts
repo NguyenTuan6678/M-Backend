@@ -13,7 +13,12 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CreateProductDto } from './dto/create-product.req';
 import { ProductResponseDto } from './dto/product.res';
 import {
@@ -32,6 +37,7 @@ export class ProductController {
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new bank' })
+  @ApiResponse({ status: 404, description: 'Can not created product.' })
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body(ValidationPipe) createProductDto: CreateProductDto,
@@ -41,6 +47,8 @@ export class ProductController {
 
   @Get()
   @ApiOperation({ summary: 'Get a paginated list of banks' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  @ApiResponse({ status: 404, description: 'Product not found.' })
   async findAll(
     @Query(ValidationPipe) paginationDto: PaginationDto,
   ): Promise<PaginatedResponseDto<ProductResponseDto>> {
@@ -49,12 +57,16 @@ export class ProductController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get bank by ID' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  @ApiResponse({ status: 404, description: 'Product not found.' })
   async findOne(@Param('id') id: string): Promise<ProductResponseDto> {
     return await this.productService.getProductById(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Updated bank by ID' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  @ApiResponse({ status: 404, description: 'Product not found.' })
   async update(
     @Param('id') id: string,
     @Body(ValidationPipe) updateProductDto: Partial<CreateProductDto>,
@@ -64,6 +76,8 @@ export class ProductController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete bank by ID' })
+  @ApiResponse({ status: 200, description: 'Product deleted.' })
+  @ApiResponse({ status: 404, description: 'Product not found.' })
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string): Promise<MessageResponse> {
     return await this.productService.deleteProduct(id);
