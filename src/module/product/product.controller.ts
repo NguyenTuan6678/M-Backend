@@ -37,7 +37,7 @@ export class ProductController {
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new bank' })
-  @ApiResponse({ status: 404, description: 'Can not created product.' })
+  @ApiResponse({ status: 404, description: 'Can not create product.' })
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body(ValidationPipe) createProductDto: CreateProductDto,

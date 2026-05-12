@@ -37,7 +37,7 @@ export class EmployeeController {
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new employee' })
-  @ApiResponse({ status: 404, description: 'Can not created employee.' })
+  @ApiResponse({ status: 404, description: 'Can not create employee.' })
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body(ValidationPipe) createEmployeeDto: CreateEmployeeDto,
