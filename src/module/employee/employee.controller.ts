@@ -15,7 +15,12 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { MessageResponse } from '@app-types/message.res';
 import {
   PaginatedResponseDto,
@@ -32,6 +37,7 @@ export class EmployeeController {
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new employee' })
+  @ApiResponse({ status: 404, description: 'Can not created employee.' })
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body(ValidationPipe) createEmployeeDto: CreateEmployeeDto,
@@ -41,6 +47,8 @@ export class EmployeeController {
 
   @Get()
   @ApiOperation({ summary: 'Get a paginated list of employees' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  @ApiResponse({ status: 404, description: 'Employee not found.' })
   async findAll(
     @Query(ValidationPipe) paginationDto: PaginationDto,
   ): Promise<PaginatedResponseDto<EmployeeResponseDto>> {
@@ -49,12 +57,16 @@ export class EmployeeController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get employee by ID' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  @ApiResponse({ status: 404, description: 'Employee not found.' })
   async findOne(@Param('id') id: string): Promise<EmployeeResponseDto> {
     return await this.employeeService.getEmployeeById(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Updated employee by ID' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  @ApiResponse({ status: 404, description: 'Employee not found.' })
   async update(
     @Param('id') id: string,
     @Body(ValidationPipe) updateEmployeeDto: Partial<CreateEmployeeDto>,
@@ -64,6 +76,7 @@ export class EmployeeController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete bank by ID' })
+  @ApiResponse({ status: 404, description: 'Employee not found.' })
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string): Promise<MessageResponse> {
     return await this.employeeService.deleteEmployee(id);
