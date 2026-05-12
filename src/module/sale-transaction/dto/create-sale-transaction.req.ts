@@ -46,14 +46,6 @@ export class TransactionItemDto {
 }
 
 export class CreateSalesTransactionDto {
-  @ApiProperty({
-    example: '15/01/2026 12:00:00 SA',
-    description: 'Activation Date',
-  })
-  @IsNotEmpty()
-  @IsString()
-  activationDate?: string;
-
   @ApiPropertyOptional({ example: '1C26TYY', description: 'Invoice series' })
   @IsString()
   @IsOptional()

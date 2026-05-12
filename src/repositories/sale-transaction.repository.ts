@@ -215,12 +215,12 @@ export class SaleTransactionRepository {
     try {
       return await this.saleTransactionModel
         .find({
-          activationDate: {
+          createdAt: {
             $gte: startDate,
             $lte: endDate,
           },
         })
-        .sort({ activationDate: -1 })
+        .sort({ createdAt: -1 })
         .exec();
     } catch (error: any) {
       this.logger.error(

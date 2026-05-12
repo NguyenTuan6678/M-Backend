@@ -23,9 +23,6 @@ export class TransactionItem {
 @Schema({ timestamps: true })
 export class SalesTransaction {
   @Prop()
-  activationDate: Date;
-
-  @Prop()
   inv_invoiceSeries: string;
 
   @Prop()
