@@ -73,63 +73,124 @@ export class SaleTransactionRepository {
     }
   }
 
-  async findByIdWithPopulate(
-    id: string,
-  ): Promise<SalesTransactionDocument | null> {
+  async findAllWithPopulate(): Promise<SalesTransactionDocument[]> {
     try {
       return await this.saleTransactionModel
-        .findById(id)
-        .populate({ path: 'agencyId', select: 'name commissionPercent' })
-        .populate({
-          path: 'departmentId',
-          select: 'departmentName departmentDescription',
-        })
-        .populate({
-          path: 'employeeId',
-          select: 'employeeName employeeEmail employeePhone ',
-        })
-        .populate({ path: 'bankId', select: 'inv_buyerBankName' })
-        .populate({
-          path: 'items.productId',
-          select:
-            'inv_itemCode inv_itemName inv_unitCode inv_unitPrice ma_thue inv_quantity inv_discountAmount inv_TotalAmountWithoutVat inv_vatAmount inv_TotalAmount',
-        })
-        .lean()
-        .exec();
-    } catch (error: any) {
-      this.logger.error(
-        `Error finding sale transaction with populate: ${error.message}`,
-      );
-      throw error;
-    }
-  }
-
-  async findAll(skip = 0, limit = 10) {
-    const [data, total] = await Promise.all([
-      this.saleTransactionModel
         .find()
-        .skip(skip)
-        .limit(limit)
-        .populate({ path: 'agencyId', select: 'name commissionPercent' })
+        .populate({
+          path: 'agencyId',
+          select: 'name commissionPercent',
+        })
         .populate({
           path: 'departmentId',
           select: 'departmentName departmentDescription',
         })
         .populate({
           path: 'employeeId',
-          select: 'employeeName employeeEmail employeePhone ',
+          select: 'employeeName employeeEmail employeePhone',
         })
-        .populate({ path: 'bankId', select: 'inv_buyerBankName' })
+        .populate({
+          path: 'bankId',
+          select: 'inv_buyerBankName',
+        })
         .populate({
           path: 'items.productId',
           select:
             'inv_itemCode inv_itemName inv_unitCode inv_unitPrice ma_thue inv_quantity inv_discountAmount inv_TotalAmountWithoutVat inv_vatAmount inv_TotalAmount',
         })
         .sort({ createdAt: -1 })
-        .exec(),
-      this.saleTransactionModel.countDocuments().exec(),
-    ]);
-    return { data, total };
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transactions with populate: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async findByIdWithPopulate(
+    id: string,
+  ): Promise<SalesTransactionDocument | null> {
+    try {
+      return await this.saleTransactionModel
+        .findById(id)
+        .populate({
+          path: 'agencyId',
+          select: 'name commissionPercent',
+        })
+        .populate({
+          path: 'departmentId',
+          select: 'departmentName departmentDescription',
+        })
+        .populate({
+          path: 'employeeId',
+          select: 'employeeName employeeEmail employeePhone',
+        })
+        .populate({
+          path: 'bankId',
+          select: 'inv_buyerBankName',
+        })
+        .populate({
+          path: 'items.productId',
+          select:
+            'inv_itemCode inv_itemName inv_unitCode inv_unitPrice ma_thue inv_quantity inv_discountAmount inv_TotalAmountWithoutVat inv_vatAmount inv_TotalAmount',
+        })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transaction with populate: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async findAllWithPopulatePaginated(
+    skip = 0,
+    limit = 10,
+  ): Promise<{ data: SalesTransactionDocument[]; total: number }> {
+    try {
+      const [data, total] = await Promise.all([
+        this.saleTransactionModel
+          .find()
+          .skip(skip)
+          .limit(limit)
+          .populate({
+            path: 'agencyId',
+            select: 'name commissionPercent',
+          })
+          .populate({
+            path: 'departmentId',
+            select: 'departmentName departmentDescription',
+          })
+          .populate({
+            path: 'employeeId',
+            select: 'employeeName employeeEmail employeePhone',
+          })
+          .populate({
+            path: 'bankId',
+            select: 'inv_buyerBankName',
+          })
+          .populate({
+            path: 'items.productId',
+            select:
+              'inv_itemCode inv_itemName inv_unitCode inv_unitPrice ma_thue inv_quantity inv_discountAmount inv_TotalAmountWithoutVat inv_vatAmount inv_TotalAmount',
+          })
+          .sort({ createdAt: -1 })
+          .exec(),
+
+        this.saleTransactionModel.countDocuments().exec(),
+      ]);
+
+      return { data, total };
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transactions with populate: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
   }
 
   async update(

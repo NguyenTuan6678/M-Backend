@@ -1,10 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { Agency } from './agency.schema';
+import { Department } from './department.schema';
+import { Employee } from './employee.schema';
+import { Bank } from './bank.schema';
+import { Product } from './product.schema';
 
 export type SalesTransactionDocument = SalesTransaction & Document;
 
 export class TransactionItem {
-  @Prop({ type: Types.ObjectId, ref: 'Product' })
+  @Prop({ type: Types.ObjectId, ref: Product.name })
   productId: Types.ObjectId;
 
   @Prop()
@@ -97,22 +102,22 @@ export class SalesTransaction {
   @Prop()
   inv_discountPercentage: number;
 
-  @Prop({ type: Types.ObjectId, ref: 'Agency' })
+  @Prop({ type: Types.ObjectId, ref: Agency.name, required: true })
   agencyId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Department' })
+  @Prop({ type: Types.ObjectId, ref: Department.name, required: true })
   departmentId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Employee' })
+  @Prop({ type: Types.ObjectId, ref: Employee.name, required: true })
   employeeId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Bank' })
+  @Prop({ type: Types.ObjectId, ref: Bank.name, required: true })
   bankId: Types.ObjectId;
 
   @Prop({
     type: [
       {
-        productId: { type: Types.ObjectId, ref: 'Product' },
+        productId: { type: Types.ObjectId, ref: Product.name },
         revenue: Number,
         capitalPrice: Number,
         totalSalary: Number,

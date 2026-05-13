@@ -189,7 +189,8 @@ export class SaleTransactionService {
   async getAllSaleTransactions(): Promise<GetAllSaleTransactions> {
     let response: GetAllSaleTransactions | null = null;
     try {
-      const saleTransactions = await this.transactionModel.find().exec();
+      const saleTransactions =
+        await this.saleTransactionRepository.findAllWithPopulate();
       response = {
         code: 200,
         info: ERROR_INFO.SUCCESS,
@@ -212,7 +213,8 @@ export class SaleTransactionService {
   ): Promise<SaleTransactionResponseDTO> {
     let response: SaleTransactionResponseDTO | null = null;
     try {
-      const transaction = await this.saleTransactionRepository.findById(id);
+      const transaction =
+        await this.saleTransactionRepository.findByIdWithPopulate(id);
 
       if (!transaction) {
         response = {
@@ -259,11 +261,14 @@ export class SaleTransactionService {
         };
       }
 
+      const populatedTransaction =
+        await this.saleTransactionRepository.findByIdWithPopulate(id);
+
       return {
         code: 200,
         info: ERROR_INFO.SUCCESS,
-        message: 'Agency updated successfully',
-        content: updatedTransation,
+        message: 'Sale transaction updated successfully',
+        content: populatedTransaction || updatedTransation,
       };
     } catch (error: any) {
       return {
