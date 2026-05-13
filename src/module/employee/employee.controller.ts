@@ -27,6 +27,7 @@ import {
   PaginationDto,
 } from '@common/dto/pagination.dto';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
+import { GetAllEmployees } from './dto/get-all-employee.res';
 
 @ApiTags('Employee')
 @Controller('employees')
@@ -49,18 +50,31 @@ export class EmployeeController {
   @ApiOperation({ summary: 'Get a paginated list of employees' })
   @ApiResponse({ status: 200, description: 'Success.' })
   @ApiResponse({ status: 404, description: 'Employee not found.' })
-  async findAll(
-    @Query(ValidationPipe) paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<EmployeeResponseDto>> {
-    return await this.employeeService.getAllEmployees(paginationDto);
+  async findAll(): Promise<GetAllEmployees> {
+    return await this.employeeService.getAllEmployees();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get employee by ID' })
   @ApiResponse({ status: 200, description: 'Success.' })
   @ApiResponse({ status: 404, description: 'Employee not found.' })
-  async findOne(@Param('id') id: string): Promise<EmployeeResponseDto> {
+  async findOne(@Param('id') id: string): Promise<EmployeeResponseDto | null> {
     return await this.employeeService.getEmployeeById(id);
+  }
+
+  @Get('search-name/search')
+  @ApiOperation({ summary: 'Search employees by name' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  async searchEmployees(
+    @Query('keyword') keyword: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    return this.employeeService.searchEmployeesByName(
+      keyword,
+      Number(page),
+      Number(limit),
+    );
   }
 
   @Patch(':id')

@@ -7,11 +7,12 @@ import { Model } from 'mongoose';
 import { CreateDepartmentDto } from './dto/create-department.req';
 import { DepartmentResponseDto } from './dto/department.res';
 import { MessageResponse } from '@app-types/message.res';
-import { ERROR_RES } from '@common/constants/error.const';
+import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import {
   PaginatedResponseDto,
   PaginationDto,
 } from '@common/dto/pagination.dto';
+import { GetAllDepartments } from './dto/get-all-department.res';
 
 @Injectable()
 export class DepartmentService {
@@ -71,29 +72,85 @@ export class DepartmentService {
     return response;
   }
 
-  async getDepartmentById(id: string): Promise<DepartmentResponseDto> {
-    const department = await this.departmentRepository.findById(id);
-    if (!department) {
-      throw new NotFoundException(
-        `Department with ID ${id} dose not in database`,
-      );
+  async getAllDepartments(): Promise<GetAllDepartments> {
+    let response: GetAllDepartments | null = null;
+    try {
+      const departments = await this.departmentModel.find().exec();
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Get all agencies successfully',
+        content: departments,
+      };
+      return response;
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
     }
-    return this.mapToResponseDto(department);
+    return response;
   }
 
-  async getAllDepartments(
-    paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<DepartmentResponseDto>> {
-    const { data, total } = await this.departmentRepository.findAll(
-      paginationDto.skip,
-      paginationDto.limit,
+  async getDepartmentById(id: string): Promise<DepartmentResponseDto | null> {
+    let response: DepartmentResponseDto | null = null;
+    try {
+      const department = await this.departmentRepository.findById(id);
+
+      if (!department) {
+        response = {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Department with ID ${id} not found`,
+        };
+
+        return response;
+      }
+
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Department fetched successfully',
+        content: department,
+      };
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
+    }
+    return response;
+  }
+
+  async searchDepartmentsByName(keyword: string, page = 1, limit = 10) {
+    if (!keyword || !keyword.trim()) {
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      };
+    }
+
+    const currentPage = Number(page) || 1;
+    const currentLimit = Number(limit) || 10;
+    const skip = (currentPage - 1) * currentLimit;
+
+    const { data, total } = await this.departmentRepository.searchByName(
+      keyword.trim(),
+      skip,
+      currentLimit,
     );
+
     return {
-      data: data.map((department) => this.mapToResponseDto(department)),
+      data: data.map((agency) => this.mapToResponseDto(agency)),
       total,
-      page: paginationDto.page,
-      limit: paginationDto.limit,
-      totalPages: Math.ceil(total / paginationDto.limit),
+      page: currentPage,
+      limit: currentLimit,
+      totalPages: Math.ceil(total / currentLimit),
     };
   }
 
@@ -101,16 +158,35 @@ export class DepartmentService {
     id: string,
     updateData: Partial<CreateDepartmentDto>,
   ): Promise<DepartmentResponseDto> {
-    const updatedDepartment = await this.departmentRepository.update(
-      id,
-      updateData,
-    );
-    if (!updatedDepartment) {
-      throw new NotFoundException(
-        `Department with ID ${id} does not in database`,
+    try {
+      const updatedDepartment = await this.departmentRepository.update(
+        id,
+        updateData,
       );
+
+      if (!updatedDepartment) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Agency with ID ${id} not found`,
+          content: updatedDepartment || undefined,
+        };
+      }
+
+      return {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Agency updated successfully',
+        content: updatedDepartment,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+        content: undefined,
+      };
     }
-    return this.mapToResponseDto(updatedDepartment);
   }
 
   async deleteDepartment(id: string): Promise<MessageResponse> {

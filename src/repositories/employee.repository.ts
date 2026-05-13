@@ -29,15 +29,6 @@ export class EmployeeRepository {
     }
   }
 
-  async findById(id: string): Promise<EmployeeDocument | null> {
-    try {
-      return await this.employeeModel.findById(id).exec();
-    } catch (error: any) {
-      this.logger.error(`Error finding employee by ID: ${error.message}`);
-      throw error;
-    }
-  }
-
   async findAll(
     skip: number = 0,
     limit: number = 10,
@@ -55,6 +46,48 @@ export class EmployeeRepository {
       return { data, total };
     } catch (error: any) {
       this.logger.error(`Error fetching employees: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findById(id: string): Promise<EmployeeDocument | null> {
+    try {
+      return await this.employeeModel.findById(id).exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding employee by ID: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async searchByName(
+    keyword: string,
+    skip = 0,
+    limit = 10,
+  ): Promise<{ data: EmployeeDocument[]; total: number }> {
+    try {
+      const safeKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+      const filter = {
+        employeeName: {
+          $regex: safeKeyword,
+          $options: 'i',
+        },
+      };
+
+      const [data, total] = await Promise.all([
+        this.employeeModel
+          .find(filter)
+          .skip(skip)
+          .limit(limit)
+          .sort({ createdAt: -1 })
+          .exec(),
+
+        this.employeeModel.countDocuments(filter).exec(),
+      ]);
+
+      return { data, total };
+    } catch (error: any) {
+      this.logger.error(`Error searching employee by name: ${error.message}`);
       throw error;
     }
   }

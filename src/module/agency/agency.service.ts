@@ -6,12 +6,9 @@ import { Agency, AgencyDocument } from '@schemas/agency.schema';
 import { Model } from 'mongoose';
 import { CreateAgencyDto } from './dto/create-agency.req';
 import { MessageResponse } from '@app-types/message.res';
-import { ERROR_RES } from '@common/constants/error.const';
+import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { AgencyResponseDto } from './dto/agency.res';
-import {
-  PaginatedResponseDto,
-  PaginationDto,
-} from '@common/dto/pagination.dto';
+import { GetAllAgencies } from './dto/get-all-agency.res';
 
 @Injectable()
 export class AgencyService {
@@ -23,8 +20,8 @@ export class AgencyService {
 
   async createAgency(
     createAgencyDto: CreateAgencyDto,
-  ): Promise<AgencyResponseDto> {
-    let response: MessageResponse | null = null;
+  ): Promise<AgencyResponseDto | null> {
+    let response: AgencyResponseDto | null = null;
     try {
       const { name, commissionPercent } = createAgencyDto;
       if (!name || !commissionPercent) {
@@ -58,39 +55,118 @@ export class AgencyService {
     return response;
   }
 
-  async getAllAgencies(
-    paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<AgencyResponseDto>> {
-    const { data, total } = await this.agencyRepository.findAll(
-      paginationDto.skip,
-      paginationDto.limit,
+  async getAllAgencies(): Promise<GetAllAgencies> {
+    let response: GetAllAgencies | null = null;
+    try {
+      const agencies = await this.agencyModel.find().exec();
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Get all agencies successfully',
+        content: agencies,
+      };
+      return response;
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
+    }
+    return response;
+  }
+
+  async getAgencyById(id: string): Promise<AgencyResponseDto | null> {
+    let response: AgencyResponseDto | null = null;
+    try {
+      const agency = await this.agencyRepository.findById(id);
+
+      if (!agency) {
+        response = {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Agency with ID ${id} not found`,
+        };
+
+        return response;
+      }
+
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Agency fetched successfully',
+        content: agency,
+      };
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
+    }
+    return response;
+  }
+
+  async searchAgenciesByName(keyword: string, page = 1, limit = 10) {
+    if (!keyword || !keyword.trim()) {
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      };
+    }
+
+    const currentPage = Number(page) || 1;
+    const currentLimit = Number(limit) || 10;
+    const skip = (currentPage - 1) * currentLimit;
+
+    const { data, total } = await this.agencyRepository.searchByName(
+      keyword.trim(),
+      skip,
+      currentLimit,
     );
+
     return {
       data: data.map((agency) => this.mapToResponseDto(agency)),
       total,
-      page: paginationDto.page,
-      limit: paginationDto.limit,
-      totalPages: Math.ceil(total / paginationDto.limit),
+      page: currentPage,
+      limit: currentLimit,
+      totalPages: Math.ceil(total / currentLimit),
     };
-  }
-
-  async getAgencyById(id: string): Promise<AgencyResponseDto> {
-    const agency = await this.agencyRepository.findById(id);
-    if (!agency) {
-      throw new Error(`Agency with ID ${id} not found`);
-    }
-    return this.mapToResponseDto(agency);
   }
 
   async updateAgency(
     id: string,
     updateData: Partial<CreateAgencyDto>,
-  ): Promise<AgencyResponseDto> {
-    const updatedAgency = await this.agencyRepository.update(id, updateData);
-    if (!updatedAgency) {
-      throw new Error(`Agency with ID ${id} not found`);
+  ): Promise<AgencyResponseDto | null> {
+    try {
+      const updatedAgency = await this.agencyRepository.update(id, updateData);
+
+      if (!updatedAgency) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Agency with ID ${id} not found`,
+          content: updatedAgency || undefined,
+        };
+      }
+
+      return {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Agency updated successfully',
+        content: updatedAgency,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+        content: undefined,
+      };
     }
-    return this.mapToResponseDto(updatedAgency);
   }
 
   async deleteAgency(id: string): Promise<MessageResponse> {

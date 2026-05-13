@@ -23,6 +23,7 @@ export default registerAs<AppConfig>('app', () => ({
   port: parseInt(process.env.PORT || '4000', 10),
   mongodb: {
     uri: process.env.MONGODB_URI || 'mongodb://localhost:27017',
+    name: process.env.MONGODB_NAME || 'NAMELESS',
   },
   jwt: {
     secret: process.env.JWT_SECRET || '22v1jv2hv1h3v1uk3h1v23j1v1v3h1v2',

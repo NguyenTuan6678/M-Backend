@@ -27,6 +27,7 @@ import {
 } from '@common/dto/pagination.dto';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
+import { GetAllBanks } from './dto/get-all-bank.res';
 
 @ApiTags('Bank')
 @Controller('banks')
@@ -40,27 +41,47 @@ export class BankController {
   @ApiResponse({ status: 404, description: 'Can not create bank.' })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body(ValidationPipe) createBankDto: CreateBankDto,
-  ): Promise<BankResponseDto> {
-    return await this.bankService.createBank(createBankDto);
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    )
+    createBankDto: CreateBankDto,
+  ): Promise<BankResponseDto | null> {
+    return this.bankService.createBank(createBankDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get a paginated list of banks' })
   @ApiResponse({ status: 200, description: 'Success.' })
   @ApiResponse({ status: 404, description: 'Bank not found.' })
-  async findAll(
-    @Query(ValidationPipe) paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<BankResponseDto>> {
-    return await this.bankService.getAllBanks(paginationDto);
+  async findAll(): Promise<GetAllBanks> {
+    return this.bankService.getAllBanks();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get bank by ID' })
   @ApiResponse({ status: 200, description: 'Success.' })
   @ApiResponse({ status: 404, description: 'Bank not found.' })
-  async findOne(@Param('id') id: string): Promise<BankResponseDto> {
-    return await this.bankService.getBankById(id);
+  async findOne(@Param('id') id: string): Promise<BankResponseDto | null> {
+    return this.bankService.getBankById(id);
+  }
+
+  @Get('seacrch-bank/search')
+  @ApiOperation({ summary: 'Search banks by name' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  async searchAgencies(
+    @Query('keyword') keyword: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    return this.bankService.searchBanksByName(
+      keyword,
+      Number(page),
+      Number(limit),
+    );
   }
 
   @Patch(':id')
@@ -69,9 +90,16 @@ export class BankController {
   @ApiResponse({ status: 404, description: 'Bank not found.' })
   async update(
     @Param('id') id: string,
-    @Body(ValidationPipe) updateBankDto: Partial<CreateBankDto>,
-  ): Promise<BankResponseDto> {
-    return await this.bankService.updateBank(id, updateBankDto);
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    )
+    updateBankDto: Partial<CreateBankDto>,
+  ): Promise<BankResponseDto | null> {
+    return this.bankService.updateBank(id, updateBankDto);
   }
 
   @Delete(':id')
@@ -79,6 +107,6 @@ export class BankController {
   @ApiResponse({ status: 404, description: 'Bank not found.' })
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string): Promise<MessageResponse> {
-    return await this.bankService.deleteBank(id);
+    return this.bankService.deleteBank(id);
   }
 }

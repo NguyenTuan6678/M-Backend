@@ -30,6 +30,7 @@ import { MInvoiceReceiptPostModule } from './api/m-invoice-receipt-post/m-invoic
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>('app.mongodb.uri'),
+        dbName: configService.get<string>('app.mongodb.name'),
         retryAttempts: 5,
         retryDelay: 1000,
       }),

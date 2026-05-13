@@ -7,11 +7,12 @@ import { Model } from 'mongoose';
 import { CreateBankDto } from './dto/create-bank.req';
 import { BankResponseDto } from './dto/bank.res';
 import { MessageResponse } from '@app-types/message.res';
-import { ERROR_RES } from '@common/constants/error.const';
+import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import {
   PaginatedResponseDto,
   PaginationDto,
 } from '@common/dto/pagination.dto';
+import { GetAllBanks } from './dto/get-all-bank.res';
 
 @Injectable()
 export class BankService {
@@ -68,27 +69,84 @@ export class BankService {
     return response;
   }
 
-  async getBankById(id: string): Promise<BankResponseDto> {
-    const bank = await this.bankRepository.findById(id);
-    if (!bank) {
-      throw new NotFoundException(`Bank with ID ${id} dose not in database`);
+  async getAllBanks(): Promise<GetAllBanks> {
+    let response: GetAllBanks | null = null;
+    try {
+      const banks = await this.bankModel.find().exec();
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Get all banks successfully',
+      };
+      return response;
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
     }
-    return this.mapToResponseDto(bank);
+    return response;
   }
 
-  async getAllBanks(
-    paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<BankResponseDto>> {
-    const { data, total } = await this.bankRepository.findAll(
-      paginationDto.skip,
-      paginationDto.limit,
+  async getBankById(id: string): Promise<BankResponseDto | null> {
+    let response: BankResponseDto | null = null;
+    try {
+      const bank = await this.bankRepository.findById(id);
+
+      if (!bank) {
+        response = {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Bank with ID ${id} not found`,
+        };
+
+        return response;
+      }
+
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Bank fetched successfully',
+        content: bank,
+      };
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
+    }
+    return response;
+  }
+
+  async searchBanksByName(keyword: string, page = 1, limit = 10) {
+    if (!keyword || !keyword.trim()) {
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      };
+    }
+
+    const currentPage = Number(page) || 1;
+    const currentLimit = Number(limit) || 10;
+    const skip = (currentPage - 1) * currentLimit;
+
+    const { data, total } = await this.bankRepository.searchByName(
+      keyword.trim(),
+      skip,
+      currentLimit,
     );
+
     return {
-      data: data.map((bank) => this.mapToResponseDto(bank)),
+      data: data.map((agency) => this.mapToResponseDto(agency)),
       total,
-      page: paginationDto.page,
-      limit: paginationDto.limit,
-      totalPages: Math.ceil(total / paginationDto.limit),
+      page: currentPage,
+      limit: currentLimit,
+      totalPages: Math.ceil(total / currentLimit),
     };
   }
 

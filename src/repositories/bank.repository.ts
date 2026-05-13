@@ -27,15 +27,6 @@ export class BankRepository {
     }
   }
 
-  async findById(id: string): Promise<BankDocument | null> {
-    try {
-      return await this.bankModel.findById(id).exec();
-    } catch (error: any) {
-      this.logger.error(`Error finding bank by ID: ${error.message}`);
-      throw error;
-    }
-  }
-
   async findAll(
     skip: number = 0,
     limit: number = 10,
@@ -53,6 +44,47 @@ export class BankRepository {
       return { data, total };
     } catch (error: any) {
       this.logger.error(`Error fetching banks: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findById(id: string): Promise<BankDocument | null> {
+    try {
+      return await this.bankModel.findById(id).exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding bank by ID: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async searchByName(
+    keyword: string,
+    skip = 0,
+    limit = 10,
+  ): Promise<{ data: BankDocument[]; total: number }> {
+    try {
+      const safeKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+      const filter = {
+        inv_buyerBankName: {
+          $regex: safeKeyword,
+          $options: 'i',
+        },
+      };
+
+      const [data, total] = await Promise.all([
+        this.bankModel
+          .find(filter)
+          .skip(skip)
+          .limit(limit)
+          .sort({ createdAt: -1 })
+          .exec(),
+        this.bankModel.countDocuments(filter).exec(),
+      ]);
+
+      return { data, total };
+    } catch (error: any) {
+      this.logger.error(`Error searching agency by name: ${error.message}`);
       throw error;
     }
   }

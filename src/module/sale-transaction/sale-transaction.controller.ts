@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -28,6 +29,8 @@ import {
 import { SaleTransactionResponseDTO } from '@module/sale-transaction/dto/sale-transaction.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import { GetAllSaleTransactions } from './dto/get-all-sale-transaction.res';
+import { MessageResponse } from '@app-types/message.res';
 
 @ApiTags('Sale Transaction')
 @Controller('sale-transaction')
@@ -45,7 +48,29 @@ export class SaleTransactionController {
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   @HttpCode(HttpStatus.CREATED)
   async createSaleTransaction(
-    @Body(ValidationPipe) createSalesTransactionDto: CreateSalesTransactionDto,
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+        exceptionFactory: (errors) => {
+          const formattedErrors = errors.map((error) => ({
+            field: error.property,
+            messages: Object.values(error.constraints || {}),
+            children: error.children?.map((child) => ({
+              field: `${error.property}.${child.property}`,
+              messages: Object.values(child.constraints || {}),
+            })),
+          }));
+
+          return new BadRequestException({
+            message: 'Validation failed',
+            errors: formattedErrors,
+          });
+        },
+      }),
+    )
+    createSalesTransactionDto: CreateSalesTransactionDto,
   ) {
     return await this.saleTransactionService.createSaleTransaction(
       createSalesTransactionDto,
@@ -58,12 +83,8 @@ export class SaleTransactionController {
     status: 200,
     description: 'Returns paginated sale transactions.',
   })
-  async getAllSaleTransactions(
-    @Query(ValidationPipe) paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<SaleTransactionResponseDTO>> {
-    return await this.saleTransactionService.getAllSaleTransactions(
-      paginationDto,
-    );
+  async getAllSaleTransactions(): Promise<GetAllSaleTransactions> {
+    return await this.saleTransactionService.getAllSaleTransactions();
   }
 
   @Get('stats')
@@ -134,6 +155,18 @@ export class SaleTransactionController {
     );
   }
 
+  @Get('by-bank/:bankId')
+  @ApiOperation({ summary: 'Get sale transactions by bank ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns sale transactions for a bank.',
+  })
+  async getSaleTransactionsByBank(
+    @Param('bankId') bankId: string,
+  ): Promise<SaleTransactionResponseDTO[]> {
+    return await this.saleTransactionService.getSaleTransactionsByBank(bankId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get sale transaction by ID' })
   @ApiResponse({ status: 200, description: 'Returns sale transaction by ID.' })
@@ -164,7 +197,7 @@ export class SaleTransactionController {
   @ApiResponse({ status: 404, description: 'Sale transaction not found.' })
   async deleteSaleTransaction(
     @Param('id') id: string,
-  ): Promise<{ message: string }> {
+  ): Promise<MessageResponse> {
     return await this.saleTransactionService.deleteSaleTransaction(id);
   }
 

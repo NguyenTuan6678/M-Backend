@@ -7,11 +7,12 @@ import { LoggerService } from '@common/logs/logger.service';
 import { CreateProductDto } from './dto/create-product.req';
 import { ProductResponseDto } from './dto/product.res';
 import { MessageResponse } from '@app-types/message.res';
-import { ERROR_RES } from '@common/constants/error.const';
+import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import {
   PaginatedResponseDto,
   PaginationDto,
 } from '@common/dto/pagination.dto';
+import { GetAllProducts } from './dto/get-all-product.res';
 
 @Injectable()
 export class ProductService {
@@ -115,58 +116,152 @@ export class ProductService {
     }
   }
 
-  async getProductById(id: string): Promise<ProductResponseDto> {
-    const product = await this.productRepository.findById(id);
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${id} does not exist`);
+  async getAllProducts(): Promise<GetAllProducts> {
+    let response: GetAllProducts | null = null;
+    try {
+      const products = await this.productModel.find().exec();
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Get all products successfully',
+        content: products,
+      };
+      return response;
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
     }
-    return this.mapToResponseDto(product);
+    return response;
   }
 
-  async getAllProducts(
-    paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<ProductResponseDto>> {
-    const { data, total } = await this.productRepository.findAll(
-      paginationDto.skip,
-      paginationDto.limit,
+  async getProductById(id: string): Promise<ProductResponseDto> {
+    let response: ProductResponseDto | null = null;
+    try {
+      const product = await this.productRepository.findById(id);
+
+      if (!product) {
+        response = {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Product with ID ${id} not found`,
+        };
+
+        return response;
+      }
+
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Product fetched successfully',
+        content: product,
+      };
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
+    }
+    return response;
+  }
+
+  async searchProductsByName(keyword: string, page = 1, limit = 10) {
+    if (!keyword || !keyword.trim()) {
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      };
+    }
+
+    const currentPage = Number(page) || 1;
+    const currentLimit = Number(limit) || 10;
+    const skip = (currentPage - 1) * currentLimit;
+
+    const { data, total } = await this.productRepository.searchByCode(
+      keyword.trim(),
+      skip,
+      currentLimit,
     );
+
     return {
-      data: data.map((product) => this.mapToResponseDto(product)),
+      data: data.map((agency) => this.mapToResponseDto(agency)),
       total,
-      page: paginationDto.page,
-      limit: paginationDto.limit,
-      totalPages: Math.ceil(total / paginationDto.limit),
+      page: currentPage,
+      limit: currentLimit,
+      totalPages: Math.ceil(total / currentLimit),
     };
   }
 
   async updateProduct(
     id: string,
     updateData: Partial<CreateProductDto>,
-  ): Promise<ProductResponseDto> {
-    // Nếu update bất kỳ field nào ảnh hưởng tính toán → recalculate
-    if (
-      updateData.inv_unitPrice !== undefined ||
-      updateData.inv_quantity !== undefined ||
-      updateData.inv_discountAmount !== undefined ||
-      updateData.ma_thue !== undefined
-    ) {
-      const existing = await this.productRepository.findById(id);
-      if (!existing)
-        throw new NotFoundException(`Product with ID ${id} does not exist`);
+  ): Promise<ProductResponseDto | null> {
+    try {
+      // Nếu update bất kỳ field nào ảnh hưởng tính toán → recalculate
+      if (
+        updateData.inv_unitPrice !== undefined ||
+        updateData.inv_quantity !== undefined ||
+        updateData.inv_discountAmount !== undefined ||
+        updateData.ma_thue !== undefined
+      ) {
+        const existing = await this.productRepository.findById(id);
 
-      const calculated = this.calculateFields(
-        updateData.inv_unitPrice ?? existing.inv_unitPrice,
-        updateData.inv_quantity ?? existing.inv_quantity,
-        updateData.inv_discountAmount ?? existing.inv_discountAmount,
-        updateData.ma_thue ?? existing.ma_thue,
+        if (!existing) {
+          return {
+            code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+            info: ERROR_INFO.FAIL,
+            message: `Product with ID ${id} not found`,
+            content: undefined,
+          };
+        }
+
+        const calculated = this.calculateFields(
+          updateData.inv_unitPrice ?? existing.inv_unitPrice,
+          updateData.inv_quantity ?? existing.inv_quantity,
+          updateData.inv_discountAmount ?? existing.inv_discountAmount,
+          updateData.ma_thue ?? existing.ma_thue,
+        );
+
+        updateData = {
+          ...updateData,
+          ...calculated,
+        };
+      }
+
+      const updatedProduct = await this.productRepository.update(
+        id,
+        updateData,
       );
-      updateData = { ...updateData, ...calculated };
-    }
 
-    const updatedProduct = await this.productRepository.update(id, updateData);
-    if (!updatedProduct)
-      throw new NotFoundException(`Product with ID ${id} does not exist`);
-    return this.mapToResponseDto(updatedProduct);
+      if (!updatedProduct) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Product with ID ${id} not found`,
+          content: undefined,
+        };
+      }
+
+      return {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Product updated successfully',
+        content: updatedProduct,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+        content: undefined,
+      };
+    }
   }
 
   async deleteProduct(id: string): Promise<MessageResponse> {
