@@ -64,18 +64,6 @@ export class SaleTransactionService {
         ],
       });
     }
-
-    if (!Types.ObjectId.isValid(value)) {
-      throw new BadRequestException({
-        message: 'Validation failed',
-        errors: [
-          {
-            field: fieldName,
-            message: `${fieldName} must be a valid MongoDB ObjectId`,
-          },
-        ],
-      });
-    }
   }
 
   private async validateRelatedEntities(

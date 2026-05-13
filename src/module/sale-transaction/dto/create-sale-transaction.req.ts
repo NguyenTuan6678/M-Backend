@@ -18,6 +18,7 @@ export class TransactionItemDto {
     description: 'Product ID',
   })
   @IsNotEmpty({ message: 'productId is required' })
+  @IsString({ message: 'productId must be a string' })
   @IsMongoId({ message: 'productId must be a valid MongoDB ObjectId' })
   productId: string;
 
@@ -236,6 +237,7 @@ export class CreateSalesTransactionDto {
     description: 'Agency ID',
   })
   @IsNotEmpty({ message: 'agencyId is required' })
+  @IsString({ message: 'agencyId must be a string' })
   @IsMongoId({ message: 'agencyId must be a valid MongoDB ObjectId' })
   agencyId: string;
 
@@ -244,6 +246,7 @@ export class CreateSalesTransactionDto {
     description: 'Department ID',
   })
   @IsNotEmpty({ message: 'departmentId is required' })
+  @IsString({ message: 'deparmentId must be a string' })
   @IsMongoId({ message: 'departmentId must be a valid MongoDB ObjectId' })
   departmentId: string;
 
@@ -252,6 +255,7 @@ export class CreateSalesTransactionDto {
     description: 'Employee ID',
   })
   @IsNotEmpty({ message: 'employeeId is required' })
+  @IsString({ message: 'employeeId must be a string' })
   @IsMongoId({ message: 'employeeId must be a valid MongoDB ObjectId' })
   employeeId: string;
 
@@ -260,6 +264,7 @@ export class CreateSalesTransactionDto {
     description: 'Bank ID',
   })
   @IsNotEmpty({ message: 'bankId is required' })
+  @IsString({ message: 'bankId must be a string' })
   @IsMongoId({ message: 'bankId must be a valid MongoDB ObjectId' })
   bankId: string;
 
