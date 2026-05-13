@@ -16,10 +16,6 @@ import {
 import { UsersService } from '@users/users.service';
 import { CreateUsersDTO } from '@users/dto/create-users.req';
 import { UsersResponseDTO } from '@users/dto/users.res';
-import {
-  PaginationDto,
-  PaginatedResponseDto,
-} from '@common/dto/pagination.dto';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import {
   ApiBearerAuth,

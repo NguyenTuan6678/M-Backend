@@ -8,10 +8,6 @@ import { CreateBankDto } from './dto/create-bank.req';
 import { BankResponseDto } from './dto/bank.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
-import {
-  PaginatedResponseDto,
-  PaginationDto,
-} from '@common/dto/pagination.dto';
 import { GetAllBanks } from './dto/get-all-bank.res';
 
 @Injectable()
@@ -77,6 +73,7 @@ export class BankService {
         code: 200,
         info: ERROR_INFO.SUCCESS,
         message: 'Get all banks successfully',
+        content: banks,
       };
       return response;
     } catch (error: any) {

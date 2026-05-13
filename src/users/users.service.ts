@@ -1,12 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UsersRepository } from '@repositories/users.repository';
 import { CreateUsersDTO } from '@users/dto/create-users.req';
 import { UsersResponseDTO } from '@users/dto/users.res';
 import { LoggerService } from '@common/logs/logger.service';
-import {
-  PaginationDto,
-  PaginatedResponseDto,
-} from '@common/dto/pagination.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '@schemas/users.schema';
 import { Model } from 'mongoose';

@@ -1,15 +1,11 @@
 import { LoggerService } from '@common/logs/logger.service';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EmployeeRepository } from '@repositories/employee.repository';
 import { Employee, EmployeeDocument } from '@schemas/employee.schema';
 import { CreateEmployeeDto } from './dto/create.employee.req';
 import { EmployeeResponseDto } from './dto/employee.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
-import {
-  PaginatedResponseDto,
-  PaginationDto,
-} from '@common/dto/pagination.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { GetAllEmployees } from './dto/get-all-employee.res';
@@ -79,7 +75,7 @@ export class EmployeeService {
       response = {
         code: 200,
         info: ERROR_INFO.SUCCESS,
-        message: 'Get all agencies successfully',
+        message: 'Get all employees successfully',
         content: employees,
       };
       return response;
@@ -111,7 +107,7 @@ export class EmployeeService {
       response = {
         code: 200,
         info: ERROR_INFO.SUCCESS,
-        message: 'Agency fetched successfully',
+        message: 'Employee fetched successfully',
         content: employee,
       };
     } catch (error: any) {

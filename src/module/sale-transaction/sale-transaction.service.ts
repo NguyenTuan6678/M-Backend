@@ -4,15 +4,10 @@ import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
-
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
 import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { SaleTransactionResponseDTO } from '@module/sale-transaction/dto/sale-transaction.res';
-import {
-  PaginationDto,
-  PaginatedResponseDto,
-} from '@common/dto/pagination.dto';
 import { AgencyRepository } from '@repositories/agency.repository';
 import { DepartmentRepository } from '@repositories/department.repository';
 import { EmployeeRepository } from '@repositories/employee.repository';

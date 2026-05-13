@@ -21,10 +21,6 @@ import {
 } from '@nestjs/swagger';
 import { CreateBankDto } from './dto/create-bank.req';
 import { BankResponseDto } from './dto/bank.res';
-import {
-  PaginatedResponseDto,
-  PaginationDto,
-} from '@common/dto/pagination.dto';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { GetAllBanks } from './dto/get-all-bank.res';

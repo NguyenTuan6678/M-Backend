@@ -22,10 +22,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { MessageResponse } from '@app-types/message.res';
-import {
-  PaginatedResponseDto,
-  PaginationDto,
-} from '@common/dto/pagination.dto';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { GetAllEmployees } from './dto/get-all-employee.res';
 

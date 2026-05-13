@@ -21,10 +21,6 @@ import {
 } from '@nestjs/swagger';
 import { CreateProductDto } from './dto/create-product.req';
 import { ProductResponseDto } from './dto/product.res';
-import {
-  PaginatedResponseDto,
-  PaginationDto,
-} from '@common/dto/pagination.dto';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { GetAllProducts } from './dto/get-all-product.res';

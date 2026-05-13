@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ProductRepository } from '@repositories/product.repository';
@@ -8,10 +8,6 @@ import { CreateProductDto } from './dto/create-product.req';
 import { ProductResponseDto } from './dto/product.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
-import {
-  PaginatedResponseDto,
-  PaginationDto,
-} from '@common/dto/pagination.dto';
 import { GetAllProducts } from './dto/get-all-product.res';
 
 @Injectable()
