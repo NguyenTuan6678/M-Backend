@@ -27,6 +27,7 @@ import {
 } from '@common/dto/pagination.dto';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
+import { GetAllProducts } from './dto/get-all-product.res';
 
 @ApiTags('Product')
 @Controller('products')
@@ -40,7 +41,14 @@ export class ProductController {
   @ApiResponse({ status: 404, description: 'Can not create product.' })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body(ValidationPipe) createProductDto: CreateProductDto,
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    )
+    createProductDto: CreateProductDto,
   ): Promise<ProductResponseDto> {
     return await this.productService.createProduct(createProductDto);
   }
@@ -49,10 +57,8 @@ export class ProductController {
   @ApiOperation({ summary: 'Get a paginated list of banks' })
   @ApiResponse({ status: 200, description: 'Success.' })
   @ApiResponse({ status: 404, description: 'Product not found.' })
-  async findAll(
-    @Query(ValidationPipe) paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<ProductResponseDto>> {
-    return await this.productService.getAllProducts(paginationDto);
+  async findAll(): Promise<GetAllProducts> {
+    return await this.productService.getAllProducts();
   }
 
   @Get(':id')
@@ -63,14 +69,36 @@ export class ProductController {
     return await this.productService.getProductById(id);
   }
 
+  @Get('search-name/search')
+  @ApiOperation({ summary: 'Search agencies by product code' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  async searchAgencies(
+    @Query('keyword') keyword: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    return this.productService.searchProductsByName(
+      keyword,
+      Number(page),
+      Number(limit),
+    );
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Updated bank by ID' })
   @ApiResponse({ status: 200, description: 'Success.' })
   @ApiResponse({ status: 404, description: 'Product not found.' })
   async update(
     @Param('id') id: string,
-    @Body(ValidationPipe) updateProductDto: Partial<CreateProductDto>,
-  ): Promise<ProductResponseDto> {
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    )
+    updateProductDto: Partial<CreateProductDto>,
+  ): Promise<ProductResponseDto | null> {
     return await this.productService.updateProduct(id, updateProductDto);
   }
 

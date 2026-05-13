@@ -21,12 +21,9 @@ import {
 } from '@nestjs/swagger';
 import { AgencyResponseDto } from './dto/agency.res';
 import { CreateAgencyDto } from './dto/create-agency.req';
-import {
-  PaginatedResponseDto,
-  PaginationDto,
-} from '@common/dto/pagination.dto';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { MessageResponse } from '@app-types/message.res';
+import { GetAllAgencies } from './dto/get-all-agency.res';
 
 @ApiTags('Agency')
 @Controller('agencies')
@@ -37,33 +34,38 @@ export class AgencyController {
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new agency' })
-  @ApiResponse({ status: 404, description: 'Can not create agency.' })
+  @ApiResponse({ status: 201, description: 'Agency created successfully.' })
+  @ApiResponse({ status: 400, description: 'Missing required fields.' })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body(ValidationPipe) createAgencyDto: CreateAgencyDto,
-  ): Promise<AgencyResponseDto> {
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    )
+    createAgencyDto: CreateAgencyDto,
+  ): Promise<AgencyResponseDto | null> {
     return this.agencyService.createAgency(createAgencyDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get a paginated list of agencies' })
+  @ApiOperation({ summary: 'Get all agencies' })
   @ApiResponse({ status: 200, description: 'Success.' })
-  @ApiResponse({ status: 404, description: 'Agency not found.' })
-  async findAll(
-    @Query(ValidationPipe) paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<AgencyResponseDto>> {
-    return this.agencyService.getAllAgencies(paginationDto);
+  async findAll(): Promise<GetAllAgencies> {
+    return this.agencyService.getAllAgencies();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get agency by ID' })
   @ApiResponse({ status: 200, description: 'Success.' })
   @ApiResponse({ status: 404, description: 'Agency not found.' })
-  async findOne(@Param('id') id: string): Promise<AgencyResponseDto> {
+  async findOne(@Param('id') id: string): Promise<AgencyResponseDto | null> {
     return this.agencyService.getAgencyById(id);
   }
 
-  @Get('/search-name/search')
+  @Get('search-name/search')
   @ApiOperation({ summary: 'Search agencies by name' })
   @ApiResponse({ status: 200, description: 'Success.' })
   async searchAgencies(
@@ -84,15 +86,23 @@ export class AgencyController {
   @ApiResponse({ status: 404, description: 'Agency not found.' })
   async update(
     @Param('id') id: string,
-    @Body(ValidationPipe) updateAgencyDto: CreateAgencyDto,
-  ): Promise<AgencyResponseDto> {
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    )
+    updateAgencyDto: Partial<CreateAgencyDto>,
+  ): Promise<AgencyResponseDto | null> {
     return this.agencyService.updateAgency(id, updateAgencyDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete agency by ID' })
+  @ApiResponse({ status: 200, description: 'Agency deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Agency not found.' })
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: string): Promise<MessageResponse> {
     return this.agencyService.deleteAgency(id);
   }

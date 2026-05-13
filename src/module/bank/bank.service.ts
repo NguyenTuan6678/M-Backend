@@ -7,11 +7,12 @@ import { Model } from 'mongoose';
 import { CreateBankDto } from './dto/create-bank.req';
 import { BankResponseDto } from './dto/bank.res';
 import { MessageResponse } from '@app-types/message.res';
-import { ERROR_RES } from '@common/constants/error.const';
+import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import {
   PaginatedResponseDto,
   PaginationDto,
 } from '@common/dto/pagination.dto';
+import { GetAllBanks } from './dto/get-all-bank.res';
 
 @Injectable()
 export class BankService {
@@ -68,28 +69,55 @@ export class BankService {
     return response;
   }
 
-  async getBankById(id: string): Promise<BankResponseDto> {
-    const bank = await this.bankRepository.findById(id);
-    if (!bank) {
-      throw new NotFoundException(`Bank with ID ${id} dose not in database`);
+  async getAllBanks(): Promise<GetAllBanks> {
+    let response: GetAllBanks | null = null;
+    try {
+      const banks = await this.bankModel.find().exec();
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Get all banks successfully',
+      };
+      return response;
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
     }
-    return this.mapToResponseDto(bank);
+    return response;
   }
 
-  async getAllBanks(
-    paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<BankResponseDto>> {
-    const { data, total } = await this.bankRepository.findAll(
-      paginationDto.skip,
-      paginationDto.limit,
-    );
-    return {
-      data: data.map((bank) => this.mapToResponseDto(bank)),
-      total,
-      page: paginationDto.page,
-      limit: paginationDto.limit,
-      totalPages: Math.ceil(total / paginationDto.limit),
-    };
+  async getBankById(id: string): Promise<BankResponseDto | null> {
+    let response: BankResponseDto | null = null;
+    try {
+      const bank = await this.bankRepository.findById(id);
+
+      if (!bank) {
+        response = {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Bank with ID ${id} not found`,
+        };
+
+        return response;
+      }
+
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Bank fetched successfully',
+        content: bank,
+      };
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
+    }
+    return response;
   }
 
   async searchBanksByName(keyword: string, page = 1, limit = 10) {

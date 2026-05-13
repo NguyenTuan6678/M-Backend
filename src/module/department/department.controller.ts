@@ -27,6 +27,7 @@ import {
 } from '@common/dto/pagination.dto';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
+import { GetAllDepartments } from './dto/get-all-department.res';
 
 @ApiTags('Department')
 @Controller('departments')
@@ -49,18 +50,33 @@ export class DepartmentController {
   @ApiOperation({ summary: 'Get a paginated list of banks' })
   @ApiResponse({ status: 200, description: 'Success.' })
   @ApiResponse({ status: 404, description: 'Employee not found.' })
-  async findAll(
-    @Query(ValidationPipe) paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<DepartmentResponseDto>> {
-    return await this.departmentService.getAllDepartments(paginationDto);
+  async findAll(): Promise<GetAllDepartments> {
+    return await this.departmentService.getAllDepartments();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get department by ID' })
   @ApiResponse({ status: 200, description: 'Success.' })
   @ApiResponse({ status: 404, description: 'Employee not found.' })
-  async findOne(@Param('id') id: string): Promise<DepartmentResponseDto> {
+  async findOne(
+    @Param('id') id: string,
+  ): Promise<DepartmentResponseDto | null> {
     return await this.departmentService.getDepartmentById(id);
+  }
+
+  @Get('search-name/search')
+  @ApiOperation({ summary: 'Search departments by name' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  async searchAgencies(
+    @Query('keyword') keyword: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    return this.departmentService.searchDepartmentsByName(
+      keyword,
+      Number(page),
+      Number(limit),
+    );
   }
 
   @Patch(':id')
@@ -69,7 +85,14 @@ export class DepartmentController {
   @ApiResponse({ status: 404, description: 'Employee not found.' })
   async update(
     @Param('id') id: string,
-    @Body(ValidationPipe) updateBankDto: Partial<CreateDepartmentDto>,
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    )
+    updateBankDto: Partial<CreateDepartmentDto>,
   ): Promise<DepartmentResponseDto> {
     return await this.departmentService.updateDepartment(id, updateBankDto);
   }

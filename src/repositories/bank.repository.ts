@@ -27,6 +27,27 @@ export class BankRepository {
     }
   }
 
+  async findAll(
+    skip: number = 0,
+    limit: number = 10,
+  ): Promise<{ data: BankDocument[]; total: number }> {
+    try {
+      const [data, total] = await Promise.all([
+        this.bankModel
+          .find()
+          .skip(skip)
+          .limit(limit)
+          .sort({ createdAt: -1 })
+          .exec(),
+        this.bankModel.countDocuments().exec(),
+      ]);
+      return { data, total };
+    } catch (error: any) {
+      this.logger.error(`Error fetching banks: ${error.message}`);
+      throw error;
+    }
+  }
+
   async findById(id: string): Promise<BankDocument | null> {
     try {
       return await this.bankModel.findById(id).exec();
@@ -45,7 +66,7 @@ export class BankRepository {
       const safeKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
       const filter = {
-        name: {
+        inv_buyerBankName: {
           $regex: safeKeyword,
           $options: 'i',
         },
@@ -64,27 +85,6 @@ export class BankRepository {
       return { data, total };
     } catch (error: any) {
       this.logger.error(`Error searching agency by name: ${error.message}`);
-      throw error;
-    }
-  }
-
-  async findAll(
-    skip: number = 0,
-    limit: number = 10,
-  ): Promise<{ data: BankDocument[]; total: number }> {
-    try {
-      const [data, total] = await Promise.all([
-        this.bankModel
-          .find()
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-        this.bankModel.countDocuments().exec(),
-      ]);
-      return { data, total };
-    } catch (error: any) {
-      this.logger.error(`Error fetching banks: ${error.message}`);
       throw error;
     }
   }

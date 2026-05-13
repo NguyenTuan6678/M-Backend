@@ -29,6 +29,8 @@ import {
 import { SaleTransactionResponseDTO } from '@module/sale-transaction/dto/sale-transaction.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import { GetAllSaleTransactions } from './dto/get-all-sale-transaction.res';
+import { MessageResponse } from '@app-types/message.res';
 
 @ApiTags('Sale Transaction')
 @Controller('sale-transaction')
@@ -81,12 +83,8 @@ export class SaleTransactionController {
     status: 200,
     description: 'Returns paginated sale transactions.',
   })
-  async getAllSaleTransactions(
-    @Query(ValidationPipe) paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<SaleTransactionResponseDTO>> {
-    return await this.saleTransactionService.getAllSaleTransactions(
-      paginationDto,
-    );
+  async getAllSaleTransactions(): Promise<GetAllSaleTransactions> {
+    return await this.saleTransactionService.getAllSaleTransactions();
   }
 
   @Get('stats')
@@ -199,7 +197,7 @@ export class SaleTransactionController {
   @ApiResponse({ status: 404, description: 'Sale transaction not found.' })
   async deleteSaleTransaction(
     @Param('id') id: string,
-  ): Promise<{ message: string }> {
+  ): Promise<MessageResponse> {
     return await this.saleTransactionService.deleteSaleTransaction(id);
   }
 

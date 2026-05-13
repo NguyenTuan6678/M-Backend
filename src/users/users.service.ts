@@ -13,6 +13,7 @@ import { Model } from 'mongoose';
 import { ERROR_RES, ERROR_INFO } from '@common/constants/error.const';
 import { MessageResponse } from '@app-types/message.res';
 import { Role } from '@utils/role.enum';
+import { GetAllUsers } from './dto/get-all-users.res';
 
 @Injectable()
 export class UsersService {
@@ -90,27 +91,85 @@ export class UsersService {
     return response;
   }
 
-  async getUserById(id: string): Promise<UsersResponseDTO> {
-    const user = await this.userRepository.findById(id);
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} does not in database`);
+  async getAllUsers(): Promise<GetAllUsers> {
+    let response: GetAllUsers | null = null;
+    try {
+      const users = await this.userModel.find().exec();
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Get all users successfully',
+        content: users,
+      };
+      return response;
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
     }
-    return this.mapToResponseDto(user);
+    return response;
   }
 
-  async getAllUsers(
-    paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<UsersResponseDTO>> {
-    const { data, total } = await this.userRepository.findAll(
-      paginationDto.skip,
-      paginationDto.limit,
+  async getUserById(id: string): Promise<UsersResponseDTO> {
+    let response: UsersResponseDTO | null = null;
+    try {
+      const user = await this.userRepository.findById(id);
+
+      if (!user) {
+        response = {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `User with ID ${id} not found`,
+        };
+
+        return response;
+      }
+
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'User fetched successfully',
+        content: user,
+      };
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
+    }
+    return response;
+  }
+
+  async searchUsersByName(keyword: string, page = 1, limit = 10) {
+    if (!keyword || !keyword.trim()) {
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      };
+    }
+
+    const currentPage = Number(page) || 1;
+    const currentLimit = Number(limit) || 10;
+    const skip = (currentPage - 1) * currentLimit;
+
+    const { data, total } = await this.userRepository.searchByName(
+      keyword.trim(),
+      skip,
+      currentLimit,
     );
+
     return {
       data: data.map((user) => this.mapToResponseDto(user)),
       total,
-      page: paginationDto.page,
-      limit: paginationDto.limit,
-      totalPages: Math.ceil(total / paginationDto.limit),
+      page: currentPage,
+      limit: currentLimit,
+      totalPages: Math.ceil(total / currentLimit),
     };
   }
 
@@ -118,11 +177,32 @@ export class UsersService {
     id: string,
     updateData: Partial<CreateUsersDTO>,
   ): Promise<UsersResponseDTO> {
-    const updatedUser = await this.userRepository.update(id, updateData);
-    if (!updatedUser) {
-      throw new NotFoundException(`User with ID ${id} does not in database`);
+    try {
+      const updatedUser = await this.userRepository.update(id, updateData);
+
+      if (!updatedUser) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Agency with ID ${id} not found`,
+          content: updatedUser || undefined,
+        };
+      }
+
+      return {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Agency updated successfully',
+        content: updatedUser,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+        content: undefined,
+      };
     }
-    return this.mapToResponseDto(updatedUser);
   }
 
   async deleteUser(id: string): Promise<MessageResponse> {
@@ -130,13 +210,13 @@ export class UsersService {
     if (!deletedUser) {
       return {
         code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: `User with ID ${id} not found`,
       };
     }
     return {
       code: ERROR_RES.SUCCESS.statusCode,
-      info: 'SUCCESS',
+      info: ERROR_INFO.SUCCESS,
       message: `User ${deletedUser.username} deleted successfully`,
     };
   }
@@ -145,15 +225,40 @@ export class UsersService {
     username: string,
     password: string,
   ): Promise<UsersResponseDTO | null> {
-    const user = await this.userRepository.findByUsername(username);
-    if (!user) {
-      return null;
+    let response: UsersResponseDTO | null = null;
+    try {
+      const user = await this.userRepository.findByUsername(username);
+      if (!user) {
+        response = {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `User with username ${username} not found`,
+        };
+
+        return response;
+      }
+
+      const isPasswordValid = await user.comparePassword(password);
+      if (!isPasswordValid) {
+        response = {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `User with password ${password} might be wrong`,
+        };
+      }
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: `Validated user success`,
+      };
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
     }
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return null;
-    }
-    return this.mapToResponseDto(user);
+    return response;
   }
 
   async getUserStats(): Promise<{ totalUsers: number }> {

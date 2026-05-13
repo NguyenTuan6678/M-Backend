@@ -60,15 +60,6 @@ export class AgencyRepository {
     }
   }
 
-  async findByName(name: string): Promise<AgencyDocument | null> {
-    try {
-      return await this.agencyModel.findOne({ name }).exec();
-    } catch (error: any) {
-      this.logger.error(`Error finding agency by NAME: ${error.message}`);
-      throw error;
-    }
-  }
-
   async searchByName(
     keyword: string,
     skip = 0,

@@ -25,7 +25,14 @@ import { Department } from '@schemas/department.schema';
 import { Employee } from '@schemas/employee.schema';
 import { Bank } from '@schemas/bank.schema';
 import { Product } from '@schemas/product.schema';
-import { Types } from 'mongoose';
+import { Model, Types } from 'mongoose';
+import { GetAllSaleTransactions } from './dto/get-all-sale-transaction.res';
+import { InjectModel } from '@nestjs/mongoose';
+import {
+  SalesTransaction,
+  SalesTransactionDocument,
+} from '@schemas/sale-transaction.schema';
+import { MessageResponse } from '@app-types/message.res';
 
 interface ValidatedEntities {
   missing: string[];
@@ -39,6 +46,8 @@ interface ValidatedEntities {
 @Injectable()
 export class SaleTransactionService {
   constructor(
+    @InjectModel(SalesTransaction.name)
+    private transactionModel: Model<SalesTransactionDocument>,
     private readonly saleTransactionRepository: SaleTransactionRepository,
     private readonly agencyRepository: AgencyRepository,
     private readonly departmentRepository: DepartmentRepository,
@@ -194,64 +203,109 @@ export class SaleTransactionService {
     }
   }
 
+  async getAllSaleTransactions(): Promise<GetAllSaleTransactions> {
+    let response: GetAllSaleTransactions | null = null;
+    try {
+      const saleTransactions = await this.transactionModel.find().exec();
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Get all agencies successfully',
+        content: saleTransactions,
+      };
+      return response;
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
+    }
+    return response;
+  }
+
   async getSaleTransactionById(
     id: string,
   ): Promise<SaleTransactionResponseDTO> {
-    const transaction = await this.saleTransactionRepository.findById(id);
-    if (!transaction) {
-      this.logger.warn(`Sale transaction not found with ID: ${id}`);
-      throw new Error('Sale transaction not found');
-    }
-    return this.mapToResponseDto(transaction);
-  }
+    let response: SaleTransactionResponseDTO | null = null;
+    try {
+      const transaction = await this.saleTransactionRepository.findById(id);
 
-  async getAllSaleTransactions(
-    paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<SaleTransactionResponseDTO>> {
-    const { data, total } = await this.saleTransactionRepository.findAll(
-      paginationDto.skip,
-      paginationDto.limit,
-    );
-    return {
-      data: data.map((transaction) => this.mapToResponseDto(transaction)),
-      total,
-      page: paginationDto.page,
-      limit: paginationDto.limit,
-      totalPages: Math.ceil(total / paginationDto.limit),
-    };
+      if (!transaction) {
+        response = {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Sale transaction with ID ${id} not found`,
+        };
+
+        return response;
+      }
+
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Agency fetched successfully',
+        content: transaction,
+      };
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
+    }
+    return response;
   }
 
   async updateSaleTransaction(
     id: string,
     updateData: Partial<CreateSalesTransactionDto>,
   ): Promise<SaleTransactionResponseDTO> {
-    const updatedTransaction = await this.saleTransactionRepository.update(
-      id,
-      updateData,
-    );
-    if (!updatedTransaction) {
-      this.logger.warn(`Sale transaction not found for update with ID: ${id}`);
-      throw new Error('Sale transaction not found');
+    try {
+      const updatedTransation = await this.saleTransactionRepository.update(
+        id,
+        updateData,
+      );
+
+      if (!updatedTransation) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Sale transaction with ID ${id} not found`,
+          content: updatedTransation || undefined,
+        };
+      }
+
+      return {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Agency updated successfully',
+        content: updatedTransation,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+        content: undefined,
+      };
     }
-    return this.mapToResponseDto(updatedTransaction);
   }
 
-  async deleteSaleTransaction(id: string): Promise<{ message: string }> {
-    try {
-      const deleted = await this.saleTransactionRepository.delete(id);
-      if (!deleted) {
-        this.logger.warn(
-          `Sale transaction not found for deletion with ID: ${id}`,
-        );
-        return { message: 'Sale transaction not found' };
-      }
-      return { message: 'Sale transaction deleted successfully' };
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.deleteSaleTransaction: ${error.message}`,
-      );
-      throw error;
+  async deleteSaleTransaction(id: string): Promise<MessageResponse> {
+    const deletedTransaction = await this.saleTransactionRepository.delete(id);
+    if (!deletedTransaction) {
+      return {
+        code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+        info: 'FAIL',
+        message: `Sale transaction with ID ${id} not found`,
+      };
     }
+    return {
+      code: ERROR_RES.SUCCESS.statusCode,
+      info: 'SUCCESS',
+      message: 'Sale transaction deleted successfully',
+    };
   }
 
   async getSaleTransactionStats(): Promise<{ totalTransactions: number }> {

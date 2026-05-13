@@ -5,13 +5,14 @@ import { Employee, EmployeeDocument } from '@schemas/employee.schema';
 import { CreateEmployeeDto } from './dto/create.employee.req';
 import { EmployeeResponseDto } from './dto/employee.res';
 import { MessageResponse } from '@app-types/message.res';
-import { ERROR_RES } from '@common/constants/error.const';
+import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import {
   PaginatedResponseDto,
   PaginationDto,
 } from '@common/dto/pagination.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { GetAllEmployees } from './dto/get-all-employee.res';
 
 @Injectable()
 export class EmployeeService {
@@ -71,29 +72,85 @@ export class EmployeeService {
     return response;
   }
 
-  async getEmployeeById(id: string): Promise<EmployeeResponseDto> {
-    const employee = await this.employeeRepository.findById(id);
-    if (!employee) {
-      throw new NotFoundException(
-        `Employee with ID ${id} dose not in database`,
-      );
+  async getAllEmployees(): Promise<GetAllEmployees> {
+    let response: GetAllEmployees | null = null;
+    try {
+      const employees = await this.employeeModel.find().exec();
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Get all agencies successfully',
+        content: employees,
+      };
+      return response;
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
     }
-    return this.mapToResponseDto(employee);
+    return response;
   }
 
-  async getAllEmployees(
-    paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<EmployeeResponseDto>> {
-    const { data, total } = await this.employeeRepository.findAll(
-      paginationDto.skip,
-      paginationDto.limit,
+  async getEmployeeById(id: string): Promise<EmployeeResponseDto | null> {
+    let response: EmployeeResponseDto | null = null;
+    try {
+      const employee = await this.employeeRepository.findById(id);
+
+      if (!employee) {
+        response = {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Employee with ID ${id} not found`,
+        };
+
+        return response;
+      }
+
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Agency fetched successfully',
+        content: employee,
+      };
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
+    }
+    return response;
+  }
+
+  async searchEmployeesByName(keyword: string, page = 1, limit = 10) {
+    if (!keyword || !keyword.trim()) {
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      };
+    }
+
+    const currentPage = Number(page) || 1;
+    const currentLimit = Number(limit) || 10;
+    const skip = (currentPage - 1) * currentLimit;
+
+    const { data, total } = await this.employeeRepository.searchByName(
+      keyword.trim(),
+      skip,
+      currentLimit,
     );
+
     return {
-      data: data.map((employee) => this.mapToResponseDto(employee)),
+      data: data.map((agency) => this.mapToResponseDto(agency)),
       total,
-      page: paginationDto.page,
-      limit: paginationDto.limit,
-      totalPages: Math.ceil(total / paginationDto.limit),
+      page: currentPage,
+      limit: currentLimit,
+      totalPages: Math.ceil(total / currentLimit),
     };
   }
 
@@ -101,16 +158,35 @@ export class EmployeeService {
     id: string,
     updateData: Partial<CreateEmployeeDto>,
   ): Promise<EmployeeResponseDto> {
-    const updatedEmployee = await this.employeeRepository.update(
-      id,
-      updateData,
-    );
-    if (!updatedEmployee) {
-      throw new NotFoundException(
-        `Employee with ID ${id} does not in database`,
+    try {
+      const updatedEmployee = await this.employeeRepository.update(
+        id,
+        updateData,
       );
+
+      if (!updatedEmployee) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Employee with ID ${id} not found`,
+          content: updatedEmployee || undefined,
+        };
+      }
+
+      return {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Employee updated successfully',
+        content: updatedEmployee,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+        content: undefined,
+      };
     }
-    return this.mapToResponseDto(updatedEmployee);
   }
 
   async deleteEmployee(id: string): Promise<MessageResponse> {

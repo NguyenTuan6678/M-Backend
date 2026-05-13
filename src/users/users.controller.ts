@@ -21,8 +21,14 @@ import {
   PaginatedResponseDto,
 } from '@common/dto/pagination.dto';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { MessageResponse } from '@app-types/message.res';
+import { GetAllUsers } from './dto/get-all-users.res';
 
 @ApiTags('Users')
 @Controller('users')
@@ -50,16 +56,29 @@ export class UsersController {
 
   @Get()
   @ApiOperation({ summary: 'Get a paginated list of users' })
-  async findAll(
-    @Query(ValidationPipe) paginationDto: PaginationDto,
-  ): Promise<PaginatedResponseDto<UsersResponseDTO>> {
-    return await this.usersService.getAllUsers(paginationDto);
+  async findAll(): Promise<GetAllUsers> {
+    return await this.usersService.getAllUsers();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID' })
   async findOne(@Param('id') id: string): Promise<UsersResponseDTO> {
     return await this.usersService.getUserById(id);
+  }
+
+  @Get('search-name/search')
+  @ApiOperation({ summary: 'Search user by name' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  async searchAgencies(
+    @Query('keyword') keyword: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    return this.usersService.searchUsersByName(
+      keyword,
+      Number(page),
+      Number(limit),
+    );
   }
 
   @Patch(':id')
