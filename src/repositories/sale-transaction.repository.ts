@@ -110,10 +110,16 @@ export class SaleTransactionRepository {
         .find()
         .skip(skip)
         .limit(limit)
-        .populate('agencyId')
-        .populate('departmentId')
-        .populate('employeeId')
-        .populate('bankId')
+        .populate({ path: 'agencyId', select: 'name commissionPercent' })
+        .populate({
+          path: 'departmentId',
+          select: 'departmentName departmentDescription',
+        })
+        .populate({
+          path: 'employeeId',
+          select: 'employeeName employeeEmail employeePhone ',
+        })
+        .populate({ path: 'bankId', select: 'inv_buyerBankName' })
         .populate({
           path: 'items.productId',
           select:
