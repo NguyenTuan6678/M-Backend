@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -45,7 +46,29 @@ export class SaleTransactionController {
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   @HttpCode(HttpStatus.CREATED)
   async createSaleTransaction(
-    @Body(ValidationPipe) createSalesTransactionDto: CreateSalesTransactionDto,
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+        exceptionFactory: (errors) => {
+          const formattedErrors = errors.map((error) => ({
+            field: error.property,
+            messages: Object.values(error.constraints || {}),
+            children: error.children?.map((child) => ({
+              field: `${error.property}.${child.property}`,
+              messages: Object.values(child.constraints || {}),
+            })),
+          }));
+
+          return new BadRequestException({
+            message: 'Validation failed',
+            errors: formattedErrors,
+          });
+        },
+      }),
+    )
+    createSalesTransactionDto: CreateSalesTransactionDto,
   ) {
     return await this.saleTransactionService.createSaleTransaction(
       createSalesTransactionDto,
@@ -132,6 +155,18 @@ export class SaleTransactionController {
     return await this.saleTransactionService.getSaleTransactionsByDepartment(
       departmentId,
     );
+  }
+
+  @Get('by-bank/:bankId')
+  @ApiOperation({ summary: 'Get sale transactions by bank ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns sale transactions for a bank.',
+  })
+  async getSaleTransactionsByBank(
+    @Param('bankId') bankId: string,
+  ): Promise<SaleTransactionResponseDTO[]> {
+    return await this.saleTransactionService.getSaleTransactionsByBank(bankId);
   }
 
   @Get(':id')

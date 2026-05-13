@@ -82,6 +82,36 @@ export class AgencyService {
     return this.mapToResponseDto(agency);
   }
 
+  async searchAgenciesByName(keyword: string, page = 1, limit = 10) {
+    if (!keyword || !keyword.trim()) {
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      };
+    }
+
+    const currentPage = Number(page) || 1;
+    const currentLimit = Number(limit) || 10;
+    const skip = (currentPage - 1) * currentLimit;
+
+    const { data, total } = await this.agencyRepository.searchByName(
+      keyword.trim(),
+      skip,
+      currentLimit,
+    );
+
+    return {
+      data: data.map((agency) => this.mapToResponseDto(agency)),
+      total,
+      page: currentPage,
+      limit: currentLimit,
+      totalPages: Math.ceil(total / currentLimit),
+    };
+  }
+
   async updateAgency(
     id: string,
     updateData: Partial<CreateAgencyDto>,

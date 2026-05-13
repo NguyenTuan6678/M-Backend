@@ -63,6 +63,21 @@ export class BankController {
     return await this.bankService.getBankById(id);
   }
 
+  @Get('seacrch-bank/search')
+  @ApiOperation({ summary: 'Search banks by name' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  async searchAgencies(
+    @Query('keyword') keyword: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    return this.bankService.searchBanksByName(
+      keyword,
+      Number(page),
+      Number(limit),
+    );
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Updated bank by ID' })
   @ApiResponse({ status: 200, description: 'Success.' })

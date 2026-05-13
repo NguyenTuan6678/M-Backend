@@ -63,6 +63,21 @@ export class AgencyController {
     return this.agencyService.getAgencyById(id);
   }
 
+  @Get('/search-name/search')
+  @ApiOperation({ summary: 'Search agencies by name' })
+  @ApiResponse({ status: 200, description: 'Success.' })
+  async searchAgencies(
+    @Query('keyword') keyword: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    return this.agencyService.searchAgenciesByName(
+      keyword,
+      Number(page),
+      Number(limit),
+    );
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Update agency by ID' })
   @ApiResponse({ status: 200, description: 'Success.' })

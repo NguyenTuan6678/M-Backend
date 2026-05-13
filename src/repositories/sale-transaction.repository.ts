@@ -23,14 +23,6 @@ export class SaleTransactionRepository {
       const { agencyId, departmentId, employeeId, bankId, items } =
         createSaleTransactionDto;
 
-      if (!items?.length) {
-        this.logger.warn(
-          'Missing required field: items',
-          'SaleTransactionRepository',
-        );
-        return null;
-      }
-
       const now = new Date();
       const pad = (n: number) => String(n).padStart(2, '0');
       const hours = now.getHours();
@@ -65,7 +57,7 @@ export class SaleTransactionRepository {
         `Error creating sale transaction: ${error.message}`,
         'SaleTransactionRepository',
       );
-      return null;
+      throw error;
     }
   }
 
@@ -164,7 +156,7 @@ export class SaleTransactionRepository {
   ): Promise<SalesTransactionDocument[]> {
     try {
       return await this.saleTransactionModel
-        .find({ employeeId })
+        .find({ employeeId: new Types.ObjectId(employeeId) })
         .sort({ createdAt: -1 })
         .exec();
     } catch (error: any) {
@@ -179,7 +171,7 @@ export class SaleTransactionRepository {
   async findByAgencyId(agencyId: string): Promise<SalesTransactionDocument[]> {
     try {
       return await this.saleTransactionModel
-        .find({ agencyId })
+        .find({ agencyId: new Types.ObjectId(agencyId) })
         .sort({ createdAt: -1 })
         .exec();
     } catch (error: any) {
@@ -196,12 +188,27 @@ export class SaleTransactionRepository {
   ): Promise<SalesTransactionDocument[]> {
     try {
       return await this.saleTransactionModel
-        .find({ departmentId })
+        .find({ departmentId: new Types.ObjectId(departmentId) })
         .sort({ createdAt: -1 })
         .exec();
     } catch (error: any) {
       this.logger.error(
         `Error finding sale transactions by department ID: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async findByBankId(bankId: string): Promise<SalesTransactionDocument[]> {
+    try {
+      return await this.saleTransactionModel
+        .find({ bankId: new Types.ObjectId(bankId) })
+        .sort({ createdAt: -1 })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transactions by bank ID: ${error.message}`,
         'SaleTransactionRepository',
       );
       throw error;
