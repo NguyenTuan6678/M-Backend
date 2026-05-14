@@ -64,7 +64,6 @@ export class UsersController {
 
   @Get('search-name/search')
   @ApiOperation({ summary: 'Search user by name' })
-  @ApiResponse({ status: 200, description: 'Success.' })
   async searchAgencies(
     @Query('keyword') keyword: string,
     @Query('page') page = '1',
