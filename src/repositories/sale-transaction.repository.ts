@@ -7,14 +7,30 @@ import {
 } from '@schemas/sale-transaction.schema';
 import { Model, Types } from 'mongoose';
 import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
+import { Counter, CounterDocument } from '@schemas/counter.schema';
 
 @Injectable()
 export class SaleTransactionRepository {
   constructor(
     @InjectModel(SalesTransaction.name)
     private saleTransactionModel: Model<SalesTransactionDocument>,
+
     private readonly logger: LoggerService,
+
+    @InjectModel(Counter.name)
+    private readonly counterModel: Model<CounterDocument>,
   ) {}
+
+  private async generateSaleTransactionNumber(): Promise<string> {
+    const counter = await this.counterModel.findOneAndUpdate(
+      { name: 'saleTransactionNumber' },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }, // upsert: tạo mới nếu chưa có
+    );
+
+    return `HD${String(counter.seq).padStart(4, '0')}`;
+    // → "HD0001", "HD0002", ...
+  }
 
   async createSaleTransaction(
     createSaleTransactionDto: CreateSalesTransactionDto,
@@ -23,13 +39,15 @@ export class SaleTransactionRepository {
       const { agencyId, departmentId, employeeId, bankId, items } =
         createSaleTransactionDto;
 
-      const now = new Date();
-      const pad = (n: number) => String(n).padStart(2, '0');
-      const hours = now.getHours();
-      const formattedNow = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(hours % 12 || 12)}:${pad(now.getMinutes())}:${pad(now.getSeconds())} ${hours < 12 ? 'SA' : 'CH'}`;
+      const saleTransactionNumber = await this.generateSaleTransactionNumber();
+
+      const formattedNow = new Date().toLocaleDateString('en-CA', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+      });
 
       const dataSubmit = {
         ...createSaleTransactionDto,
+        saleTransactionNumber,
         inv_invoiceIssuedDate:
           createSaleTransactionDto.inv_invoiceIssuedDate ?? formattedNow,
         ...(agencyId && { agencyId: new Types.ObjectId(agencyId) }),

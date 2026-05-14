@@ -28,6 +28,9 @@ export class TransactionItem {
 @Schema({ timestamps: true })
 export class SalesTransaction {
   @Prop()
+  inv_invoiceCreatedId: string;
+
+  @Prop()
   inv_invoiceSeries: string;
 
   @Prop()
@@ -38,6 +41,9 @@ export class SalesTransaction {
 
   @Prop()
   inv_exchangeRate: number;
+
+  @Prop({ unique: true })
+  saleTransactionNumber: string;
 
   @Prop()
   so_benh_an: string;

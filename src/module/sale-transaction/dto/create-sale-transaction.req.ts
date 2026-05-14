@@ -48,6 +48,9 @@ export class TransactionItemDto {
 }
 
 export class CreateSalesTransactionDto {
+  @IsString()
+  inv_invoiceCreatedId?: string;
+
   @ApiPropertyOptional({ example: '1C26TYY', description: 'Invoice series' })
   @IsOptional()
   @IsString({ message: 'inv_invoiceSeries must be a string' })
