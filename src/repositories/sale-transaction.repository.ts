@@ -8,6 +8,7 @@ import {
 import { Model, Types } from 'mongoose';
 import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
 import { Counter, CounterDocument } from '@schemas/counter.schema';
+import { UpdateSalesTransactionDto } from '@module/sale-transaction/dto/update-sale-transaction-repository.res';
 
 @Injectable()
 export class SaleTransactionRepository {
@@ -213,7 +214,7 @@ export class SaleTransactionRepository {
 
   async update(
     id: string,
-    updateData: Partial<CreateSalesTransactionDto>,
+    updateData: Partial<UpdateSalesTransactionDto>,
   ): Promise<SalesTransactionDocument | null> {
     try {
       const updatedTransaction = await this.saleTransactionModel
