@@ -17,6 +17,7 @@ import { ProductModule } from './module/product/product.module';
 import { MInvoiceReceiptGetModule } from './api/m-invoice-receipt-get/m-invoice-receipt-get.module';
 import { MInvoiceReceiptPostModule } from './api/m-invoice-receipt-post/m-invoice-receipt-post.module';
 import { ReceiptInvoiceModule } from '@module/receiptinvoice/receiptinvoice.module';
+import { ViewMInvoiceReceiptModule } from './api/m-invoice-receipt-get-view/m-invoice-receipt-get-view.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { ReceiptInvoiceModule } from '@module/receiptinvoice/receiptinvoice.modu
     ReceiptInvoiceModule,
     MInvoiceReceiptGetModule,
     MInvoiceReceiptPostModule,
+    ViewMInvoiceReceiptModule,
   ],
   controllers: [AppController],
   providers: [
