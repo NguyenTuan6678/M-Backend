@@ -13,12 +13,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { BankService } from './bank.service';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateBankDto } from './dto/create-bank.req';
 import { BankResponseDto } from './dto/bank.res';
 import { MessageResponse } from '@app-types/message.res';
@@ -34,7 +29,6 @@ export class BankController {
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new bank' })
-  @ApiResponse({ status: 404, description: 'Can not create bank.' })
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body(
@@ -51,23 +45,18 @@ export class BankController {
 
   @Get()
   @ApiOperation({ summary: 'Get a paginated list of banks' })
-  @ApiResponse({ status: 200, description: 'Success.' })
-  @ApiResponse({ status: 404, description: 'Bank not found.' })
   async findAll(): Promise<GetAllBanks> {
     return this.bankService.getAllBanks();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get bank by ID' })
-  @ApiResponse({ status: 200, description: 'Success.' })
-  @ApiResponse({ status: 404, description: 'Bank not found.' })
   async findOne(@Param('id') id: string): Promise<BankResponseDto | null> {
     return this.bankService.getBankById(id);
   }
 
   @Get('seacrch-bank/search')
   @ApiOperation({ summary: 'Search banks by name' })
-  @ApiResponse({ status: 200, description: 'Success.' })
   async searchAgencies(
     @Query('keyword') keyword: string,
     @Query('page') page = '1',
@@ -82,8 +71,6 @@ export class BankController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Updated bank by ID' })
-  @ApiResponse({ status: 200, description: 'Success.' })
-  @ApiResponse({ status: 404, description: 'Bank not found.' })
   async update(
     @Param('id') id: string,
     @Body(
@@ -100,7 +87,6 @@ export class BankController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete bank by ID' })
-  @ApiResponse({ status: 404, description: 'Bank not found.' })
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string): Promise<MessageResponse> {
     return this.bankService.deleteBank(id);
