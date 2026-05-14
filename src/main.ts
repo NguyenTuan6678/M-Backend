@@ -4,11 +4,21 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from '@common/filters/all-exceptions.filter';
 import { LoggerService } from '@common/logs/logger.service';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { join } from 'path';
+import { NestExpressApplication } from '@nestjs/platform-express';
 declare const module: any;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const logger = new LoggerService();
+
+  app.useStaticAssets(join(process.cwd(), 'files'), {
+    prefix: '/files',
+  });
+
+  app.useStaticAssets(join(process.cwd(), 'invoice'), {
+    prefix: '/invoice',
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
