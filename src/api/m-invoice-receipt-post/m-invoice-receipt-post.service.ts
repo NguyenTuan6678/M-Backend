@@ -146,8 +146,8 @@ export class MInvoiceReceiptPostService {
         inv_invoiceIssuedDate: resIssuedDate,
       } = responseData.data;
 
-      // Lấy saleTransactionNumber từ transaction đã fetch trước đó
-      const saleTransactionNumber = (transaction as any).saleTransactionNumber;
+      // Lấy orderNumber từ transaction đã fetch trước đó
+      const orderNumber = (transaction as any).orderNumber;
 
       const activationDate = new Date().toLocaleString('vi-VN', {
         timeZone: 'Asia/Ho_Chi_Minh',
@@ -158,7 +158,7 @@ export class MInvoiceReceiptPostService {
         key_api: resKeyApi,
         inv_invoiceIssuedDate: resIssuedDate,
         inv_invoiceCreatedId: resId,
-        so_benh_an: saleTransactionNumber, // ← tự cập nhật sau khi API thành công
+        so_benh_an: orderNumber, // ← tự cập nhật sau khi API thành công
         activationDate,
       });
     }

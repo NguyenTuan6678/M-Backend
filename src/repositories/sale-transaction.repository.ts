@@ -24,7 +24,7 @@ export class SaleTransactionRepository {
 
   private async generateSaleTransactionNumber(): Promise<string> {
     const counter = await this.counterModel.findOneAndUpdate(
-      { name: 'saleTransactionNumber' },
+      { name: 'orderNumber' },
       { $inc: { seq: 1 } },
       { new: true, upsert: true }, // upsert: tạo mới nếu chưa có
     );
@@ -40,7 +40,7 @@ export class SaleTransactionRepository {
       const { agencyId, departmentId, employeeId, bankId, items } =
         createSaleTransactionDto;
 
-      const saleTransactionNumber = await this.generateSaleTransactionNumber();
+      const orderNumber = await this.generateSaleTransactionNumber();
 
       const formattedNow = new Date().toLocaleDateString('en-CA', {
         timeZone: 'Asia/Ho_Chi_Minh',
@@ -48,7 +48,7 @@ export class SaleTransactionRepository {
 
       const dataSubmit = {
         ...createSaleTransactionDto,
-        saleTransactionNumber,
+        orderNumber,
         inv_invoiceIssuedDate:
           createSaleTransactionDto.inv_invoiceIssuedDate ?? formattedNow,
         ...(agencyId && { agencyId: new Types.ObjectId(agencyId) }),

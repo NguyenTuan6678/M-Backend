@@ -46,7 +46,7 @@ export class SalesTransaction {
   inv_exchangeRate: number;
 
   @Prop({ unique: true })
-  saleTransactionNumber: string;
+  orderNumber: string;
 
   @Prop()
   so_benh_an: string;
