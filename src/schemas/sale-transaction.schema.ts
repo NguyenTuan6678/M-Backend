@@ -27,7 +27,10 @@ export class TransactionItem {
 
 @Schema({ timestamps: true })
 export class SalesTransaction {
-  @Prop()
+  @Prop({ default: null })
+  activationDate: string;
+
+  @Prop({ default: null })
   inv_invoiceCreatedId: string;
 
   @Prop()
