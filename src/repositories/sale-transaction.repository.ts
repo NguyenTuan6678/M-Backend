@@ -131,6 +131,11 @@ export class SaleTransactionRepository {
   async findByIdWithPopulate(
     id: string,
   ): Promise<SalesTransactionDocument | null> {
+    if (!Types.ObjectId.isValid(id)) {
+      this.logger.error(`Invalid ObjectId: ${id}`, 'SaleTransactionRepository');
+      return null;
+    }
+
     try {
       return await this.saleTransactionModel
         .findById(id)
@@ -159,6 +164,37 @@ export class SaleTransactionRepository {
     } catch (error: any) {
       this.logger.error(
         `Error finding sale transaction with populate: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async findByInvoiceCreatedId(
+    inv_invoiceCreatedId: string,
+  ): Promise<SalesTransactionDocument | null> {
+    try {
+      return await this.saleTransactionModel
+        .findOne({ inv_invoiceCreatedId })
+        .populate({ path: 'agencyId', select: 'name commissionPercent' })
+        .populate({
+          path: 'departmentId',
+          select: 'departmentName departmentDescriptions',
+        })
+        .populate({
+          path: 'employeeId',
+          select: 'employeeName employeeEmail employeePhone',
+        })
+        .populate({ path: 'bankId', select: 'inv_buyerBankName' })
+        .populate({
+          path: 'items.productId',
+          select:
+            'inv_itemCode inv_itemName inv_unitCode inv_unitPrice ma_thue inv_quantity inv_discountAmount inv_TotalAmountWithoutVat inv_vatAmount inv_TotalAmount',
+        })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transaction by inv_invoiceCreatedId: ${error.message}`,
         'SaleTransactionRepository',
       );
       throw error;
