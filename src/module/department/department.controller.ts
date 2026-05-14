@@ -38,7 +38,6 @@ export class DepartmentController {
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new bank' })
-  @ApiResponse({ status: 404, description: 'Can not create department.' })
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body(ValidationPipe) createDepartmentDto: CreateDepartmentDto,
@@ -48,16 +47,12 @@ export class DepartmentController {
 
   @Get()
   @ApiOperation({ summary: 'Get a paginated list of banks' })
-  @ApiResponse({ status: 200, description: 'Success.' })
-  @ApiResponse({ status: 404, description: 'Employee not found.' })
   async findAll(): Promise<GetAllDepartments> {
     return await this.departmentService.getAllDepartments();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get department by ID' })
-  @ApiResponse({ status: 200, description: 'Success.' })
-  @ApiResponse({ status: 404, description: 'Employee not found.' })
   async findOne(
     @Param('id') id: string,
   ): Promise<DepartmentResponseDto | null> {
@@ -66,7 +61,6 @@ export class DepartmentController {
 
   @Get('search-name/search')
   @ApiOperation({ summary: 'Search departments by name' })
-  @ApiResponse({ status: 200, description: 'Success.' })
   async searchAgencies(
     @Query('keyword') keyword: string,
     @Query('page') page = '1',
@@ -81,8 +75,6 @@ export class DepartmentController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Updated bank by ID' })
-  @ApiResponse({ status: 200, description: 'Success.' })
-  @ApiResponse({ status: 404, description: 'Employee not found.' })
   async update(
     @Param('id') id: string,
     @Body(
@@ -99,7 +91,6 @@ export class DepartmentController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete bank by ID' })
-  @ApiResponse({ status: 404, description: 'Employee not found.' })
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string): Promise<MessageResponse> {
     return await this.departmentService.deleteDepartment(id);
