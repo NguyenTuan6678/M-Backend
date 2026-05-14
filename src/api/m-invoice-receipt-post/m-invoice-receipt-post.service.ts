@@ -79,7 +79,7 @@ export class MInvoiceReceiptPostService {
   async createInvoice(
     tax_code: string,
     saleTransactionId: string,
-    inv_invoiceSeries?: string,
+    inv_invoiceSeries: string,
     inv_invoiceIssuedDate?: string,
     editmode?: number,
   ) {
@@ -102,12 +102,15 @@ export class MInvoiceReceiptPostService {
 
     const invoiceDto = mapTransactionToInvoice(transaction as any);
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+    });
 
     invoiceDto.data = invoiceDto.data.map((d) => ({
       ...d,
-      ...(inv_invoiceSeries && { inv_invoiceSeries }),
+      inv_invoiceSeries,
       inv_invoiceIssuedDate: inv_invoiceIssuedDate || today,
+      key_api: saleTransactionId,
     }));
 
     const builtPayload = this.buildPayload(invoiceDto);
@@ -131,6 +134,29 @@ export class MInvoiceReceiptPostService {
         },
       ),
     );
+
+    const responseData = response.data;
+
+    // Lưu lại thông tin hoá đơn sau khi tạo thành công
+    if (responseData?.ok && responseData?.data) {
+      const {
+        inv_invoiceSeries: resSeries,
+        key_api: resKeyApi,
+        id: resId,
+        inv_invoiceIssuedDate: resIssuedDate,
+      } = responseData.data;
+
+      // Lấy saleTransactionNumber từ transaction đã fetch trước đó
+      const saleTransactionNumber = (transaction as any).saleTransactionNumber;
+
+      await this.saleTransactionRepository.update(saleTransactionId, {
+        inv_invoiceSeries: resSeries,
+        key_api: resKeyApi,
+        inv_invoiceIssuedDate: resIssuedDate,
+        inv_invoiceCreatedId: resId,
+        so_benh_an: saleTransactionNumber, // ← tự cập nhật sau khi API thành công
+      });
+    }
 
     return response.data;
   }
