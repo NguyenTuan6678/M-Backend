@@ -1,0 +1,176 @@
+import { LoggerService } from '@common/logs/logger.service';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { ReceiptInvoiceRepository } from '@repositories/receiptinvoice.repository';
+import {
+  ReceiptInvoice,
+  ReceiptInvoiceDocument,
+} from '@schemas/receiptinvoice.schema';
+import { Model } from 'mongoose';
+import { CreateReceiptInvoiceDto } from './dto/create-receiptinvoice.req';
+import { ReceiptInvoiceResponseDto } from './dto/reiptinvoice.res';
+import { MessageResponse } from '@app-types/message.res';
+import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
+import { GetAllReceiptInvoices } from './dto/get-all-reiptinvoice.res';
+
+@Injectable()
+export class ReceiptInvoiceService {
+  constructor(
+    @InjectModel(ReceiptInvoice.name)
+    private receiptModel: Model<ReceiptInvoiceDocument>,
+    private readonly receiptInvoiceRepository: ReceiptInvoiceRepository,
+    private readonly logger: LoggerService,
+  ) {}
+
+  async createReceipt(
+    createReceipt: CreateReceiptInvoiceDto,
+  ): Promise<ReceiptInvoiceResponseDto> {
+    let response: MessageResponse | null = null;
+    try {
+      const { inv_invoiceSeries, tax_code } = createReceipt;
+      if (!inv_invoiceSeries) {
+        response = {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: 'FAIL',
+          message: 'Missing required fields: inv_invoiceSeries',
+        };
+        return response;
+      }
+
+      const duplicatedReceipt = await this.receiptModel.findOne({
+        inv_invoiceSeries,
+      });
+      if (duplicatedReceipt) {
+        response = {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: 'FAIL',
+          message: 'inv_invoiceSeries already exists',
+        };
+        return response;
+      }
+
+      const newReceipt = new this.receiptModel({
+        inv_invoiceSeries,
+        tax_code,
+      });
+
+      await newReceipt.save();
+
+      response = {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: 'SUCCESS',
+        message: 'inv_invoiceSeries created successfully',
+      };
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: 'FAIL',
+        message: 'An error occurred while creating the inv_invoiceSeries',
+      };
+    }
+    return response;
+  }
+
+  async getAllReceipts(): Promise<GetAllReceiptInvoices> {
+    let response: GetAllReceiptInvoices | null = null;
+    try {
+      const receipt = await this.receiptModel.find().exec();
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Get all employees successfully',
+        content: receipt,
+      };
+      return response;
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
+    }
+    return response;
+  }
+
+  async getReceiptById(id: string): Promise<ReceiptInvoiceResponseDto | null> {
+    let response: ReceiptInvoiceResponseDto | null = null;
+    try {
+      const receipt = await this.receiptInvoiceRepository.findById(id);
+
+      if (!receipt) {
+        response = {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Receipt with ID ${id} not found`,
+        };
+
+        return response;
+      }
+
+      response = {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Employee fetched successfully',
+        content: receipt,
+      };
+    } catch (error: any) {
+      response = {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
+    }
+    return response;
+  }
+
+  async updateReceipt(
+    id: string,
+    updateData: Partial<CreateReceiptInvoiceDto>,
+  ): Promise<ReceiptInvoiceResponseDto> {
+    try {
+      const updatedReceipt = await this.receiptInvoiceRepository.update(
+        id,
+        updateData,
+      );
+
+      if (!updatedReceipt) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `ReceiptInvoice with ID ${id} not found`,
+          content: updatedReceipt || undefined,
+        };
+      }
+
+      return {
+        code: 200,
+        info: ERROR_INFO.SUCCESS,
+        message: 'ReceiptInvoice updated successfully',
+        content: updatedReceipt,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+        content: undefined,
+      };
+    }
+  }
+
+  async deleteReceipt(id: string): Promise<MessageResponse> {
+    const deletedReceipt = await this.receiptInvoiceRepository.delete(id);
+    if (!deletedReceipt) {
+      return {
+        code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+        info: 'FAIL',
+        message: `ReceiptInvoice with ID ${id} not found`,
+      };
+    }
+    return {
+      code: ERROR_RES.SUCCESS.statusCode,
+      info: 'SUCCESS',
+      message: `ReceiptInvoice ${deletedReceipt.inv_invoiceSeries} deleted successfully`,
+    };
+  }
+}
