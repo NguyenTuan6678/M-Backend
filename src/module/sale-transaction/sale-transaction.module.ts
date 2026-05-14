@@ -19,6 +19,7 @@ import { Department, DepartmentSchema } from '@schemas/department.schema';
 import { Employee, EmployeeSchema } from '@schemas/employee.schema';
 import { Bank, BankSchema } from '@schemas/bank.schema';
 import { Product, ProductSchema } from '@schemas/product.schema';
+import { Counter, CounterSchema } from '@schemas/counter.schema';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { Product, ProductSchema } from '@schemas/product.schema';
       { name: Employee.name, schema: EmployeeSchema },
       { name: Bank.name, schema: BankSchema },
       { name: Product.name, schema: ProductSchema },
+      { name: Counter.name, schema: CounterSchema },
     ]),
     AgencyModule,
     DepartmentModule,
