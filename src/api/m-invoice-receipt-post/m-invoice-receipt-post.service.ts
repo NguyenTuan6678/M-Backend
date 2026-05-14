@@ -93,22 +93,24 @@ export class MInvoiceReceiptPostService {
   }
 
   private calculateItemFields(item: InvoiceItemDataDto) {
-    const A = item.price;
-    const B = item.inv_quantity;
-    const C = item.inv_discountAmount;
-    const D = item.ma_thue / 100;
+    const price = item.price;
+    const quantity = item.inv_quantity;
+    const discount = item.inv_discountAmount;
+    const discountPercentage = item.inv_discountPercentage || 0;
+    const tax = item.ma_thue / 100;
 
-    const G = A * B - C; // inv_TotalAmountWithoutVat
-    const F = G * D; // inv_vatAmount
-    const E = G + F; // inv_TotalAmount
-    const I = G / B; // inv_unitPrice
+    const totalPrice = price * quantity - discount;
+    const totalAmountWithVat = totalPrice / (1 + tax);
+    const vatAmount = totalPrice - totalAmountWithVat;
+    const totalBeforeDiscount = totalAmountWithVat / (1 - discountPercentage);
+    const unitPrice = totalBeforeDiscount / quantity;
 
     return {
       ...item,
-      inv_TotalAmountWithoutVat: G,
-      inv_vatAmount: F,
-      inv_TotalAmount: E,
-      inv_unitPrice: I,
+      inv_TotalAmountWithoutVat: totalAmountWithVat,
+      inv_vatAmount: vatAmount,
+      inv_TotalAmount: totalPrice,
+      inv_unitPrice: unitPrice,
     };
   }
 
