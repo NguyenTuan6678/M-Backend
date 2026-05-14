@@ -1,7 +1,14 @@
 import configuration from '@config/configuration';
 import { HttpService } from '@nestjs/axios';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  GatewayTimeoutException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
+import { AxiosError } from 'axios';
 import { ConfigType } from '@nestjs/config';
 import { CreateInvoiceDto, InvoiceItemDataDto } from './dto/send-receipt.req';
 import { mapTransactionToInvoice } from '@module/sale-transaction/sale-transaction.mapper';
@@ -15,6 +22,75 @@ export class MInvoiceReceiptPostService {
     private readonly httpService: HttpService,
     private readonly saleTransactionRepository: SaleTransactionRepository,
   ) {}
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private async callExternalApiWithRetry<T>(
+    fn: () => Promise<T>,
+    retries = 3,
+    delayMs = 1000,
+  ): Promise<T> {
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      const start = Date.now();
+
+      try {
+        const result = await fn();
+
+        console.log('[M-Invoice API SUCCESS]', {
+          attempt,
+          durationMs: Date.now() - start,
+        });
+
+        return result;
+      } catch (error) {
+        lastError = error;
+
+        const axiosError = error as AxiosError;
+        const status = axiosError.response?.status;
+        const code = axiosError.code;
+
+        console.error('[M-Invoice API FAILED]', {
+          attempt,
+          durationMs: Date.now() - start,
+          status,
+          code,
+          message: axiosError.message,
+        });
+
+        const shouldRetry =
+          code === 'ECONNABORTED' ||
+          code === 'ECONNRESET' ||
+          status === 408 ||
+          status === 429 ||
+          status === 500 ||
+          status === 502 ||
+          status === 503 ||
+          status === 504;
+
+        if (!shouldRetry || attempt === retries) {
+          break;
+        }
+
+        await this.sleep(delayMs * attempt);
+      }
+    }
+
+    const axiosError = lastError as AxiosError;
+
+    if (axiosError.code === 'ECONNABORTED') {
+      throw new GatewayTimeoutException('M-Invoice API timeout');
+    }
+
+    throw new BadGatewayException({
+      message: 'M-Invoice API is temporarily unavailable',
+      status: axiosError.response?.status,
+      error: axiosError.response?.data ?? axiosError.message,
+    });
+  }
 
   private calculateItemFields(item: InvoiceItemDataDto) {
     const A = item.price;
@@ -100,6 +176,19 @@ export class MInvoiceReceiptPostService {
       );
     }
 
+    if ((transaction as any).inv_invoiceCreatedId) {
+      return {
+        ok: true,
+        message: 'Invoice already created',
+        data: {
+          inv_invoiceCreatedId: (transaction as any).inv_invoiceCreatedId,
+          inv_invoiceSeries: (transaction as any).inv_invoiceSeries,
+          key_api: (transaction as any).key_api,
+          inv_invoiceIssuedDate: (transaction as any).inv_invoiceIssuedDate,
+        },
+      };
+    }
+
     const invoiceDto = mapTransactionToInvoice(transaction as any);
 
     const today = new Date().toLocaleDateString('en-CA', {
@@ -123,16 +212,17 @@ export class MInvoiceReceiptPostService {
 
     // console.log('payload', JSON.stringify(payload, null, 2));
 
-    const response = await firstValueFrom(
-      this.httpService.post(
-        `https://${tax_code}.${baseUrl}/api/InvoiceApi78/Save`,
-        payload,
-        {
+    const url = `https://${tax_code}.${baseUrl}/api/InvoiceApi78/Save`;
+
+    const response = await this.callExternalApiWithRetry(() =>
+      firstValueFrom(
+        this.httpService.post(url, payload, {
+          timeout: 15000,
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-        },
+        }),
       ),
     );
 
