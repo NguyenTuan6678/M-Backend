@@ -96,7 +96,9 @@ export class MInvoiceReceiptPostService {
     const price = item.price;
     const quantity = item.inv_quantity;
     const discount = item.inv_discountAmount;
-    const discountPercentage = item.inv_discountPercentage || 0;
+    const discountPercentage =
+      item.inv_discountPercentage ||
+      item.inv_discountAmount / (price * quantity);
     const tax = item.ma_thue / 100;
 
     const totalPrice = price * quantity - discount;
