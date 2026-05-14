@@ -149,12 +149,17 @@ export class MInvoiceReceiptPostService {
       // Lấy saleTransactionNumber từ transaction đã fetch trước đó
       const saleTransactionNumber = (transaction as any).saleTransactionNumber;
 
+      const activationDate = new Date().toLocaleString('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+      });
+
       await this.saleTransactionRepository.update(saleTransactionId, {
         inv_invoiceSeries: resSeries,
         key_api: resKeyApi,
         inv_invoiceIssuedDate: resIssuedDate,
         inv_invoiceCreatedId: resId,
         so_benh_an: saleTransactionNumber, // ← tự cập nhật sau khi API thành công
+        activationDate,
       });
     }
 
