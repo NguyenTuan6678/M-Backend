@@ -111,6 +111,7 @@ export class MInvoiceReceiptPostService {
       inv_invoiceSeries,
       inv_invoiceIssuedDate: inv_invoiceIssuedDate || today,
       key_api: saleTransactionId,
+      so_benh_an: transaction.orderNumber,
     }));
 
     const builtPayload = this.buildPayload(invoiceDto);
