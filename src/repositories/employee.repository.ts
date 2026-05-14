@@ -3,7 +3,7 @@ import { CreateEmployeeDto } from '../module/employee/dto/create.employee.req';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Employee, EmployeeDocument } from '@schemas/employee.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class EmployeeRepository {
@@ -29,21 +29,16 @@ export class EmployeeRepository {
     }
   }
 
-  async findAll(
-    skip: number = 0,
-    limit: number = 10,
-  ): Promise<{ data: EmployeeDocument[]; total: number }> {
+  async findAll(): Promise<EmployeeDocument[]> {
     try {
-      const [data, total] = await Promise.all([
-        this.employeeModel
-          .find()
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-        this.employeeModel.countDocuments().exec(),
-      ]);
-      return { data, total };
+      return await this.employeeModel
+        .find()
+        .populate({
+          path: 'departmentId',
+          select: 'departmentName departmentDescription',
+        })
+        .sort({ createdAt: -1 })
+        .exec();
     } catch (error: any) {
       this.logger.error(`Error fetching employees: ${error.message}`);
       throw error;
@@ -51,10 +46,23 @@ export class EmployeeRepository {
   }
 
   async findById(id: string): Promise<EmployeeDocument | null> {
+    if (!Types.ObjectId.isValid(id)) {
+      this.logger.error(`Invalid ObjectId: ${id}`, 'DepartmentRepository');
+      return null;
+    }
     try {
-      return await this.employeeModel.findById(id).exec();
+      return await this.employeeModel
+        .findById(id)
+        .populate({
+          path: 'departmentId',
+          select: 'departmentName departmentDescription',
+        })
+        .exec();
     } catch (error: any) {
-      this.logger.error(`Error finding employee by ID: ${error.message}`);
+      this.logger.error(
+        `Error finding sale transaction with employee: ${error.message}`,
+        'SaleTransactionRepository',
+      );
       throw error;
     }
   }

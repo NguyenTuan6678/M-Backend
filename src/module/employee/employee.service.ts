@@ -71,7 +71,7 @@ export class EmployeeService {
   async getAllEmployees(): Promise<GetAllEmployees> {
     let response: GetAllEmployees | null = null;
     try {
-      const employees = await this.employeeModel.find().exec();
+      const employees = await this.employeeRepository.findAll();
       response = {
         code: 200,
         info: ERROR_INFO.SUCCESS,

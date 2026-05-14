@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { Department } from './department.schema';
 
 export type EmployeeDocument = Employee & Document;
 
@@ -14,7 +15,7 @@ export class Employee {
   @Prop({ unique: true })
   employeePhone?: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Department' })
+  @Prop({ type: Types.ObjectId, ref: Department.name })
   departmentId: Types.ObjectId;
 
   @Prop({ default: true })
