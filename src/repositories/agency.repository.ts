@@ -6,6 +6,7 @@ import { LoggerService } from '@common/logs/logger.service';
 import { CreateAgencyDto } from '@module/agency/dto/create-agency.req';
 import { UpdateAgencyDto } from '@module/agency/dto/update-agency.req';
 import { Counter, CounterDocument } from '@schemas/counter.schema';
+import { QueryAgencyDto } from '@module/agency/dto/query-agency.req';
 
 const POPULATE_OPTIONS = [
   {
@@ -86,6 +87,67 @@ export class AgencyRepository {
         .exec();
     } catch (error: any) {
       this.logger.error(`Error finding agency by ID: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findAllWithFilters(query: QueryAgencyDto): Promise<{
+    data: AgencyDocument[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    try {
+      const { employeeId, isActive, search } = query;
+
+      const page = Number(query.page) || 1;
+      const limit = Number(query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const filter: Record<string, any> = {};
+
+      if (employeeId) {
+        filter.employeeId = new Types.ObjectId(employeeId);
+      }
+
+      if (isActive !== undefined) {
+        filter.isActive = isActive;
+      }
+
+      if (search) {
+        const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        filter.$or = [
+          { agencyNumber: { $regex: safeSearch, $options: 'i' } },
+          { agencyName: { $regex: safeSearch, $options: 'i' } },
+          { agencyEmail: { $regex: safeSearch, $options: 'i' } },
+        ];
+      }
+
+      const [data, total] = await Promise.all([
+        this.agencyModel
+          .find(filter)
+          .skip(skip)
+          .limit(limit)
+          .populate(POPULATE_OPTIONS)
+          .sort({ createdAt: -1 })
+          .exec(),
+
+        this.agencyModel.countDocuments(filter).exec(),
+      ]);
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding agencies with filters: ${error.message}`,
+      );
       throw error;
     }
   }

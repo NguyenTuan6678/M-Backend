@@ -4,10 +4,10 @@ import { CreateAgencyDto } from './dto/create-agency.req';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { AgencyResponseDto } from './dto/agency.res';
-import { GetAllAgencies } from './dto/get-all-agency.res';
 import { InjectModel } from '@nestjs/mongoose';
 import { Agency, AgencyDocument } from '@schemas/agency.schema';
 import { Model } from 'mongoose';
+import { QueryAgencyDto } from './dto/query-agency.req';
 
 @Injectable()
 export class AgencyService {
@@ -58,26 +58,26 @@ export class AgencyService {
     }
   }
 
-  async getAllAgencies(): Promise<GetAllAgencies> {
-    let response: GetAllAgencies | null = null;
-    try {
-      const agencies = await this.agencyRepository.findAll();
-      response = {
-        code: ERROR_RES.SUCCESS.statusCode,
-        info: ERROR_INFO.SUCCESS,
-        message: 'Get all agencies successfully',
-        content: agencies,
-      };
-      return response;
-    } catch (error: any) {
-      response = {
-        code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: ERROR_INFO.FAIL,
-        message: `An error occurred while getting all agencies: ${error.message}`,
-      };
-    }
-    return response;
-  }
+  // async getAllAgencies(): Promise<GetAllAgencies> {
+  //   let response: GetAllAgencies | null = null;
+  //   try {
+  //     const agencies = await this.agencyRepository.findAll();
+  //     response = {
+  //       code: ERROR_RES.SUCCESS.statusCode,
+  //       info: ERROR_INFO.SUCCESS,
+  //       message: 'Get all agencies successfully',
+  //       content: agencies,
+  //     };
+  //     return response;
+  //   } catch (error: any) {
+  //     response = {
+  //       code: ERROR_RES.INTERNAL_ERROR.statusCode,
+  //       info: ERROR_INFO.FAIL,
+  //       message: `An error occurred while getting all agencies: ${error.message}`,
+  //     };
+  //   }
+  //   return response;
+  // }
 
   async getAgencyById(id: string): Promise<AgencyResponseDto | null> {
     let response: AgencyResponseDto | null = null;
@@ -108,6 +108,25 @@ export class AgencyService {
       };
     }
     return response;
+  }
+
+  async searchAgencies(query: QueryAgencyDto) {
+    try {
+      const result = await this.agencyRepository.findAllWithFilters(query);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Agencies fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error searching agencies: ${error.message}`,
+      };
+    }
   }
 
   async searchAgenciesByName(keyword: string, page = 1, limit = 10) {

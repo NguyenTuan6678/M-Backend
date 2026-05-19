@@ -11,6 +11,7 @@ import { ReceiptInvoiceResponseDto } from './dto/reiptinvoice.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { GetAllReceiptInvoices } from './dto/get-all-reiptinvoice.res';
+import { QueryReceiptInvoiceDto } from './dto/query-receiptinvoice.req';
 
 @Injectable()
 export class ReceiptInvoiceService {
@@ -117,6 +118,26 @@ export class ReceiptInvoiceService {
       };
     }
     return response;
+  }
+
+  async searchReceiptInvoices(query: QueryReceiptInvoiceDto) {
+    try {
+      const result =
+        await this.receiptInvoiceRepository.findAllWithFilters(query);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Receipt invoices fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error searching receipt invoices: ${error.message}`,
+      };
+    }
   }
 
   async updateReceipt(

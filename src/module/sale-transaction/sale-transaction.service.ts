@@ -15,7 +15,7 @@ import { Bank } from '@schemas/bank.schema';
 import { Product } from '@schemas/product.schema';
 import { GetAllSaleTransactions } from './dto/get-all-sale-transaction.res';
 import { MessageResponse } from '@app-types/message.res';
-import { QuerySaleTransactionDto } from './dto/update-query-transaction.res';
+import { QuerySaleTransactionDto } from './dto/query-transaction.req';
 
 interface ValidatedEntities {
   missing: string[];

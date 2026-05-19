@@ -8,17 +8,17 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-
 import { ReceiptInvoiceService } from './receiptinvoice.service';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { CreateReceiptInvoiceDto } from './dto/create-receiptinvoice.req';
 import { ReceiptInvoiceResponseDto } from './dto/reiptinvoice.res';
-import { GetAllReceiptInvoices } from './dto/get-all-reiptinvoice.res';
 import { MessageResponse } from '@app-types/message.res';
+import { QueryReceiptInvoiceDto } from './dto/query-receiptinvoice.req';
 
 @ApiTags('ReceiptInvoice')
 @Controller('receiptinvoices')
@@ -37,9 +37,18 @@ export class ReceiptInvoiceController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get a paginated list of receiptinvoices' })
-  async findAll(): Promise<GetAllReceiptInvoices> {
-    return await this.receiptService.getAllReceipts();
+  @ApiOperation({
+    summary: 'Get all receipt invoices with optional filters & pagination',
+    description:
+      'Filter theo: inv_invoiceSeries, tax_code. ' +
+      'Text search inv_invoiceSeries, tax_code qua param search. ' +
+      'Phân trang qua page và limit.',
+  })
+  async getAllReceiptInvoices(
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    query: QueryReceiptInvoiceDto,
+  ) {
+    return await this.receiptService.searchReceiptInvoices(query);
   }
 
   @Get(':id')

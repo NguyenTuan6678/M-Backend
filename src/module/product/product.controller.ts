@@ -18,7 +18,7 @@ import { CreateProductDto } from './dto/create-product.req';
 import { ProductResponseDto } from './dto/product.res';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
-import { GetAllProducts } from './dto/get-all-product.res';
+import { QueryProductDto } from './dto/query-product.req';
 
 @ApiTags('Product')
 @Controller('products')
@@ -44,9 +44,18 @@ export class ProductController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get a paginated list of banks' })
-  async findAll(): Promise<GetAllProducts> {
-    return await this.productService.getAllProducts();
+  @ApiOperation({
+    summary: 'Get all products with optional filters & pagination',
+    description:
+      'Filter theo: isActive, ma_thue, minPrice, maxPrice. ' +
+      'Text search inv_itemCode, inv_itemName, inv_unitCode, ma_thue qua param search. ' +
+      'Phân trang qua page và limit.',
+  })
+  async getAllProducts(
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    query: QueryProductDto,
+  ) {
+    return await this.productService.searchProducts(query);
   }
 
   @Get(':id')
@@ -55,19 +64,19 @@ export class ProductController {
     return await this.productService.getProductById(id);
   }
 
-  @Get('search-name/search')
-  @ApiOperation({ summary: 'Search products by product code' })
-  async searchAgencies(
-    @Query('keyword') keyword: string,
-    @Query('page') page = '1',
-    @Query('limit') limit = '10',
-  ) {
-    return this.productService.searchProductsByName(
-      keyword,
-      Number(page),
-      Number(limit),
-    );
-  }
+  // @Get('search-name/search')
+  // @ApiOperation({ summary: 'Search products by product code' })
+  // async searchAgencies(
+  //   @Query('keyword') keyword: string,
+  //   @Query('page') page = '1',
+  //   @Query('limit') limit = '10',
+  // ) {
+  //   return this.productService.searchProductsByName(
+  //     keyword,
+  //     Number(page),
+  //     Number(limit),
+  //   );
+  // }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Updated bank by ID' })

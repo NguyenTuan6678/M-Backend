@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { User, UserDocument } from '@schemas/users.schema';
 import { CreateUsersDTO } from '@users/dto/create-users.req';
 import { LoggerService } from '@common/logs/logger.service';
+import { QueryUserDto } from '@users/dto/query-user.req';
 
 @Injectable()
 export class UsersRepository {
@@ -47,6 +48,68 @@ export class UsersRepository {
       return await this.userModel.findOne({ username }).exec();
     } catch (error: any) {
       this.logger.error(`Error finding user by username: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findAllWithFilters(query: QueryUserDto): Promise<{
+    data: UserDocument[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    try {
+      const { isActive, role, search } = query;
+
+      const page = Number(query.page) || 1;
+      const limit = Number(query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const filter: Record<string, any> = {};
+
+      if (isActive !== undefined) {
+        filter.isActive = isActive;
+      }
+
+      if (role) {
+        filter.role = role;
+      }
+
+      if (search) {
+        const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        filter.$or = [
+          {
+            username: {
+              $regex: safeSearch,
+              $options: 'i',
+            },
+          },
+        ];
+      }
+
+      const [data, total] = await Promise.all([
+        this.userModel
+          .find(filter)
+          .select('-password')
+          .skip(skip)
+          .limit(limit)
+          .sort({ createdAt: -1 })
+          .exec(),
+
+        this.userModel.countDocuments(filter).exec(),
+      ]);
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error: any) {
+      this.logger.error(`Error finding users with filters: ${error.message}`);
       throw error;
     }
   }

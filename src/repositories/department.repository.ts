@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Department, DepartmentDocument } from '@schemas/department.schema';
 import { Model } from 'mongoose';
 import { Counter, CounterDocument } from '@schemas/counter.schema';
+import { QueryDepartmentDto } from '@module/department/dto/query-department.req';
 
 @Injectable()
 export class DepartmentRepository {
@@ -66,6 +67,62 @@ export class DepartmentRepository {
       return await this.departmentModel.findById(id).exec();
     } catch (error: any) {
       this.logger.error(`Error finding department by ID: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findAllWithFilters(query: QueryDepartmentDto): Promise<{
+    data: DepartmentDocument[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    try {
+      const { isActive, search } = query;
+
+      const page = Number(query.page) || 1;
+      const limit = Number(query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const filter: Record<string, any> = {};
+
+      if (isActive !== undefined) {
+        filter.isActive = isActive;
+      }
+
+      if (search) {
+        const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        filter.$or = [
+          { departmentNumber: { $regex: safeSearch, $options: 'i' } },
+          { departmentName: { $regex: safeSearch, $options: 'i' } },
+          { departmentDescription: { $regex: safeSearch, $options: 'i' } },
+        ];
+      }
+
+      const [data, total] = await Promise.all([
+        this.departmentModel
+          .find(filter)
+          .skip(skip)
+          .limit(limit)
+          .sort({ createdAt: -1 })
+          .exec(),
+
+        this.departmentModel.countDocuments(filter).exec(),
+      ]);
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding departments with filters: ${error.message}`,
+      );
       throw error;
     }
   }

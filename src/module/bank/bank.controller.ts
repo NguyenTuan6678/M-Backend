@@ -18,7 +18,7 @@ import { CreateBankDto } from './dto/create-bank.req';
 import { BankResponseDto } from './dto/bank.res';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
-import { GetAllBanks } from './dto/get-all-bank.res';
+import { QueryBankDto } from './dto/query-bank.req';
 
 @ApiTags('Bank')
 @Controller('banks')
@@ -44,9 +44,18 @@ export class BankController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get a paginated list of banks' })
-  async findAll(): Promise<GetAllBanks> {
-    return this.bankService.getAllBanks();
+  @ApiOperation({
+    summary: 'Get all banks with optional filters & pagination',
+    description:
+      'Filter theo: isActive. ' +
+      'Text search inv_buyerBankName qua param search. ' +
+      'Phân trang qua page và limit.',
+  })
+  async getAllBanks(
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    query: QueryBankDto,
+  ) {
+    return await this.bankService.searchBanks(query);
   }
 
   @Get(':id')
@@ -55,19 +64,19 @@ export class BankController {
     return this.bankService.getBankById(id);
   }
 
-  @Get('seacrch-bank/search')
-  @ApiOperation({ summary: 'Search banks by name' })
-  async searchAgencies(
-    @Query('keyword') keyword: string,
-    @Query('page') page = '1',
-    @Query('limit') limit = '10',
-  ) {
-    return this.bankService.searchBanksByName(
-      keyword,
-      Number(page),
-      Number(limit),
-    );
-  }
+  // @Get('seacrch-bank/search')
+  // @ApiOperation({ summary: 'Search banks by name' })
+  // async searchAgencies(
+  //   @Query('keyword') keyword: string,
+  //   @Query('page') page = '1',
+  //   @Query('limit') limit = '10',
+  // ) {
+  //   return this.bankService.searchBanksByName(
+  //     keyword,
+  //     Number(page),
+  //     Number(limit),
+  //   );
+  // }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Updated bank by ID' })

@@ -18,7 +18,7 @@ import { AgencyResponseDto } from './dto/agency.res';
 import { CreateAgencyDto } from './dto/create-agency.req';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { MessageResponse } from '@app-types/message.res';
-import { GetAllAgencies } from './dto/get-all-agency.res';
+import { QueryAgencyDto } from './dto/query-agency.req';
 
 @ApiTags('Agency')
 @Controller('agencies')
@@ -44,9 +44,14 @@ export class AgencyController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all agencies' })
-  async findAll(): Promise<GetAllAgencies> {
-    return this.agencyService.getAllAgencies();
+  @ApiOperation({
+    summary: 'Get all agencies with optional filters & pagination',
+  })
+  async getAllAgencies(
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    query: QueryAgencyDto,
+  ) {
+    return await this.agencyService.searchAgencies(query);
   }
 
   @Get(':id')
@@ -55,19 +60,19 @@ export class AgencyController {
     return this.agencyService.getAgencyById(id);
   }
 
-  @Get('search-name/search')
-  @ApiOperation({ summary: 'Search agencies by name' })
-  async searchAgencies(
-    @Query('keyword') keyword: string,
-    @Query('page') page = '1',
-    @Query('limit') limit = '10',
-  ) {
-    return this.agencyService.searchAgenciesByName(
-      keyword,
-      Number(page),
-      Number(limit),
-    );
-  }
+  // @Get('search-name/search')
+  // @ApiOperation({ summary: 'Search agencies by name' })
+  // async searchAgencies(
+  //   @Query('keyword') keyword: string,
+  //   @Query('page') page = '1',
+  //   @Query('limit') limit = '10',
+  // ) {
+  //   return this.agencyService.searchAgenciesByName(
+  //     keyword,
+  //     Number(page),
+  //     Number(limit),
+  //   );
+  // }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update agency by ID' })

@@ -8,6 +8,7 @@ import { DepartmentResponseDto } from './dto/department.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { GetAllDepartments } from './dto/get-all-department.res';
+import { QueryDepartmentDto } from './dto/query-department.req';
 
 @Injectable()
 export class DepartmentService {
@@ -114,6 +115,25 @@ export class DepartmentService {
       };
     }
     return response;
+  }
+
+  async searchDepartments(query: QueryDepartmentDto) {
+    try {
+      const result = await this.departmentRepository.findAllWithFilters(query);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Departments fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error searching departments: ${error.message}`,
+      };
+    }
   }
 
   async searchDepartmentsByName(keyword: string, page = 1, limit = 10) {

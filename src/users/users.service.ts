@@ -10,6 +10,7 @@ import { ERROR_RES, ERROR_INFO } from '@common/constants/error.const';
 import { MessageResponse } from '@app-types/message.res';
 import { Role } from '@utils/role.enum';
 import { GetAllUsers } from './dto/get-all-users.res';
+import { QueryUserDto } from './dto/query-user.req';
 
 @Injectable()
 export class UsersService {
@@ -137,6 +138,27 @@ export class UsersService {
       };
     }
     return response;
+  }
+
+  async searchUsers(query: QueryUserDto) {
+    try {
+      const result = await this.userRepository.findAllWithFilters(query);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Users fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      this.logger.error(`Error searching users: ${error.message}`);
+
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
+    }
   }
 
   async searchUsersByName(keyword: string, page = 1, limit = 10) {

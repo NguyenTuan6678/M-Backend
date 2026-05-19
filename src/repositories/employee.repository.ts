@@ -5,6 +5,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Employee, EmployeeDocument } from '@schemas/employee.schema';
 import { Model, Types } from 'mongoose';
 import { Counter, CounterDocument } from '@schemas/counter.schema';
+import { QueryEmployeeDto } from '@module/employee/dto/query-employee.req';
+
+const POPULATE_OPTIONS = [
+  {
+    path: 'departmentId',
+    select: 'departmentName departmentDescription departmentNumber',
+  },
+];
 
 @Injectable()
 export class EmployeeRepository {
@@ -57,10 +65,7 @@ export class EmployeeRepository {
     try {
       return await this.employeeModel
         .find()
-        .populate({
-          path: 'departmentId',
-          select: 'departmentName departmentDescription',
-        })
+        .populate(POPULATE_OPTIONS)
         .sort({ createdAt: -1 })
         .exec();
     } catch (error: any) {
@@ -78,15 +83,74 @@ export class EmployeeRepository {
 
       return await this.employeeModel
         .findById(id)
-        .populate({
-          path: 'departmentId',
-          select: 'departmentName departmentDescription',
-        })
+        .populate(POPULATE_OPTIONS)
         .exec();
     } catch (error: any) {
       this.logger.error(
         `Error finding sale transaction with employee: ${error.message}`,
         'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async findAllWithFilters(query: QueryEmployeeDto): Promise<{
+    data: EmployeeDocument[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    try {
+      const { departmentId, isActive, search } = query;
+
+      const page = Number(query.page) || 1;
+      const limit = Number(query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const filter: Record<string, any> = {};
+
+      if (departmentId) {
+        filter.departmentId = new Types.ObjectId(departmentId);
+      }
+
+      if (isActive !== undefined) {
+        filter.isActive = isActive;
+      }
+
+      if (search) {
+        const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        filter.$or = [
+          { employeNumber: { $regex: safeSearch, $options: 'i' } },
+          { employeeName: { $regex: safeSearch, $options: 'i' } },
+          { employeeEmail: { $regex: safeSearch, $options: 'i' } },
+          { employeePhone: { $regex: safeSearch, $options: 'i' } },
+        ];
+      }
+
+      const [data, total] = await Promise.all([
+        this.employeeModel
+          .find(filter)
+          .skip(skip)
+          .limit(limit)
+          .populate(POPULATE_OPTIONS)
+          .sort({ createdAt: -1 })
+          .exec(),
+
+        this.employeeModel.countDocuments(filter).exec(),
+      ]);
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding employees with filters: ${error.message}`,
       );
       throw error;
     }

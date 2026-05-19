@@ -8,6 +8,7 @@ import { BankResponseDto } from './dto/bank.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { GetAllBanks } from './dto/get-all-bank.res';
+import { QueryBankDto } from './dto/query-bank.req';
 
 @Injectable()
 export class BankService {
@@ -110,6 +111,25 @@ export class BankService {
       };
     }
     return response;
+  }
+
+  async searchBanks(query: QueryBankDto) {
+    try {
+      const result = await this.bankRepository.findAllWithFilters(query);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Banks fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error searching banks: ${error.message}`,
+      };
+    }
   }
 
   async searchBanksByName(keyword: string, page = 1, limit = 10) {

@@ -18,7 +18,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
-import { GetAllEmployees } from './dto/get-all-employee.res';
+import { QueryEmployeeDto } from './dto/query-employee.req';
 
 @ApiTags('Employee')
 @Controller('employees')
@@ -36,9 +36,18 @@ export class EmployeeController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get a paginated list of employees' })
-  async findAll(): Promise<GetAllEmployees> {
-    return await this.employeeService.getAllEmployees();
+  @ApiOperation({
+    summary: 'Get all employees with optional filters & pagination',
+    description:
+      'Filter theo: departmentId, isActive. ' +
+      'Text search employeNumber, employeeName, employeeEmail, employeePhone qua param search. ' +
+      'Phân trang qua page và limit.',
+  })
+  async getAllEmployees(
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    query: QueryEmployeeDto,
+  ) {
+    return await this.employeeService.searchEmployees(query);
   }
 
   @Get(':id')
@@ -47,19 +56,19 @@ export class EmployeeController {
     return await this.employeeService.getEmployeeById(id);
   }
 
-  @Get('search-name/search')
-  @ApiOperation({ summary: 'Search employees by name' })
-  async searchEmployees(
-    @Query('keyword') keyword: string,
-    @Query('page') page = '1',
-    @Query('limit') limit = '10',
-  ) {
-    return this.employeeService.searchEmployeesByName(
-      keyword,
-      Number(page),
-      Number(limit),
-    );
-  }
+  // @Get('search-name/search')
+  // @ApiOperation({ summary: 'Search employees by name' })
+  // async searchEmployees(
+  //   @Query('keyword') keyword: string,
+  //   @Query('page') page = '1',
+  //   @Query('limit') limit = '10',
+  // ) {
+  //   return this.employeeService.searchEmployeesByName(
+  //     keyword,
+  //     Number(page),
+  //     Number(limit),
+  //   );
+  // }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Updated employee by ID' })

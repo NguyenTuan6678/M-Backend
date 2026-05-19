@@ -8,6 +8,7 @@ import { ProductResponseDto } from './dto/product.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { GetAllProducts } from './dto/get-all-product.res';
+import { QueryProductDto } from './dto/query-product.req';
 
 @Injectable()
 export class ProductService {
@@ -110,6 +111,25 @@ export class ProductService {
       };
     }
     return response;
+  }
+
+  async searchProducts(query: QueryProductDto) {
+    try {
+      const result = await this.productRepository.findAllWithFilters(query);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Products fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error searching products: ${error.message}`,
+      };
+    }
   }
 
   async searchProductsByName(keyword: string, page = 1, limit = 10) {

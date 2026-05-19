@@ -15,19 +15,10 @@ import {
 import { DepartmentService } from './department.service';
 import { CreateDepartmentDto } from './dto/create-department.req';
 import { DepartmentResponseDto } from './dto/department.res';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import {
-  PaginatedResponseDto,
-  PaginationDto,
-} from '@common/dto/pagination.dto';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
-import { GetAllDepartments } from './dto/get-all-department.res';
+import { QueryDepartmentDto } from './dto/query-department.req';
 
 @ApiTags('Department')
 @Controller('departments')
@@ -46,9 +37,18 @@ export class DepartmentController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get a paginated list of banks' })
-  async findAll(): Promise<GetAllDepartments> {
-    return await this.departmentService.getAllDepartments();
+  @ApiOperation({
+    summary: 'Get all departments with optional filters & pagination',
+    description:
+      'Filter theo: isActive. ' +
+      'Text search departmentNumber, departmentName, departmentDescription qua param search. ' +
+      'Phân trang qua page và limit.',
+  })
+  async getAllDepartments(
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    query: QueryDepartmentDto,
+  ) {
+    return await this.departmentService.searchDepartments(query);
   }
 
   @Get(':id')
@@ -59,19 +59,19 @@ export class DepartmentController {
     return await this.departmentService.getDepartmentById(id);
   }
 
-  @Get('search-name/search')
-  @ApiOperation({ summary: 'Search departments by name' })
-  async searchAgencies(
-    @Query('keyword') keyword: string,
-    @Query('page') page = '1',
-    @Query('limit') limit = '10',
-  ) {
-    return this.departmentService.searchDepartmentsByName(
-      keyword,
-      Number(page),
-      Number(limit),
-    );
-  }
+  // @Get('search-name/search')
+  // @ApiOperation({ summary: 'Search departments by name' })
+  // async searchAgencies(
+  //   @Query('keyword') keyword: string,
+  //   @Query('page') page = '1',
+  //   @Query('limit') limit = '10',
+  // ) {
+  //   return this.departmentService.searchDepartmentsByName(
+  //     keyword,
+  //     Number(page),
+  //     Number(limit),
+  //   );
+  // }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Updated bank by ID' })

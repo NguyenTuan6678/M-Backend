@@ -20,9 +20,8 @@ import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-s
 import { SaleTransactionResponseDTO } from '@module/sale-transaction/dto/sale-transaction.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { CacheInterceptor } from '@nestjs/cache-manager';
-import { GetAllSaleTransactions } from './dto/get-all-sale-transaction.res';
 import { MessageResponse } from '@app-types/message.res';
-import { QuerySaleTransactionDto } from './dto/update-query-transaction.res';
+import { QuerySaleTransactionDto } from './dto/query-transaction.req';
 
 @ApiTags('Sale Transaction')
 @Controller('sale-transaction')

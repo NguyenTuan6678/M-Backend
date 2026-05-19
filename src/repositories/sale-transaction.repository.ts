@@ -9,7 +9,7 @@ import { Model, Types } from 'mongoose';
 import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
 import { Counter, CounterDocument } from '@schemas/counter.schema';
 import { UpdateSalesTransactionDto } from '@module/sale-transaction/dto/update-sale-transaction-repository.res';
-import { QuerySaleTransactionDto } from '@module/sale-transaction/dto/update-query-transaction.res';
+import { QuerySaleTransactionDto } from '@module/sale-transaction/dto/query-transaction.req';
 
 type CreateSalesTransactionPayload = CreateSalesTransactionDto & {
   employeeId?: string;

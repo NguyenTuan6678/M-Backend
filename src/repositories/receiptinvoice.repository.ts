@@ -1,5 +1,4 @@
 import { LoggerService } from '@common/logs/logger.service';
-import { CreateEmployeeDto } from '../module/employee/dto/create.employee.req';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -8,6 +7,7 @@ import {
   ReceiptInvoiceDocument,
 } from '@schemas/receiptinvoice.schema';
 import { CreateReceiptInvoiceDto } from '@module/receiptinvoice/dto/create-receiptinvoice.req';
+import { QueryReceiptInvoiceDto } from '@module/receiptinvoice/dto/query-receiptinvoice.req';
 
 @Injectable()
 export class ReceiptInvoiceRepository {
@@ -97,6 +97,75 @@ export class ReceiptInvoiceRepository {
       return { data, total };
     } catch (error: any) {
       this.logger.error(`Error searching employee by name: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findAllWithFilters(query: QueryReceiptInvoiceDto): Promise<{
+    data: ReceiptInvoiceDocument[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    try {
+      const { inv_invoiceSeries, tax_code, search } = query;
+
+      const page = Number(query.page) || 1;
+      const limit = Number(query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const filter: Record<string, any> = {};
+
+      if (inv_invoiceSeries) {
+        filter.inv_invoiceSeries = inv_invoiceSeries;
+      }
+
+      if (tax_code) {
+        filter.tax_code = tax_code;
+      }
+
+      if (search) {
+        const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        filter.$or = [
+          {
+            inv_invoiceSeries: {
+              $regex: safeSearch,
+              $options: 'i',
+            },
+          },
+          {
+            tax_code: {
+              $regex: safeSearch,
+              $options: 'i',
+            },
+          },
+        ];
+      }
+
+      const [data, total] = await Promise.all([
+        this.receiptModel
+          .find(filter)
+          .skip(skip)
+          .limit(limit)
+          .sort({ createdAt: -1 })
+          .exec(),
+
+        this.receiptModel.countDocuments(filter).exec(),
+      ]);
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding receipt invoices with filters: ${error.message}`,
+      );
       throw error;
     }
   }

@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { CreateProductDto } from '../module/product/dto/create-product.req';
 import { Product, ProductDocument } from '@schemas/product.schema';
 import { Model } from 'mongoose';
+import { QueryProductDto } from '@module/product/dto/query-product.req';
 
 @Injectable()
 export class ProductRepository {
@@ -49,6 +50,79 @@ export class ProductRepository {
     return this.productModel.find({
       _id: { $in: ids },
     });
+  }
+
+  async findAllWithFilters(query: QueryProductDto): Promise<{
+    data: ProductDocument[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    try {
+      const { isActive, ma_thue, search, minPrice, maxPrice } = query;
+
+      const page = Number(query.page) || 1;
+      const limit = Number(query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const filter: Record<string, any> = {};
+
+      if (isActive !== undefined) {
+        filter.isActive = isActive;
+      }
+
+      if (ma_thue) {
+        filter.ma_thue = ma_thue;
+      }
+
+      if (minPrice !== undefined || maxPrice !== undefined) {
+        filter.inv_unitPrice = {};
+
+        if (minPrice !== undefined) {
+          filter.inv_unitPrice.$gte = minPrice;
+        }
+
+        if (maxPrice !== undefined) {
+          filter.inv_unitPrice.$lte = maxPrice;
+        }
+      }
+
+      if (search) {
+        const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        filter.$or = [
+          { inv_itemCode: { $regex: safeSearch, $options: 'i' } },
+          { inv_itemName: { $regex: safeSearch, $options: 'i' } },
+          { inv_unitCode: { $regex: safeSearch, $options: 'i' } },
+          { ma_thue: { $regex: safeSearch, $options: 'i' } },
+        ];
+      }
+
+      const [data, total] = await Promise.all([
+        this.productModel
+          .find(filter)
+          .skip(skip)
+          .limit(limit)
+          .sort({ createdAt: -1 })
+          .exec(),
+
+        this.productModel.countDocuments(filter).exec(),
+      ]);
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding products with filters: ${error.message}`,
+      );
+      throw error;
+    }
   }
 
   async searchByCode(

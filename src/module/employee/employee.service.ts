@@ -8,6 +8,7 @@ import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { GetAllEmployees } from './dto/get-all-employee.res';
+import { QueryEmployeeDto } from './dto/query-employee.req';
 
 @Injectable()
 export class EmployeeService {
@@ -113,6 +114,25 @@ export class EmployeeService {
       };
     }
     return response;
+  }
+
+  async searchEmployees(query: QueryEmployeeDto) {
+    try {
+      const result = await this.employeeRepository.findAllWithFilters(query);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Employees fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error searching employees: ${error.message}`,
+      };
+    }
   }
 
   async searchEmployeesByName(keyword: string, page = 1, limit = 10) {
