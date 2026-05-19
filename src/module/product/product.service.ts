@@ -117,7 +117,7 @@ export class ProductService {
     try {
       const products = await this.productModel.find().exec();
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Get all products successfully',
         content: products,
@@ -149,7 +149,7 @@ export class ProductService {
       }
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Product fetched successfully',
         content: product,
@@ -245,7 +245,7 @@ export class ProductService {
       }
 
       return {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Product updated successfully',
         content: updatedProduct,

@@ -76,7 +76,7 @@ export class ReceiptInvoiceService {
     try {
       const receipt = await this.receiptModel.find().exec();
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Get all employees successfully',
         content: receipt,
@@ -108,7 +108,7 @@ export class ReceiptInvoiceService {
       }
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Employee fetched successfully',
         content: receipt,
@@ -143,7 +143,7 @@ export class ReceiptInvoiceService {
       }
 
       return {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'ReceiptInvoice updated successfully',
         content: updatedReceipt,

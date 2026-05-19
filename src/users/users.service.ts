@@ -73,7 +73,7 @@ export class UsersService {
       await newUser.save();
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: 'SUCCESS',
         message: 'User created successfully',
       };
@@ -92,7 +92,7 @@ export class UsersService {
     try {
       const users = await this.userModel.find().exec();
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Get all users successfully',
         content: users,
@@ -124,7 +124,7 @@ export class UsersService {
       }
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'User fetched successfully',
         content: user,
@@ -186,7 +186,7 @@ export class UsersService {
       }
 
       return {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Agency updated successfully',
         content: updatedUser,
@@ -243,7 +243,7 @@ export class UsersService {
         };
       }
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: `Validated user success`,
       };

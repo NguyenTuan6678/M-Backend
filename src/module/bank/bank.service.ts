@@ -70,7 +70,7 @@ export class BankService {
     try {
       const banks = await this.bankModel.find().exec();
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Get all banks successfully',
         content: banks,
@@ -102,7 +102,7 @@ export class BankService {
       }
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Bank fetched successfully',
         content: bank,
