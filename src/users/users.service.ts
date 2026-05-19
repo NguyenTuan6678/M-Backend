@@ -1,12 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UsersRepository } from '@repositories/users.repository';
 import { CreateUsersDTO } from '@users/dto/create-users.req';
 import { UsersResponseDTO } from '@users/dto/users.res';
 import { LoggerService } from '@common/logs/logger.service';
-import {
-  PaginationDto,
-  PaginatedResponseDto,
-} from '@common/dto/pagination.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '@schemas/users.schema';
 import { Model } from 'mongoose';
@@ -14,6 +10,7 @@ import { ERROR_RES, ERROR_INFO } from '@common/constants/error.const';
 import { MessageResponse } from '@app-types/message.res';
 import { Role } from '@utils/role.enum';
 import { GetAllUsers } from './dto/get-all-users.res';
+import { QueryUserDto } from './dto/query-user.req';
 
 @Injectable()
 export class UsersService {
@@ -77,7 +74,7 @@ export class UsersService {
       await newUser.save();
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: 'SUCCESS',
         message: 'User created successfully',
       };
@@ -96,7 +93,7 @@ export class UsersService {
     try {
       const users = await this.userModel.find().exec();
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Get all users successfully',
         content: users,
@@ -128,7 +125,7 @@ export class UsersService {
       }
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'User fetched successfully',
         content: user,
@@ -141,6 +138,27 @@ export class UsersService {
       };
     }
     return response;
+  }
+
+  async searchUsers(query: QueryUserDto) {
+    try {
+      const result = await this.userRepository.findAllWithFilters(query);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Users fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      this.logger.error(`Error searching users: ${error.message}`);
+
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
+    }
   }
 
   async searchUsersByName(keyword: string, page = 1, limit = 10) {
@@ -190,7 +208,7 @@ export class UsersService {
       }
 
       return {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Agency updated successfully',
         content: updatedUser,
@@ -247,7 +265,7 @@ export class UsersService {
         };
       }
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: `Validated user success`,
       };

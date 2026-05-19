@@ -1,25 +1,20 @@
-import { LoggerService } from '@common/logs/logger.service';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EmployeeRepository } from '@repositories/employee.repository';
 import { Employee, EmployeeDocument } from '@schemas/employee.schema';
 import { CreateEmployeeDto } from './dto/create.employee.req';
 import { EmployeeResponseDto } from './dto/employee.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
-import {
-  PaginatedResponseDto,
-  PaginationDto,
-} from '@common/dto/pagination.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { GetAllEmployees } from './dto/get-all-employee.res';
+import { QueryEmployeeDto } from './dto/query-employee.req';
 
 @Injectable()
 export class EmployeeService {
   constructor(
     @InjectModel(Employee.name) private employeeModel: Model<EmployeeDocument>,
     private readonly employeeRepository: EmployeeRepository,
-    private readonly logger: LoggerService,
   ) {}
 
   async createEmployee(
@@ -27,12 +22,13 @@ export class EmployeeService {
   ): Promise<EmployeeResponseDto> {
     let response: MessageResponse | null = null;
     try {
-      const { employeeName, employeeEmail, employeePhone } = createEmployeeDto;
-      if (!employeeName) {
+      const { employeeName, employeeEmail, employeePhone, departmentId } =
+        createEmployeeDto;
+      if (!employeeName || !departmentId) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
-          message: 'Missing required fields: name',
+          info: ERROR_INFO.FAIL,
+          message: 'Missing required fields: employeeName or departmentId',
         };
         return response;
       }
@@ -43,29 +39,25 @@ export class EmployeeService {
       if (duplicatedEmployee) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
+          info: ERROR_INFO.FAIL,
           message: 'Employee already exists',
         };
         return response;
       }
 
-      const newEmployee = new this.employeeModel({
-        employeeName,
-        employeeEmail,
-        employeePhone,
-      });
+      const newEmployee =
+        await this.employeeRepository.create(createEmployeeDto);
 
-      await newEmployee.save();
-
-      response = {
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
-        info: 'SUCCESS',
+        info: ERROR_INFO.SUCCESS,
         message: 'Employee created successfully',
+        content: newEmployee,
       };
     } catch (error: any) {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: 'An error occurred while creating the employee',
       };
     }
@@ -75,11 +67,11 @@ export class EmployeeService {
   async getAllEmployees(): Promise<GetAllEmployees> {
     let response: GetAllEmployees | null = null;
     try {
-      const employees = await this.employeeModel.find().exec();
+      const employees = await this.employeeRepository.findAll();
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Get all agencies successfully',
+        message: 'Get all employees successfully',
         content: employees,
       };
       return response;
@@ -87,7 +79,7 @@ export class EmployeeService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while getting all emplyoyees: ${error.message}`,
       };
     }
     return response;
@@ -109,19 +101,38 @@ export class EmployeeService {
       }
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Agency fetched successfully',
+        message: 'Employee fetched successfully',
         content: employee,
       };
     } catch (error: any) {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while getting emplyoyee by id: ${error.message}`,
       };
     }
     return response;
+  }
+
+  async searchEmployees(query: QueryEmployeeDto) {
+    try {
+      const result = await this.employeeRepository.findAllWithFilters(query);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Employees fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error searching employees: ${error.message}`,
+      };
+    }
   }
 
   async searchEmployeesByName(keyword: string, page = 1, limit = 10) {
@@ -174,7 +185,7 @@ export class EmployeeService {
       }
 
       return {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Employee updated successfully',
         content: updatedEmployee,
@@ -183,7 +194,7 @@ export class EmployeeService {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while creating the employee: ${error.message}`,
         content: undefined,
       };
     }
@@ -194,13 +205,13 @@ export class EmployeeService {
     if (!deletedEmployee) {
       return {
         code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: `Employee with ID ${id} not found`,
       };
     }
     return {
       code: ERROR_RES.SUCCESS.statusCode,
-      info: 'SUCCESS',
+      info: ERROR_INFO.SUCCESS,
       message: `Employee ${deletedEmployee.employeeName} deleted successfully`,
     };
   }

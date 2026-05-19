@@ -14,11 +14,23 @@ import { DepartmentModule } from '../department/department.module';
 import { EmployeeModule } from '../employee/employee.module';
 import { BankModule } from '../bank/bank.module';
 import { ProductModule } from '../product/product.module';
+import { Agency, AgencySchema } from '@schemas/agency.schema';
+import { Department, DepartmentSchema } from '@schemas/department.schema';
+import { Employee, EmployeeSchema } from '@schemas/employee.schema';
+import { Bank, BankSchema } from '@schemas/bank.schema';
+import { Product, ProductSchema } from '@schemas/product.schema';
+import { Counter, CounterSchema } from '@schemas/counter.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: SalesTransaction.name, schema: SalesTransactionSchema },
+      { name: Agency.name, schema: AgencySchema },
+      { name: Department.name, schema: DepartmentSchema },
+      { name: Employee.name, schema: EmployeeSchema },
+      { name: Bank.name, schema: BankSchema },
+      { name: Product.name, schema: ProductSchema },
+      { name: Counter.name, schema: CounterSchema },
     ]),
     AgencyModule,
     DepartmentModule,

@@ -115,7 +115,7 @@ export class AuthService {
       await newAdmin.save();
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Register successfully',
       };
@@ -173,7 +173,7 @@ export class AuthService {
 
       const token = await this.generateToken(admin);
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Login successfully',
         content: {
@@ -238,7 +238,7 @@ export class AuthService {
       await user.save();
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Change password successfully',
       };
@@ -276,7 +276,7 @@ export class AuthService {
 
       const token = await this.generateToken(admin);
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Token refreshed successfully',
         content: {

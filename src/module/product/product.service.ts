@@ -1,67 +1,33 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ProductRepository } from '@repositories/product.repository';
 import { Product, ProductDocument } from '@schemas/product.schema';
-import { LoggerService } from '@common/logs/logger.service';
 import { CreateProductDto } from './dto/create-product.req';
 import { ProductResponseDto } from './dto/product.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
-import {
-  PaginatedResponseDto,
-  PaginationDto,
-} from '@common/dto/pagination.dto';
 import { GetAllProducts } from './dto/get-all-product.res';
+import { QueryProductDto } from './dto/query-product.req';
 
 @Injectable()
 export class ProductService {
   constructor(
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
     private readonly productRepository: ProductRepository,
-    private readonly logger: LoggerService,
   ) {}
-
-  private calculateFields(
-    inv_unitPrice: number,
-    inv_quantity: number,
-    inv_discountAmount: number,
-    ma_thue: string,
-  ) {
-    const A = inv_unitPrice;
-    const B = inv_quantity;
-    const C = inv_discountAmount;
-    const D = parseFloat(ma_thue) / 100;
-
-    const G = A * B - C; // inv_TotalAmountWithoutVat
-    const F = G * D; // inv_vatAmount
-    const E = G + F; // inv_TotalAmount
-
-    return {
-      inv_TotalAmountWithoutVat: G,
-      inv_vatAmount: F,
-      inv_TotalAmount: E,
-    };
-  }
 
   async createProduct(
     createProductDto: CreateProductDto,
   ): Promise<ProductResponseDto> {
+    let response: MessageResponse | null = null;
     try {
-      const {
-        inv_itemCode,
-        inv_itemName,
-        inv_unitCode,
-        inv_unitPrice,
-        inv_quantity,
-        inv_discountAmount,
-        ma_thue,
-      } = createProductDto;
+      const { inv_itemCode, ma_thue } = createProductDto;
 
       if (!inv_itemCode || !ma_thue) {
-        return {
+        response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
+          info: ERROR_INFO.FAIL,
           message: 'Missing required fields: inv_itemCode or ma_thue',
         };
       }
@@ -70,50 +36,29 @@ export class ProductService {
         inv_itemCode,
       });
       if (duplicatedProduct) {
-        return {
+        response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
+          info: ERROR_INFO.FAIL,
           message: `Product with code ${inv_itemCode} already exists`,
         };
       }
 
-      const calculated = this.calculateFields(
-        inv_unitPrice,
-        inv_quantity,
-        inv_discountAmount,
-        ma_thue,
-      );
-
-      const newProduct = new this.productModel({
-        inv_itemCode,
-        inv_itemName,
-        inv_unitCode,
-        inv_unitPrice,
-        inv_quantity,
-        inv_discountAmount,
-        ma_thue,
-        ...calculated, // inv_TotalAmountWithoutVat, inv_vatAmount, inv_TotalAmount
-      });
-
-      await newProduct.save();
-      this.logger.log(`Product created: ${inv_itemCode}`, 'ProductService');
+      const newProduct = await this.productRepository.create(createProductDto);
 
       return {
         code: ERROR_RES.SUCCESS.statusCode,
-        info: 'SUCCESS',
+        info: ERROR_INFO.SUCCESS,
         message: 'Product created successfully',
+        content: newProduct,
       };
     } catch (error: any) {
-      this.logger.error(
-        `Error creating product: ${error.message}`,
-        'ProductService',
-      );
-      return {
+      response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: 'FAIL',
-        message: 'An error occurred while creating the product',
+        info: ERROR_INFO.FAIL,
+        message: `An error occurred while creating the product: ${error.message}`,
       };
     }
+    return response;
   }
 
   async getAllProducts(): Promise<GetAllProducts> {
@@ -121,7 +66,7 @@ export class ProductService {
     try {
       const products = await this.productModel.find().exec();
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Get all products successfully',
         content: products,
@@ -131,7 +76,7 @@ export class ProductService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while get all products: ${error.message}`,
       };
     }
     return response;
@@ -153,7 +98,7 @@ export class ProductService {
       }
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Product fetched successfully',
         content: product,
@@ -162,10 +107,29 @@ export class ProductService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while get product by id: ${error.message}`,
       };
     }
     return response;
+  }
+
+  async searchProducts(query: QueryProductDto) {
+    try {
+      const result = await this.productRepository.findAllWithFilters(query);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Products fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error searching products: ${error.message}`,
+      };
+    }
   }
 
   async searchProductsByName(keyword: string, page = 1, limit = 10) {
@@ -221,16 +185,8 @@ export class ProductService {
           };
         }
 
-        const calculated = this.calculateFields(
-          updateData.inv_unitPrice ?? existing.inv_unitPrice,
-          updateData.inv_quantity ?? existing.inv_quantity,
-          updateData.inv_discountAmount ?? existing.inv_discountAmount,
-          updateData.ma_thue ?? existing.ma_thue,
-        );
-
         updateData = {
           ...updateData,
-          ...calculated,
         };
       }
 
@@ -249,7 +205,7 @@ export class ProductService {
       }
 
       return {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Product updated successfully',
         content: updatedProduct,
@@ -258,7 +214,7 @@ export class ProductService {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while updating the product: ${error.message}`,
         content: undefined,
       };
     }
@@ -269,13 +225,13 @@ export class ProductService {
     if (!deletedProduct) {
       return {
         code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: `Product with ID ${id} not found`,
       };
     }
     return {
       code: ERROR_RES.SUCCESS.statusCode,
-      info: 'SUCCESS',
+      info: ERROR_INFO.SUCCESS,
       message: `Product ${deletedProduct.inv_itemCode} deleted successfully`,
     };
   }

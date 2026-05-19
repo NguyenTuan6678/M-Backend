@@ -8,6 +8,7 @@ import {
   SalesTransactionSchema,
 } from '@schemas/sale-transaction.schema';
 import { SaleTransactionModule } from '@module/sale-transaction/sale-transaction.module';
+import { ReceiptInvoiceModule } from '@module/receiptinvoice/receiptinvoice.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { SaleTransactionModule } from '@module/sale-transaction/sale-transaction
       },
     ]),
     SaleTransactionModule,
+    ReceiptInvoiceModule,
   ],
   providers: [MInvoiceReceiptPostService],
   controllers: [MInvoiceReceiptPostController],

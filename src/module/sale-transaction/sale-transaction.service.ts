@@ -1,44 +1,25 @@
 import { LoggerService } from '@common/logs/logger.service';
-import {
-  Injectable,
-  BadRequestException,
-  InternalServerErrorException,
-} from '@nestjs/common';
-
+import { Injectable } from '@nestjs/common';
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
 import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { SaleTransactionResponseDTO } from '@module/sale-transaction/dto/sale-transaction.res';
-import {
-  PaginationDto,
-  PaginatedResponseDto,
-} from '@common/dto/pagination.dto';
 import { AgencyRepository } from '@repositories/agency.repository';
-import { DepartmentRepository } from '@repositories/department.repository';
 import { EmployeeRepository } from '@repositories/employee.repository';
 import { BankRepository } from '@repositories/bank.repository';
 import { ProductRepository } from '@repositories/product.repository';
 import { mapTransactionToInvoice } from '@module/sale-transaction/sale-transaction.mapper';
 import { CreateInvoiceDto } from '../../api/m-invoice-receipt-post/dto/send-receipt.req';
 import { Agency } from '@schemas/agency.schema';
-import { Department } from '@schemas/department.schema';
-import { Employee } from '@schemas/employee.schema';
 import { Bank } from '@schemas/bank.schema';
 import { Product } from '@schemas/product.schema';
-import { Model, Types } from 'mongoose';
 import { GetAllSaleTransactions } from './dto/get-all-sale-transaction.res';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  SalesTransaction,
-  SalesTransactionDocument,
-} from '@schemas/sale-transaction.schema';
 import { MessageResponse } from '@app-types/message.res';
+import { QuerySaleTransactionDto } from './dto/query-transaction.req';
 
 interface ValidatedEntities {
   missing: string[];
   agency?: Agency;
-  department?: Department;
-  employee?: Employee;
   bank?: Bank;
   products?: Product[];
 }
@@ -46,47 +27,15 @@ interface ValidatedEntities {
 @Injectable()
 export class SaleTransactionService {
   constructor(
-    @InjectModel(SalesTransaction.name)
-    private transactionModel: Model<SalesTransactionDocument>,
     private readonly saleTransactionRepository: SaleTransactionRepository,
     private readonly agencyRepository: AgencyRepository,
-    private readonly departmentRepository: DepartmentRepository,
     private readonly employeeRepository: EmployeeRepository,
     private readonly bankRepository: BankRepository,
     private readonly productRepository: ProductRepository,
     private readonly logger: LoggerService,
   ) {}
 
-  private async validateObjectId(fieldName: string, value?: string) {
-    if (!value) {
-      throw new BadRequestException({
-        message: 'Validation failed',
-        errors: [
-          {
-            field: fieldName,
-            message: `${fieldName} is required`,
-          },
-        ],
-      });
-    }
-
-    if (!Types.ObjectId.isValid(value)) {
-      throw new BadRequestException({
-        message: 'Validation failed',
-        errors: [
-          {
-            field: fieldName,
-            message: `${fieldName} must be a valid MongoDB ObjectId`,
-          },
-        ],
-      });
-    }
-  }
-
   private async validateRelatedEntities(
-    agencyId: string | undefined,
-    departmentId: string | undefined,
-    employeeId: string | undefined,
     bankId: string | undefined,
     items: { productId?: string }[],
   ): Promise<ValidatedEntities> {
@@ -94,12 +43,7 @@ export class SaleTransactionService {
       ?.map((i) => i.productId)
       .filter((id): id is string => !!id);
 
-    const [agency, department, employee, bank, products] = await Promise.all([
-      agencyId ? this.agencyRepository.findById(agencyId) : undefined,
-      departmentId
-        ? this.departmentRepository.findById(departmentId)
-        : undefined,
-      employeeId ? this.employeeRepository.findById(employeeId) : undefined,
+    const [bank, products] = await Promise.all([
       bankId ? this.bankRepository.findById(bankId) : undefined,
       productIds?.length
         ? this.productRepository.findByIds(productIds)
@@ -107,110 +51,102 @@ export class SaleTransactionService {
     ]);
 
     const missing: string[] = [];
-    if (agencyId && !agency) missing.push('Agency');
-    if (departmentId && !department) missing.push('Department');
-    if (employeeId && !employee) missing.push('Employee');
     if (bankId && !bank) missing.push('Bank');
     if (productIds?.length && (!products || products.length === 0))
       missing.push('Products');
 
     return {
       missing,
-      ...(agency && { agency }),
-      ...(department && { department }),
-      ...(employee && { employee }),
       ...(bank && { bank }),
       ...(products?.length && { products }),
     };
   }
 
   async createSaleTransaction(
-    createSalesTransactionDto: CreateSalesTransactionDto,
-  ) {
+    createSaleTransactionDto: CreateSalesTransactionDto,
+  ): Promise<SaleTransactionResponseDTO | null> {
     try {
-      const errors: { field: string; message: string }[] = [];
+      const { agencyId, bankId, items } = createSaleTransactionDto;
 
-      const requiredObjectIds = [
-        'agencyId',
-        'departmentId',
-        'employeeId',
-        'bankId',
-      ] as const;
+      // Lookup agency để lấy employeeId và departmentId
+      const agency = agencyId
+        ? await this.agencyRepository.findById(agencyId)
+        : null;
 
-      for (const field of requiredObjectIds) {
-        const value = createSalesTransactionDto[field];
-
-        if (!value) {
-          errors.push({
-            field,
-            message: `${field} is required`,
-          });
-        } else if (!Types.ObjectId.isValid(value)) {
-          errors.push({
-            field,
-            message: `${field} must be a valid MongoDB ObjectId`,
-          });
-        }
+      if (agencyId && !agency) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Agency not found',
+        };
       }
 
-      if (
-        !createSalesTransactionDto.items ||
-        !Array.isArray(createSalesTransactionDto.items) ||
-        createSalesTransactionDto.items.length === 0
-      ) {
-        errors.push({
-          field: 'items',
-          message: 'items must contain at least one product item',
-        });
-      } else {
-        createSalesTransactionDto.items.forEach((item, index) => {
-          if (!item.productId) {
-            errors.push({
-              field: `items[${index}].productId`,
-              message: `items[${index}].productId is required`,
-            });
-          } else if (!Types.ObjectId.isValid(item.productId)) {
-            errors.push({
-              field: `items[${index}].productId`,
-              message: `items[${index}].productId must be a valid MongoDB ObjectId`,
-            });
-          }
-        });
+      // Extract employeeId từ agency, departmentId từ employee
+      const employeeId = agency?.employeeId?.toString();
+      const employee = employeeId
+        ? await this.employeeRepository.findById(employeeId)
+        : null;
+      const departmentId = employee?.departmentId?.toString();
+
+      const { missing, bank, products } = await this.validateRelatedEntities(
+        bankId,
+        items,
+      );
+
+      if (missing.length > 0) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Missing entities: ${missing.join(', ')}`,
+        };
       }
 
-      if (errors.length > 0) {
-        throw new BadRequestException({
-          message: 'Create sale transaction failed',
-          errors,
+      this.logger.log(
+        `Validated — Agency: ${agency?.agencyName}, Employee: ${employee?.employeeName}, Department: ${departmentId}, Bank: ${bank?.inv_buyerBankName}, Products: ${products?.map((p) => p.inv_itemCode).join(', ')}`,
+        'SaleTransactionService',
+      );
+
+      const createdTransaction =
+        await this.saleTransactionRepository.createSaleTransaction({
+          ...createSaleTransactionDto,
+          // Gắn employeeId và departmentId tự động từ agency
+          ...(employeeId && { employeeId }),
+          ...(departmentId && { departmentId }),
         });
+
+      if (!createdTransaction) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Missing required fields or creation failed ${missing.join(', ')}`,
+        };
       }
 
-      const saleTransaction =
-        await this.saleTransactionRepository.createSaleTransaction(
-          createSalesTransactionDto,
-        );
-
-      return this.mapToResponseDto(saleTransaction);
+      return {
+        content: createdTransaction,
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Sale transaction created successfully',
+      };
     } catch (error: any) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-
-      throw new InternalServerErrorException({
-        message: 'Create sale transaction failed',
-        detail: error.message,
-      });
+      this.logger.error(`Error creating sale transaction: ${error.message}`);
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `An error occurred while creating transaction: ${error.message}`,
+      };
     }
   }
 
   async getAllSaleTransactions(): Promise<GetAllSaleTransactions> {
     let response: GetAllSaleTransactions | null = null;
     try {
-      const saleTransactions = await this.transactionModel.find().exec();
+      const saleTransactions =
+        await this.saleTransactionRepository.findAllWithPopulate();
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Get all agencies successfully',
+        message: 'Get all sale transactions successfully',
         content: saleTransactions,
       };
       return response;
@@ -218,7 +154,7 @@ export class SaleTransactionService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while getting all transaction: ${error.message}`,
       };
     }
     return response;
@@ -229,29 +165,28 @@ export class SaleTransactionService {
   ): Promise<SaleTransactionResponseDTO> {
     let response: SaleTransactionResponseDTO | null = null;
     try {
-      const transaction = await this.saleTransactionRepository.findById(id);
+      const transaction =
+        await this.saleTransactionRepository.findByIdWithPopulate(id);
 
       if (!transaction) {
-        response = {
+        return {
           code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
           message: `Sale transaction with ID ${id} not found`,
         };
-
-        return response;
       }
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Agency fetched successfully',
+        message: 'Sale transaction fetched successfully',
         content: transaction,
       };
     } catch (error: any) {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while getting transaction by id: ${error.message}`,
       };
     }
     return response;
@@ -262,32 +197,33 @@ export class SaleTransactionService {
     updateData: Partial<CreateSalesTransactionDto>,
   ): Promise<SaleTransactionResponseDTO> {
     try {
-      const updatedTransation = await this.saleTransactionRepository.update(
+      const updatedTransaction = await this.saleTransactionRepository.update(
         id,
         updateData,
       );
 
-      if (!updatedTransation) {
+      if (!updatedTransaction) {
         return {
           code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
           message: `Sale transaction with ID ${id} not found`,
-          content: updatedTransation || undefined,
         };
       }
 
+      const populatedTransaction =
+        await this.saleTransactionRepository.findByIdWithPopulate(id);
+
       return {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Agency updated successfully',
-        content: updatedTransation,
+        message: 'Sale transaction updated successfully',
+        content: populatedTransaction || updatedTransaction,
       };
     } catch (error: any) {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
-        content: undefined,
+        message: `An error occurred while updating sale transaction: ${error.message}`,
       };
     }
   }
@@ -297,13 +233,13 @@ export class SaleTransactionService {
     if (!deletedTransaction) {
       return {
         code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: `Sale transaction with ID ${id} not found`,
       };
     }
     return {
       code: ERROR_RES.SUCCESS.statusCode,
-      info: 'SUCCESS',
+      info: ERROR_INFO.SUCCESS,
       message: 'Sale transaction deleted successfully',
     };
   }
@@ -374,7 +310,7 @@ export class SaleTransactionService {
       return transactions.map((t) => this.mapToResponseDto(t));
     } catch (error: any) {
       this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByDepartment: ${error.message}`,
+        `Error in SaleTransactionService.getSaleTransactionsByBank: ${error.message}`,
       );
       throw error;
     }
@@ -395,6 +331,28 @@ export class SaleTransactionService {
         `Error in SaleTransactionService.getSaleTransactionsByDateRange: ${error.message}`,
       );
       throw error;
+    }
+  }
+
+  async searchSaleTransactions(query: QuerySaleTransactionDto) {
+    try {
+      const result =
+        await this.saleTransactionRepository.findAllWithFilters(query);
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Sale transactions fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `Error in SaleTransactionService.searchSaleTransactions: ${error.message}`,
+      );
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
     }
   }
 

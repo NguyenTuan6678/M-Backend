@@ -1,80 +1,83 @@
-import { LoggerService } from '@common/logs/logger.service';
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import { AgencyRepository } from '@repositories/agency.repository';
-import { Agency, AgencyDocument } from '@schemas/agency.schema';
-import { Model } from 'mongoose';
 import { CreateAgencyDto } from './dto/create-agency.req';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { AgencyResponseDto } from './dto/agency.res';
-import { GetAllAgencies } from './dto/get-all-agency.res';
+import { InjectModel } from '@nestjs/mongoose';
+import { Agency, AgencyDocument } from '@schemas/agency.schema';
+import { Model } from 'mongoose';
+import { QueryAgencyDto } from './dto/query-agency.req';
 
 @Injectable()
 export class AgencyService {
   constructor(
     @InjectModel(Agency.name) private agencyModel: Model<AgencyDocument>,
     private readonly agencyRepository: AgencyRepository,
-    private readonly logger: LoggerService,
   ) {}
 
   async createAgency(
     createAgencyDto: CreateAgencyDto,
   ): Promise<AgencyResponseDto | null> {
-    let response: AgencyResponseDto | null = null;
+    let response: MessageResponse | null = null;
     try {
-      const { name, commissionPercent } = createAgencyDto;
-      if (!name || !commissionPercent) {
+      const { agencyName, commissionPercent } = createAgencyDto;
+
+      if (!agencyName) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Missing required fields: agencyName',
+        };
+      }
+
+      const duplicatedAgency = await this.agencyModel.findOne({ agencyName });
+      if (duplicatedAgency) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
-          message: 'Missing required fields: name or commissionPercent',
+          info: ERROR_INFO.FAIL,
+          message: 'Agency already exists',
         };
         return response;
       }
 
-      const newAgency = new this.agencyModel({
-        name,
-        commissionPercent,
-      });
+      const newAgency = await this.agencyRepository.create(createAgencyDto);
 
-      await newAgency.save();
-
-      response = {
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
-        info: 'SUCCESS',
+        info: ERROR_INFO.SUCCESS,
         message: 'Agency created successfully',
+        content: newAgency,
       };
     } catch (error: any) {
-      response = {
+      return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: `Error creating agency: ${error.message}`,
       };
     }
-    return response;
   }
 
-  async getAllAgencies(): Promise<GetAllAgencies> {
-    let response: GetAllAgencies | null = null;
-    try {
-      const agencies = await this.agencyModel.find().exec();
-      response = {
-        code: 200,
-        info: ERROR_INFO.SUCCESS,
-        message: 'Get all agencies successfully',
-        content: agencies,
-      };
-      return response;
-    } catch (error: any) {
-      response = {
-        code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: ERROR_INFO.FAIL,
-        message: error.message,
-      };
-    }
-    return response;
-  }
+  // async getAllAgencies(): Promise<GetAllAgencies> {
+  //   let response: GetAllAgencies | null = null;
+  //   try {
+  //     const agencies = await this.agencyRepository.findAll();
+  //     response = {
+  //       code: ERROR_RES.SUCCESS.statusCode,
+  //       info: ERROR_INFO.SUCCESS,
+  //       message: 'Get all agencies successfully',
+  //       content: agencies,
+  //     };
+  //     return response;
+  //   } catch (error: any) {
+  //     response = {
+  //       code: ERROR_RES.INTERNAL_ERROR.statusCode,
+  //       info: ERROR_INFO.FAIL,
+  //       message: `An error occurred while getting all agencies: ${error.message}`,
+  //     };
+  //   }
+  //   return response;
+  // }
 
   async getAgencyById(id: string): Promise<AgencyResponseDto | null> {
     let response: AgencyResponseDto | null = null;
@@ -92,7 +95,7 @@ export class AgencyService {
       }
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Agency fetched successfully',
         content: agency,
@@ -101,10 +104,29 @@ export class AgencyService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while getting agency by id: ${error.message}`,
       };
     }
     return response;
+  }
+
+  async searchAgencies(query: QueryAgencyDto) {
+    try {
+      const result = await this.agencyRepository.findAllWithFilters(query);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Agencies fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error searching agencies: ${error.message}`,
+      };
+    }
   }
 
   async searchAgenciesByName(keyword: string, page = 1, limit = 10) {
@@ -154,7 +176,7 @@ export class AgencyService {
       }
 
       return {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Agency updated successfully',
         content: updatedAgency,
@@ -163,7 +185,7 @@ export class AgencyService {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while updating agency: ${error.message}`,
         content: undefined,
       };
     }
@@ -174,13 +196,13 @@ export class AgencyService {
     if (!deletedAgency) {
       return {
         code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: `Agency with ID ${id} not found`,
       };
     }
     return {
       code: ERROR_RES.SUCCESS.statusCode,
-      info: 'SUCCESS',
+      info: ERROR_INFO.SUCCESS,
       message: 'Agency deleted successfully',
     };
   }
