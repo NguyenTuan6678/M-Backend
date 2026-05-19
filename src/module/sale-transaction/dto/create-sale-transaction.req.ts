@@ -40,7 +40,7 @@ export class TransactionItemDto {
   @IsNumber({}, { message: 'totalSalary must be a number' })
   totalSalary: number;
 
-  @ApiProperty({ example: 200, description: 'Accounting account code' })
+  @ApiProperty({ example: 2000, description: 'Accounting account code' })
   @Type(() => Number)
   @IsNotEmpty({ message: 'accountingAccountCode is required' })
   @IsNumber({}, { message: 'accountingAccountCode must be a number' })
@@ -240,24 +240,6 @@ export class CreateSalesTransactionDto {
   @IsString({ message: 'agencyId must be a string' })
   @IsMongoId({ message: 'agencyId must be a valid MongoDB ObjectId' })
   agencyId: string;
-
-  @ApiProperty({
-    example: '649a6f1e5f1234567890abce',
-    description: 'Department ID',
-  })
-  @IsNotEmpty({ message: 'departmentId is required' })
-  @IsString({ message: 'deparmentId must be a string' })
-  @IsMongoId({ message: 'departmentId must be a valid MongoDB ObjectId' })
-  departmentId: string;
-
-  @ApiProperty({
-    example: '649a6f1e5f1234567890abcf',
-    description: 'Employee ID',
-  })
-  @IsNotEmpty({ message: 'employeeId is required' })
-  @IsString({ message: 'employeeId must be a string' })
-  @IsMongoId({ message: 'employeeId must be a valid MongoDB ObjectId' })
-  employeeId: string;
 
   @ApiProperty({
     example: '649a6f1e5f1234567890abd0',

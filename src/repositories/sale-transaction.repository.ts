@@ -10,6 +10,35 @@ import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-s
 import { Counter, CounterDocument } from '@schemas/counter.schema';
 import { UpdateSalesTransactionDto } from '@module/sale-transaction/dto/update-sale-transaction-repository.res';
 
+type CreateSalesTransactionPayload = CreateSalesTransactionDto & {
+  employeeId?: string;
+  departmentId?: string;
+};
+
+// Populate options dùng chung — đảm bảo nhất quán giữa các query
+const POPULATE_OPTIONS = [
+  {
+    path: 'agencyId',
+    select: 'agencyNumber agencyName agencyEmail commissionPercent',
+  },
+  {
+    path: 'departmentId',
+    select: 'departmentName departmentDescription',
+  },
+  {
+    path: 'employeeId',
+    select: 'employeeName employeeEmail employeePhone',
+  },
+  {
+    path: 'bankId',
+    select: 'inv_buyerBankName',
+  },
+  {
+    path: 'items.productId',
+    select: 'inv_itemCode inv_itemName inv_unitCode inv_unitPrice ma_thue',
+  },
+];
+
 @Injectable()
 export class SaleTransactionRepository {
   constructor(
@@ -26,15 +55,13 @@ export class SaleTransactionRepository {
     const counter = await this.counterModel.findOneAndUpdate(
       { name: 'orderNumber' },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true }, // upsert: tạo mới nếu chưa có
+      { new: true, upsert: true },
     );
-
     return `HD${String(counter.seq).padStart(4, '0')}`;
-    // → "HD0001", "HD0002", ...
   }
 
   async createSaleTransaction(
-    createSaleTransactionDto: CreateSalesTransactionDto,
+    createSaleTransactionDto: CreateSalesTransactionPayload,
   ): Promise<SalesTransactionDocument | null> {
     try {
       const { agencyId, departmentId, employeeId, bankId, items } =
@@ -96,27 +123,7 @@ export class SaleTransactionRepository {
     try {
       return await this.saleTransactionModel
         .find()
-        .populate({
-          path: 'agencyId',
-          select: 'name commissionPercent',
-        })
-        .populate({
-          path: 'departmentId',
-          select: 'departmentName departmentDescription',
-        })
-        .populate({
-          path: 'employeeId',
-          select: 'employeeName employeeEmail employeePhone',
-        })
-        .populate({
-          path: 'bankId',
-          select: 'inv_buyerBankName',
-        })
-        .populate({
-          path: 'items.productId',
-          select:
-            'inv_itemCode inv_itemName inv_unitCode inv_unitPrice ma_thue inv_quantity inv_discountAmount inv_TotalAmountWithoutVat inv_vatAmount inv_TotalAmount',
-        })
+        .populate(POPULATE_OPTIONS)
         .sort({ createdAt: -1 })
         .exec();
     } catch (error: any) {
@@ -139,27 +146,7 @@ export class SaleTransactionRepository {
     try {
       return await this.saleTransactionModel
         .findById(id)
-        .populate({
-          path: 'agencyId',
-          select: 'name commissionPercent',
-        })
-        .populate({
-          path: 'departmentId',
-          select: 'departmentName departmentDescription',
-        })
-        .populate({
-          path: 'employeeId',
-          select: 'employeeName employeeEmail employeePhone',
-        })
-        .populate({
-          path: 'bankId',
-          select: 'inv_buyerBankName',
-        })
-        .populate({
-          path: 'items.productId',
-          select:
-            'inv_itemCode inv_itemName inv_unitCode inv_unitPrice ma_thue inv_quantity inv_discountAmount inv_TotalAmountWithoutVat inv_vatAmount inv_TotalAmount',
-        })
+        .populate(POPULATE_OPTIONS)
         .exec();
     } catch (error: any) {
       this.logger.error(
@@ -176,21 +163,7 @@ export class SaleTransactionRepository {
     try {
       return await this.saleTransactionModel
         .findOne({ inv_invoiceCreatedId })
-        .populate({ path: 'agencyId', select: 'name commissionPercent' })
-        .populate({
-          path: 'departmentId',
-          select: 'departmentName departmentDescriptions',
-        })
-        .populate({
-          path: 'employeeId',
-          select: 'employeeName employeeEmail employeePhone',
-        })
-        .populate({ path: 'bankId', select: 'inv_buyerBankName' })
-        .populate({
-          path: 'items.productId',
-          select:
-            'inv_itemCode inv_itemName inv_unitCode inv_unitPrice ma_thue inv_quantity inv_discountAmount inv_TotalAmountWithoutVat inv_vatAmount inv_TotalAmount',
-        })
+        .populate(POPULATE_OPTIONS)
         .exec();
     } catch (error: any) {
       this.logger.error(
@@ -211,37 +184,15 @@ export class SaleTransactionRepository {
           .find()
           .skip(skip)
           .limit(limit)
-          .populate({
-            path: 'agencyId',
-            select: 'name commissionPercent',
-          })
-          .populate({
-            path: 'departmentId',
-            select: 'departmentName departmentDescription',
-          })
-          .populate({
-            path: 'employeeId',
-            select: 'employeeName employeeEmail employeePhone',
-          })
-          .populate({
-            path: 'bankId',
-            select: 'inv_buyerBankName',
-          })
-          .populate({
-            path: 'items.productId',
-            select:
-              'inv_itemCode inv_itemName inv_unitCode inv_unitPrice ma_thue inv_quantity inv_discountAmount inv_TotalAmountWithoutVat inv_vatAmount inv_TotalAmount',
-          })
+          .populate(POPULATE_OPTIONS)
           .sort({ createdAt: -1 })
           .exec(),
-
         this.saleTransactionModel.countDocuments().exec(),
       ]);
-
       return { data, total };
     } catch (error: any) {
       this.logger.error(
-        `Error finding sale transactions with populate: ${error.message}`,
+        `Error finding sale transactions paginated with populate: ${error.message}`,
         'SaleTransactionRepository',
       );
       throw error;
@@ -250,7 +201,7 @@ export class SaleTransactionRepository {
 
   async update(
     id: string,
-    updateData: Partial<UpdateSalesTransactionDto>,
+    updateData: Partial<UpdateSalesTransactionDto> & { isActive?: boolean },
   ): Promise<SalesTransactionDocument | null> {
     try {
       const updatedTransaction = await this.saleTransactionModel

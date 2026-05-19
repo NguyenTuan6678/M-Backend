@@ -114,10 +114,10 @@ export class SalesTransaction {
   @Prop({ type: Types.ObjectId, ref: Agency.name, required: true })
   agencyId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: Department.name, required: true })
+  @Prop({ type: Types.ObjectId, ref: Department.name })
   departmentId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: Employee.name, required: true })
+  @Prop({ type: Types.ObjectId, ref: Employee.name })
   employeeId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: Bank.name, required: true })
@@ -135,6 +135,9 @@ export class SalesTransaction {
     ],
   })
   items: TransactionItem[];
+
+  @Prop({ default: true })
+  isActive: boolean;
 }
 
 export const SalesTransactionSchema =
