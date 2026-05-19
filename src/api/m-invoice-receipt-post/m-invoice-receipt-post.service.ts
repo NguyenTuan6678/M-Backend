@@ -98,7 +98,8 @@ export class MInvoiceReceiptPostService {
     const discount = item.inv_discountAmount;
     const discountPercentage =
       item.inv_discountPercentage ||
-      item.inv_discountAmount / (price * quantity);
+      item.inv_discountAmount / (price * quantity) ||
+      0;
     const tax = item.ma_thue / 100;
 
     const totalPrice = price * quantity - discount;
@@ -255,6 +256,7 @@ export class MInvoiceReceiptPostService {
         inv_invoiceCreatedId: resId,
         so_benh_an: orderNumber, // ← tự cập nhật sau khi API thành công
         activationDate,
+        isActive: false,
       });
     }
 
