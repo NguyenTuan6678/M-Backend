@@ -15,19 +15,30 @@ type CreateSalesTransactionPayload = CreateSalesTransactionDto & {
   employeeId?: string;
   departmentId?: string;
 };
-
 const POPULATE_OPTIONS = [
   {
     path: 'agencyId',
-    select: 'agencyNumber agencyName agencyEmail commissionPercent',
+    select: 'agencyNumber agencyName agencyEmail commissionPercent employeeId',
+    populate: {
+      path: 'employeeId',
+      select: 'employeeName employeeEmail employeePhone departmentId',
+      populate: {
+        path: 'departmentId',
+        select: 'departmentName departmentDescription',
+      },
+    },
+  },
+  {
+    path: 'employeeId',
+    select: 'employeeName employeeEmail employeePhone departmentId',
+    populate: {
+      path: 'departmentId',
+      select: 'departmentName departmentDescription',
+    },
   },
   {
     path: 'departmentId',
     select: 'departmentName departmentDescription',
-  },
-  {
-    path: 'employeeId',
-    select: 'employeeName employeeEmail employeePhone',
   },
   {
     path: 'bankId',
@@ -116,32 +127,43 @@ export class SaleTransactionRepository {
   }> {
     try {
       const {
-        agency_Id,
-        employee_Id,
-        department_Id,
-        bank_Id,
+        agencyId,
+        employeeId,
+        departmentId,
+        bankId,
         isActive,
         startDate,
         endDate,
         search,
       } = query;
-      const page = query.page ?? 1;
-      const limit = query.limit ?? 10;
+
+      const page = Number(query.page) || 1;
+      const limit = Number(query.limit) || 10;
       const skip = (page - 1) * limit;
 
       const filter: Record<string, any> = {};
 
-      if (agency_Id) filter.agencyId = new Types.ObjectId(agency_Id);
-      if (employee_Id) filter.employeeId = new Types.ObjectId(employee_Id);
-      if (department_Id)
-        filter.departmentId = new Types.ObjectId(department_Id);
-      if (bank_Id) filter.bankId = new Types.ObjectId(bank_Id);
-      if (isActive !== undefined) filter.isActive = isActive;
+      if (agencyId) filter.agencyId = new Types.ObjectId(agencyId);
+      if (employeeId) filter.employeeId = new Types.ObjectId(employeeId);
+      if (departmentId) filter.departmentId = new Types.ObjectId(departmentId);
+      if (bankId) filter.bankId = new Types.ObjectId(bankId);
+
+      if (isActive !== undefined) {
+        filter.isActive = isActive;
+      }
 
       if (startDate || endDate) {
         filter.createdAt = {};
-        if (startDate) filter.createdAt.$gte = new Date(startDate);
-        if (endDate) filter.createdAt.$lte = new Date(endDate);
+
+        if (startDate) {
+          filter.createdAt.$gte = new Date(startDate);
+        }
+
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          filter.createdAt.$lte = end;
+        }
       }
 
       if (search) {
@@ -152,16 +174,29 @@ export class SaleTransactionRepository {
         ];
       }
 
+      console.log('QUERY:', query);
+      console.log('FILTER:', filter);
+
       const [data, total] = await Promise.all([
         this.saleTransactionModel
           .find(filter)
           .skip(skip)
           .limit(limit)
-          .populate(POPULATE_OPTIONS)
           .sort({ createdAt: -1 })
+          .populate(POPULATE_OPTIONS)
           .exec(),
+
         this.saleTransactionModel.countDocuments(filter).exec(),
       ]);
+
+      console.log(
+        'MODEL COLLECTION:',
+        this.saleTransactionModel.collection.name,
+      );
+      console.log(
+        'COUNT ALL:',
+        await this.saleTransactionModel.countDocuments(),
+      );
 
       return {
         data,

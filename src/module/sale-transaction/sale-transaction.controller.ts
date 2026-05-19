@@ -71,8 +71,8 @@ export class SaleTransactionController {
   @ApiOperation({
     summary: 'Get all sale transactions with optional filters & pagination',
     description:
-      'Filter theo: agency_Id, employee_Id, department_Id, bank_Id, isActive, startDate, endDate. ' +
-      'Text search (inv_buyerDisplayName, inv_buyerTaxCode, orderNumber) qua param search. ' +
+      'Filter theo: agencyId, employeeId, departmentId, bankId, isActive, startDate, endDate. ' +
+      'Text search qua param search. ' +
       'Phân trang qua page và limit. Mặc định trả toàn bộ nếu không có filter.',
   })
   async getAllSaleTransactions(
@@ -80,16 +80,16 @@ export class SaleTransactionController {
     query: QuerySaleTransactionDto,
   ) {
     const hasFilter =
-      query.agency_Id ||
-      query.employee_Id ||
-      query.department_Id ||
-      query.bank_Id ||
+      !!query.agencyId ||
+      !!query.employeeId ||
+      !!query.departmentId ||
+      !!query.bankId ||
       query.isActive !== undefined ||
-      query.startDate ||
-      query.endDate ||
-      query.search ||
-      query.page > 1 ||
-      query.limit !== 10;
+      !!query.startDate ||
+      !!query.endDate ||
+      !!query.search ||
+      (query.page !== undefined && query.page > 1) ||
+      (query.limit !== undefined && query.limit !== 10);
 
     if (hasFilter) {
       return await this.saleTransactionService.searchSaleTransactions(query);

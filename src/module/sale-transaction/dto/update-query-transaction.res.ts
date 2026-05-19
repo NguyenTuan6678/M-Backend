@@ -10,52 +10,46 @@ import { Transform, Type } from 'class-transformer';
 
 export class QuerySaleTransactionDto {
   @ApiPropertyOptional({
-    example: '649a6f1e5f1234567890abcd',
     description: 'Filter by agency ID',
   })
   @IsOptional()
   @IsMongoId()
-  agency_Id?: string;
+  agencyId?: string;
 
   @ApiPropertyOptional({
-    example: '649a6f1e5f1234567890abce',
     description: 'Filter by employee ID',
   })
   @IsOptional()
   @IsMongoId()
-  employee_Id?: string;
+  employeeId?: string;
 
   @ApiPropertyOptional({
-    example: '649a6f1e5f1234567890abcf',
     description: 'Filter by department ID',
   })
   @IsOptional()
   @IsMongoId()
-  department_Id?: string;
+  departmentId?: string;
 
   @ApiPropertyOptional({
-    example: '649a6f1e5f1234567890abd0',
     description: 'Filter by bank ID',
   })
   @IsOptional()
   @IsMongoId()
-  bank_Id?: string;
+  bankId?: string;
 
-  @ApiPropertyOptional({
-    example: true,
-    description: 'Filter by isActive status',
-  })
+  @ApiPropertyOptional({ example: true })
   @IsOptional()
   @Transform(({ value }) => {
-    if (value === 'true') return true;
-    if (value === 'false') return false;
-    return value;
+    if (value === undefined || value === null || value === '') {
+      return undefined;
+    }
+
+    return value === true || value === 'true';
   })
   @IsBoolean()
   isActive?: boolean;
 
   @ApiPropertyOptional({
-    example: '2026-01-01',
     description: 'Start date filter (createdAt)',
   })
   @IsOptional()
@@ -63,7 +57,6 @@ export class QuerySaleTransactionDto {
   startDate?: string;
 
   @ApiPropertyOptional({
-    example: '2026-12-31',
     description: 'End date filter (createdAt)',
   })
   @IsOptional()
@@ -71,7 +64,6 @@ export class QuerySaleTransactionDto {
   endDate?: string;
 
   @ApiPropertyOptional({
-    example: 'Nguyen Van A',
     description:
       'Text search — tìm trong inv_buyerDisplayName, inv_buyerTaxCode, orderNumber',
   })

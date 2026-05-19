@@ -67,7 +67,7 @@ export class DepartmentService {
   async getAllDepartments(): Promise<GetAllDepartments> {
     let response: GetAllDepartments | null = null;
     try {
-      const departments = await this.departmentModel.find().exec();
+      const departments = await this.departmentRepository.findAll();
       response = {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
