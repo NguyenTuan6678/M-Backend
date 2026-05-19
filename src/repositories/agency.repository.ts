@@ -7,6 +7,12 @@ import { CreateAgencyDto } from '@module/agency/dto/create-agency.req';
 import { UpdateAgencyDto } from '@module/agency/dto/update-agency.req';
 import { Counter, CounterDocument } from '@schemas/counter.schema';
 
+const POPULATE_OPTIONS = [
+  {
+    path: 'employeeId',
+    select: 'employeeName employeeEmail employeePhone deparmentId',
+  },
+];
 @Injectable()
 export class AgencyRepository {
   constructor(
@@ -46,23 +52,13 @@ export class AgencyRepository {
     }
   }
 
-  async findAll(
-    skip = 0,
-    limit = 10,
-  ): Promise<{ data: AgencyDocument[]; total: number }> {
+  async findAll(): Promise<AgencyDocument[]> {
     try {
-      const [data, total] = await Promise.all([
-        this.agencyModel
-          .find()
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-
-        this.agencyModel.countDocuments().exec(),
-      ]);
-
-      return { data, total };
+      return await this.agencyModel
+        .find()
+        .populate(POPULATE_OPTIONS)
+        .sort({ createdAt: -1 })
+        .exec();
     } catch (error: any) {
       this.logger.error(`Error finding agencies: ${error.message}`);
       throw error;

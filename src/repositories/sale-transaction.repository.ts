@@ -9,6 +9,7 @@ import { Model, Types } from 'mongoose';
 import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
 import { Counter, CounterDocument } from '@schemas/counter.schema';
 import { UpdateSalesTransactionDto } from '@module/sale-transaction/dto/update-sale-transaction-repository.res';
+import { QuerySaleTransactionDto } from '@module/sale-transaction/dto/update-query-transaction.res';
 
 type CreateSalesTransactionPayload = CreateSalesTransactionDto & {
   employeeId?: string;
@@ -101,6 +102,78 @@ export class SaleTransactionRepository {
     } catch (error: any) {
       this.logger.error(
         `Error creating sale transaction: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async findAllWithFilters(query: QuerySaleTransactionDto): Promise<{
+    data: SalesTransactionDocument[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    try {
+      const {
+        agency_Id,
+        employee_Id,
+        department_Id,
+        bank_Id,
+        isActive,
+        startDate,
+        endDate,
+        search,
+      } = query;
+      const page = query.page ?? 1;
+      const limit = query.limit ?? 10;
+      const skip = (page - 1) * limit;
+
+      const filter: Record<string, any> = {};
+
+      if (agency_Id) filter.agencyId = new Types.ObjectId(agency_Id);
+      if (employee_Id) filter.employeeId = new Types.ObjectId(employee_Id);
+      if (department_Id)
+        filter.departmentId = new Types.ObjectId(department_Id);
+      if (bank_Id) filter.bankId = new Types.ObjectId(bank_Id);
+      if (isActive !== undefined) filter.isActive = isActive;
+
+      if (startDate || endDate) {
+        filter.createdAt = {};
+        if (startDate) filter.createdAt.$gte = new Date(startDate);
+        if (endDate) filter.createdAt.$lte = new Date(endDate);
+      }
+
+      if (search) {
+        filter.$or = [
+          { inv_buyerDisplayName: { $regex: search, $options: 'i' } },
+          { inv_buyerTaxCode: { $regex: search, $options: 'i' } },
+          { orderNumber: { $regex: search, $options: 'i' } },
+        ];
+      }
+
+      const [data, total] = await Promise.all([
+        this.saleTransactionModel
+          .find(filter)
+          .skip(skip)
+          .limit(limit)
+          .populate(POPULATE_OPTIONS)
+          .sort({ createdAt: -1 })
+          .exec(),
+        this.saleTransactionModel.countDocuments(filter).exec(),
+      ]);
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transactions with filters: ${error.message}`,
         'SaleTransactionRepository',
       );
       throw error;

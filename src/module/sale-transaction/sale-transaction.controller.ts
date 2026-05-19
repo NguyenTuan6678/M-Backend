@@ -22,6 +22,7 @@ import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { GetAllSaleTransactions } from './dto/get-all-sale-transaction.res';
 import { MessageResponse } from '@app-types/message.res';
+import { QuerySaleTransactionDto } from './dto/update-query-transaction.res';
 
 @ApiTags('Sale Transaction')
 @Controller('sale-transaction')
@@ -67,8 +68,33 @@ export class SaleTransactionController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get a paginated list of sale transactions' })
-  async getAllSaleTransactions(): Promise<GetAllSaleTransactions> {
+  @ApiOperation({
+    summary: 'Get all sale transactions with optional filters & pagination',
+    description:
+      'Filter theo: agency_Id, employee_Id, department_Id, bank_Id, isActive, startDate, endDate. ' +
+      'Text search (inv_buyerDisplayName, inv_buyerTaxCode, orderNumber) qua param search. ' +
+      'Phân trang qua page và limit. Mặc định trả toàn bộ nếu không có filter.',
+  })
+  async getAllSaleTransactions(
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    query: QuerySaleTransactionDto,
+  ) {
+    const hasFilter =
+      query.agency_Id ||
+      query.employee_Id ||
+      query.department_Id ||
+      query.bank_Id ||
+      query.isActive !== undefined ||
+      query.startDate ||
+      query.endDate ||
+      query.search ||
+      query.page > 1 ||
+      query.limit !== 10;
+
+    if (hasFilter) {
+      return await this.saleTransactionService.searchSaleTransactions(query);
+    }
+
     return await this.saleTransactionService.getAllSaleTransactions();
   }
 
@@ -78,55 +104,55 @@ export class SaleTransactionController {
     return await this.saleTransactionService.getSaleTransactionStats();
   }
 
-  @Get('search/date-range')
-  @ApiOperation({ summary: 'Get sale transactions by date range' })
-  async getSaleTransactionsByDateRange(
-    @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    return await this.saleTransactionService.getSaleTransactionsByDateRange(
-      new Date(startDate),
-      new Date(endDate),
-    );
-  }
+  // @Get('search/date-range')
+  // @ApiOperation({ summary: 'Get sale transactions by date range' })
+  // async getSaleTransactionsByDateRange(
+  //   @Query('startDate') startDate: string,
+  //   @Query('endDate') endDate: string,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   return await this.saleTransactionService.getSaleTransactionsByDateRange(
+  //     new Date(startDate),
+  //     new Date(endDate),
+  //   );
+  // }
 
-  @Get('by-employee/:employeeId')
-  @ApiOperation({ summary: 'Get sale transactions by employee ID' })
-  async getSaleTransactionsByEmployee(
-    @Param('employeeId') employeeId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    return await this.saleTransactionService.getSaleTransactionsByEmployee(
-      employeeId,
-    );
-  }
+  // @Get('by-employee/:employeeId')
+  // @ApiOperation({ summary: 'Get sale transactions by employee ID' })
+  // async getSaleTransactionsByEmployee(
+  //   @Param('employeeId') employeeId: string,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   return await this.saleTransactionService.getSaleTransactionsByEmployee(
+  //     employeeId,
+  //   );
+  // }
 
-  @Get('by-agency/:agencyId')
-  @ApiOperation({ summary: 'Get sale transactions by agency ID' })
-  async getSaleTransactionsByAgency(
-    @Param('agencyId') agencyId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    return await this.saleTransactionService.getSaleTransactionsByAgency(
-      agencyId,
-    );
-  }
+  // @Get('by-agency/:agencyId')
+  // @ApiOperation({ summary: 'Get sale transactions by agency ID' })
+  // async getSaleTransactionsByAgency(
+  //   @Param('agencyId') agencyId: string,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   return await this.saleTransactionService.getSaleTransactionsByAgency(
+  //     agencyId,
+  //   );
+  // }
 
-  @Get('by-department/:departmentId')
-  @ApiOperation({ summary: 'Get sale transactions by department ID' })
-  async getSaleTransactionsByDepartment(
-    @Param('departmentId') departmentId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    return await this.saleTransactionService.getSaleTransactionsByDepartment(
-      departmentId,
-    );
-  }
+  // @Get('by-department/:departmentId')
+  // @ApiOperation({ summary: 'Get sale transactions by department ID' })
+  // async getSaleTransactionsByDepartment(
+  //   @Param('departmentId') departmentId: string,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   return await this.saleTransactionService.getSaleTransactionsByDepartment(
+  //     departmentId,
+  //   );
+  // }
 
-  @Get('by-bank/:bankId')
-  @ApiOperation({ summary: 'Get sale transactions by bank ID' })
-  async getSaleTransactionsByBank(
-    @Param('bankId') bankId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    return await this.saleTransactionService.getSaleTransactionsByBank(bankId);
-  }
+  // @Get('by-bank/:bankId')
+  // @ApiOperation({ summary: 'Get sale transactions by bank ID' })
+  // async getSaleTransactionsByBank(
+  //   @Param('bankId') bankId: string,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   return await this.saleTransactionService.getSaleTransactionsByBank(bankId);
+  // }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get sale transaction by ID' })
@@ -156,10 +182,10 @@ export class SaleTransactionController {
     return await this.saleTransactionService.deleteSaleTransaction(id);
   }
 
-  @Post(':id/send-receipt')
-  @ApiOperation({ summary: 'Build and send invoice payload for a transaction' })
-  @HttpCode(HttpStatus.OK)
-  async sendReceipt(@Param('id') id: string) {
-    return await this.saleTransactionService.buildInvoicePayload(id);
-  }
+  // @Post(':id/send-receipt')
+  // @ApiOperation({ summary: 'Build and send invoice payload for a transaction' })
+  // @HttpCode(HttpStatus.OK)
+  // async sendReceipt(@Param('id') id: string) {
+  //   return await this.saleTransactionService.buildInvoicePayload(id);
+  // }
 }

@@ -15,6 +15,7 @@ import { Bank } from '@schemas/bank.schema';
 import { Product } from '@schemas/product.schema';
 import { GetAllSaleTransactions } from './dto/get-all-sale-transaction.res';
 import { MessageResponse } from '@app-types/message.res';
+import { QuerySaleTransactionDto } from './dto/update-query-transaction.res';
 
 interface ValidatedEntities {
   missing: string[];
@@ -330,6 +331,28 @@ export class SaleTransactionService {
         `Error in SaleTransactionService.getSaleTransactionsByDateRange: ${error.message}`,
       );
       throw error;
+    }
+  }
+
+  async searchSaleTransactions(query: QuerySaleTransactionDto) {
+    try {
+      const result =
+        await this.saleTransactionRepository.findAllWithFilters(query);
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Sale transactions fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `Error in SaleTransactionService.searchSaleTransactions: ${error.message}`,
+      );
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: error.message,
+      };
     }
   }
 
