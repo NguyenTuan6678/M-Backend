@@ -1,5 +1,7 @@
 import {
   IsBoolean,
+  IsEmail,
+  IsMongoId,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -15,7 +17,15 @@ export class CreateAgencyDto {
   })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  agencyName: string;
+
+  @ApiProperty({
+    description: 'Name of the agency',
+    example: 'Best Travel Agency',
+  })
+  @IsString()
+  @IsEmail()
+  agencyEmail: string;
 
   @ApiProperty({
     description: 'Commission percentage for the agency',
@@ -24,6 +34,15 @@ export class CreateAgencyDto {
   @Type(() => Number)
   @IsNumber()
   commissionPercent: number;
+
+  @ApiProperty({
+    example: '649a6f1e5f1234567890abcf',
+    description: 'Employee ID',
+  })
+  @IsNotEmpty({ message: 'employeeId is required' })
+  @IsString({ message: 'employeeId must be a string' })
+  @IsMongoId({ message: 'employeeId must be a valid MongoDB ObjectId' })
+  employeeId: string;
 
   @ApiProperty({
     description: 'Indicates if the agency is active',

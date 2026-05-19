@@ -21,38 +21,36 @@ export class AgencyService {
   async createAgency(
     createAgencyDto: CreateAgencyDto,
   ): Promise<AgencyResponseDto | null> {
-    let response: AgencyResponseDto | null = null;
     try {
-      const { name, commissionPercent } = createAgencyDto;
-      if (!name || !commissionPercent) {
-        response = {
+      const { agencyName, commissionPercent } = createAgencyDto;
+
+      if (
+        !agencyName ||
+        commissionPercent === undefined ||
+        commissionPercent === null
+      ) {
+        return {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: 'FAIL',
-          message: 'Missing required fields: name or commissionPercent',
+          message: 'Missing required fields: agencyName or commissionPercent',
         };
-        return response;
       }
 
-      const newAgency = new this.agencyModel({
-        name,
-        commissionPercent,
-      });
+      const agency = await this.agencyRepository.create(createAgencyDto);
 
-      await newAgency.save();
-
-      response = {
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: 'SUCCESS',
         message: 'Agency created successfully',
+        content: agency,
       };
     } catch (error: any) {
-      response = {
+      return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: 'FAIL',
         message: `Error creating agency: ${error.message}`,
       };
     }
-    return response;
   }
 
   async getAllAgencies(): Promise<GetAllAgencies> {
@@ -60,7 +58,7 @@ export class AgencyService {
     try {
       const agencies = await this.agencyModel.find().exec();
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Get all agencies successfully',
         content: agencies,
@@ -92,7 +90,7 @@ export class AgencyService {
       }
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Agency fetched successfully',
         content: agency,
@@ -154,7 +152,7 @@ export class AgencyService {
       }
 
       return {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Agency updated successfully',
         content: updatedAgency,
