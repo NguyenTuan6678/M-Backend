@@ -5,6 +5,7 @@ import { Model, Types } from 'mongoose';
 import { LoggerService } from '@common/logs/logger.service';
 import { CreateAgencyDto } from '@module/agency/dto/create-agency.req';
 import { UpdateAgencyDto } from '@module/agency/dto/update-agency.req';
+import { Counter, CounterDocument } from '@schemas/counter.schema';
 
 @Injectable()
 export class AgencyRepository {
@@ -12,11 +13,32 @@ export class AgencyRepository {
     @InjectModel(Agency.name)
     private readonly agencyModel: Model<AgencyDocument>,
     private readonly logger: LoggerService,
+    @InjectModel(Counter.name)
+    private readonly counterModel: Model<CounterDocument>,
   ) {}
+
+  private async generateAgencyNumber(): Promise<string> {
+    const counter = await this.counterModel.findOneAndUpdate(
+      { name: 'agencyNumber' },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true },
+    );
+    return `AG${String(counter.seq).padStart(4, '0')}`;
+  }
 
   async create(createAgencyDto: CreateAgencyDto): Promise<AgencyDocument> {
     try {
-      const newAgency = new this.agencyModel(createAgencyDto);
+      const { agencyEmail, employeeId } = createAgencyDto;
+
+      const agencyNumber = await this.generateAgencyNumber();
+
+      const dataSubmit = {
+        ...createAgencyDto,
+        agencyNumber,
+        agencyEmail,
+        ...(employeeId && { employeeId: new Types.ObjectId(employeeId) }),
+      };
+      const newAgency = new this.agencyModel(dataSubmit);
       return await newAgency.save();
     } catch (error: any) {
       this.logger.error(`Error creating agency: ${error.message}`);
