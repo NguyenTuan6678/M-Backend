@@ -55,18 +55,18 @@ localhost:4000/api/docs
 - Uses class-transformer for response shaping
 - Sensitive fields (e.g. passwords) are excluded using @Exclude()
 
-**🧩 Future Improvements**
+## 🧩 Future Improvements
 
 - 📊 Reporting dashboard (revenue, commission)
 - 🔐 Authentication & Authorization (JWT, Roles)
 - 📁 File export (PDF invoices, Excel reports)
 - 🔄 Integration with external CRM systems
 
-**📌 Notes**
+## 📌 Notes
 
-MongoDB collections are created automatically via Mongoose schemas
-Monetary values should be calculated on backend (avoid trusting frontend)
-Use DTOs for all input validation
+- MongoDB collections are created automatically via Mongoose schemas
+- Monetary values should be calculated on backend (avoid trusting frontend)
+- Use DTOs for all input validation
 
 ## Authors
 
