@@ -73,7 +73,7 @@ export class EmployeeService {
     try {
       const employees = await this.employeeRepository.findAll();
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Get all employees successfully',
         content: employees,
@@ -105,7 +105,7 @@ export class EmployeeService {
       }
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Employee fetched successfully',
         content: employee,
@@ -170,7 +170,7 @@ export class EmployeeService {
       }
 
       return {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Employee updated successfully',
         content: updatedEmployee,

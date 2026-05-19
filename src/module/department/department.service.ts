@@ -77,7 +77,7 @@ export class DepartmentService {
     try {
       const departments = await this.departmentModel.find().exec();
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Get all agencies successfully',
         content: departments,
@@ -109,7 +109,7 @@ export class DepartmentService {
       }
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Department fetched successfully',
         content: department,
@@ -174,7 +174,7 @@ export class DepartmentService {
       }
 
       return {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Agency updated successfully',
         content: updatedDepartment,
