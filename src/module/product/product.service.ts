@@ -16,42 +16,12 @@ export class ProductService {
     private readonly productRepository: ProductRepository,
   ) {}
 
-  private calculateFields(
-    inv_unitPrice: number,
-    inv_quantity: number,
-    inv_discountAmount: number,
-    ma_thue: string,
-  ) {
-    const A = inv_unitPrice;
-    const B = inv_quantity;
-    const C = inv_discountAmount;
-    const D = parseFloat(ma_thue) / 100;
-
-    const G = A * B - C; // inv_TotalAmountWithoutVat
-    const F = G * D; // inv_vatAmount
-    const E = G + F; // inv_TotalAmount
-
-    return {
-      inv_TotalAmountWithoutVat: G,
-      inv_vatAmount: F,
-      inv_TotalAmount: E,
-    };
-  }
-
   async createProduct(
     createProductDto: CreateProductDto,
   ): Promise<ProductResponseDto> {
     let response: MessageResponse | null = null;
     try {
-      const {
-        inv_itemCode,
-        inv_itemName,
-        inv_unitCode,
-        inv_unitPrice,
-        inv_quantity,
-        inv_discountAmount,
-        ma_thue,
-      } = createProductDto;
+      const { inv_itemCode, ma_thue } = createProductDto;
 
       if (!inv_itemCode || !ma_thue) {
         response = {
@@ -71,13 +41,6 @@ export class ProductService {
           message: `Product with code ${inv_itemCode} already exists`,
         };
       }
-
-      const calculated = this.calculateFields(
-        inv_unitPrice,
-        inv_quantity,
-        inv_discountAmount,
-        ma_thue,
-      );
 
       const newProduct = await this.productRepository.create(createProductDto);
 
@@ -202,16 +165,8 @@ export class ProductService {
           };
         }
 
-        const calculated = this.calculateFields(
-          updateData.inv_unitPrice ?? existing.inv_unitPrice,
-          updateData.inv_quantity ?? existing.inv_quantity,
-          updateData.inv_discountAmount ?? existing.inv_discountAmount,
-          updateData.ma_thue ?? existing.ma_thue,
-        );
-
         updateData = {
           ...updateData,
-          ...calculated,
         };
       }
 
