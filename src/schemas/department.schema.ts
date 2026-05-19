@@ -5,6 +5,9 @@ export type DepartmentDocument = Department & Document;
 
 @Schema({ timestamps: true })
 export class Department {
+  @Prop({ unique: true })
+  departmentNumber: string;
+
   @Prop({ required: true })
   departmentName: string;
 

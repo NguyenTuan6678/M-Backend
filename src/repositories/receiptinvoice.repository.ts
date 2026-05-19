@@ -17,7 +17,7 @@ export class ReceiptInvoiceRepository {
     private logger: LoggerService,
   ) {}
 
-  async createReceipt(
+  async create(
     createReceiptDto: CreateReceiptInvoiceDto,
   ): Promise<ReceiptInvoiceDocument> {
     try {
@@ -37,21 +37,9 @@ export class ReceiptInvoiceRepository {
     }
   }
 
-  async findAll(
-    skip: number = 0,
-    limit: number = 10,
-  ): Promise<{ data: ReceiptInvoiceDocument[]; total: number }> {
+  async findAll(): Promise<ReceiptInvoiceDocument[]> {
     try {
-      const [data, total] = await Promise.all([
-        this.receiptModel
-          .find()
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-        this.receiptModel.countDocuments().exec(),
-      ]);
-      return { data, total };
+      return await this.receiptModel.find().sort({ createdAt: -1 }).exec();
     } catch (error: any) {
       this.logger.error(`Error fetching receiptinvoices: ${error.message}`);
       throw error;

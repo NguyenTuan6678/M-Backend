@@ -10,9 +10,14 @@ import { Counter, CounterDocument } from '@schemas/counter.schema';
 const POPULATE_OPTIONS = [
   {
     path: 'employeeId',
-    select: 'employeeName employeeEmail employeePhone deparmentId',
+    select: 'employeeName employeeEmail employeePhone departmentId',
+    populate: {
+      path: 'departmentId',
+      select: 'departmentName departmentDescription',
+    },
   },
 ];
+
 @Injectable()
 export class AgencyRepository {
   constructor(
@@ -45,6 +50,10 @@ export class AgencyRepository {
         ...(employeeId && { employeeId: new Types.ObjectId(employeeId) }),
       };
       const newAgency = new this.agencyModel(dataSubmit);
+      this.logger.log(
+        `Agency created: ${newAgency.agencyName}`,
+        `AgencyRepository`,
+      );
       return await newAgency.save();
     } catch (error: any) {
       this.logger.error(`Error creating agency: ${error.message}`);
@@ -71,7 +80,10 @@ export class AgencyRepository {
         return null;
       }
 
-      return await this.agencyModel.findById(id).exec();
+      return await this.agencyModel
+        .findById(id)
+        .populate(POPULATE_OPTIONS)
+        .exec();
     } catch (error: any) {
       this.logger.error(`Error finding agency by ID: ${error.message}`);
       throw error;
@@ -120,12 +132,16 @@ export class AgencyRepository {
         return null;
       }
 
-      return await this.agencyModel
+      const updateAgency = await this.agencyModel
         .findByIdAndUpdate(id, updateAgencyDto, {
           new: true,
           runValidators: true,
         })
         .exec();
+      if (updateAgency) {
+        this.logger.error('Agency updated successfully', 'AgencyRepository');
+      }
+      return updateAgency;
     } catch (error: any) {
       this.logger.error(`Error updating agency: ${error.message}`);
       throw error;
@@ -138,7 +154,14 @@ export class AgencyRepository {
         return null;
       }
 
-      return await this.agencyModel.findByIdAndDelete(id).exec();
+      const deleteAgency = await this.agencyModel.findByIdAndDelete(id).exec();
+      if (deleteAgency) {
+        this.logger.log(
+          `Agency deleted: ${deleteAgency.agencyName}`,
+          'AgencyRepository',
+        );
+      }
+      return deleteAgency;
     } catch (error: any) {
       this.logger.error(`Error deleting agency: ${error.message}`);
       throw error;

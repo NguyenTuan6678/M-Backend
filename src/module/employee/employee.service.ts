@@ -1,4 +1,3 @@
-import { LoggerService } from '@common/logs/logger.service';
 import { Injectable } from '@nestjs/common';
 import { EmployeeRepository } from '@repositories/employee.repository';
 import { Employee, EmployeeDocument } from '@schemas/employee.schema';
@@ -15,7 +14,6 @@ export class EmployeeService {
   constructor(
     @InjectModel(Employee.name) private employeeModel: Model<EmployeeDocument>,
     private readonly employeeRepository: EmployeeRepository,
-    private readonly logger: LoggerService,
   ) {}
 
   async createEmployee(
@@ -23,12 +21,13 @@ export class EmployeeService {
   ): Promise<EmployeeResponseDto> {
     let response: MessageResponse | null = null;
     try {
-      const { employeeName, employeeEmail, employeePhone } = createEmployeeDto;
-      if (!employeeName) {
+      const { employeeName, employeeEmail, employeePhone, departmentId } =
+        createEmployeeDto;
+      if (!employeeName || !departmentId) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
-          message: 'Missing required fields: name',
+          info: ERROR_INFO.FAIL,
+          message: 'Missing required fields: employeeName or departmentId',
         };
         return response;
       }
@@ -39,29 +38,25 @@ export class EmployeeService {
       if (duplicatedEmployee) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
+          info: ERROR_INFO.FAIL,
           message: 'Employee already exists',
         };
         return response;
       }
 
-      const newEmployee = new this.employeeModel({
-        employeeName,
-        employeeEmail,
-        employeePhone,
-      });
+      const newEmployee =
+        await this.employeeRepository.create(createEmployeeDto);
 
-      await newEmployee.save();
-
-      response = {
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
-        info: 'SUCCESS',
+        info: ERROR_INFO.SUCCESS,
         message: 'Employee created successfully',
+        content: newEmployee,
       };
     } catch (error: any) {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: 'An error occurred while creating the employee',
       };
     }
@@ -83,7 +78,7 @@ export class EmployeeService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while getting all emplyoyees: ${error.message}`,
       };
     }
     return response;
@@ -114,7 +109,7 @@ export class EmployeeService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while getting emplyoyee by id: ${error.message}`,
       };
     }
     return response;
@@ -179,7 +174,7 @@ export class EmployeeService {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while creating the employee: ${error.message}`,
         content: undefined,
       };
     }
@@ -190,13 +185,13 @@ export class EmployeeService {
     if (!deletedEmployee) {
       return {
         code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: `Employee with ID ${id} not found`,
       };
     }
     return {
       code: ERROR_RES.SUCCESS.statusCode,
-      info: 'SUCCESS',
+      info: ERROR_INFO.SUCCESS,
       message: `Employee ${deletedEmployee.employeeName} deleted successfully`,
     };
   }

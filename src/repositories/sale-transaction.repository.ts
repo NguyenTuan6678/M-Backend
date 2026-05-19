@@ -16,7 +16,6 @@ type CreateSalesTransactionPayload = CreateSalesTransactionDto & {
   departmentId?: string;
 };
 
-// Populate options dùng chung — đảm bảo nhất quán giữa các query
 const POPULATE_OPTIONS = [
   {
     path: 'agencyId',
@@ -272,37 +271,6 @@ export class SaleTransactionRepository {
     }
   }
 
-  async update(
-    id: string,
-    updateData: Partial<UpdateSalesTransactionDto> & { isActive?: boolean },
-  ): Promise<SalesTransactionDocument | null> {
-    try {
-      const updatedTransaction = await this.saleTransactionModel
-        .findByIdAndUpdate(id, updateData, { new: true })
-        .exec();
-
-      if (!updatedTransaction) {
-        this.logger.warn(
-          `Sale transaction with ID: ${id} not found`,
-          'SaleTransactionRepository',
-        );
-        return null;
-      }
-
-      this.logger.log(
-        `Sale transaction updated with ID: ${updatedTransaction._id}`,
-        'SaleTransactionRepository',
-      );
-      return updatedTransaction;
-    } catch (error: any) {
-      this.logger.error(
-        `Error updating sale transaction: ${error.message}`,
-        'SaleTransactionRepository',
-      );
-      throw error;
-    }
-  }
-
   async findByEmployeeId(
     employeeId: string,
   ): Promise<SalesTransactionDocument[]> {
@@ -384,6 +352,37 @@ export class SaleTransactionRepository {
     } catch (error: any) {
       this.logger.error(
         `Error finding sale transactions by date range: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async update(
+    id: string,
+    updateData: Partial<UpdateSalesTransactionDto> & { isActive?: boolean },
+  ): Promise<SalesTransactionDocument | null> {
+    try {
+      const updatedTransaction = await this.saleTransactionModel
+        .findByIdAndUpdate(id, updateData, { new: true })
+        .exec();
+
+      if (!updatedTransaction) {
+        this.logger.warn(
+          `Sale transaction with ID: ${id} not found`,
+          'SaleTransactionRepository',
+        );
+        return null;
+      }
+
+      this.logger.log(
+        `Sale transaction updated with ID: ${updatedTransaction._id}`,
+        'SaleTransactionRepository',
+      );
+      return updatedTransaction;
+    } catch (error: any) {
+      this.logger.error(
+        `Error updating sale transaction: ${error.message}`,
         'SaleTransactionRepository',
       );
       throw error;

@@ -27,21 +27,13 @@ export class BankRepository {
     }
   }
 
-  async findAll(
-    skip: number = 0,
-    limit: number = 10,
-  ): Promise<{ data: BankDocument[]; total: number }> {
+  async findAll(): Promise<BankDocument[]> {
     try {
-      const [data, total] = await Promise.all([
-        this.bankModel
-          .find()
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-        this.bankModel.countDocuments().exec(),
-      ]);
-      return { data, total };
+      return await this.bankModel
+        .find()
+        .populate('inv_buyerBankName')
+        .sort({ createdAt: -1 })
+        .exec();
     } catch (error: any) {
       this.logger.error(`Error fetching banks: ${error.message}`);
       throw error;
@@ -50,7 +42,10 @@ export class BankRepository {
 
   async findById(id: string): Promise<BankDocument | null> {
     try {
-      return await this.bankModel.findById(id).exec();
+      return await this.bankModel
+        .findById(id)
+        .populate('inv_buyerBankName')
+        .exec();
     } catch (error: any) {
       this.logger.error(`Error finding bank by ID: ${error.message}`);
       throw error;
@@ -94,9 +89,13 @@ export class BankRepository {
     updateData: Partial<CreateBankDto>,
   ): Promise<BankDocument | null> {
     try {
-      return await this.bankModel
+      const updateBank = await this.bankModel
         .findByIdAndUpdate(id, updateData, { new: true })
         .exec();
+      if (updateBank) {
+        this.logger.error('Bank updated succesfully', 'BankRepository');
+      }
+      return updateBank;
     } catch (error: any) {
       this.logger.error(`Error updating bank: ${error.message}`);
       throw error;

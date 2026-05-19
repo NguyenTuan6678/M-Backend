@@ -1,5 +1,4 @@
-import { LoggerService } from '@common/logs/logger.service';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { DepartmentRepository } from '@repositories/department.repository';
 import { Department, DepartmentDocument } from '@schemas/department.schema';
@@ -8,10 +7,6 @@ import { CreateDepartmentDto } from './dto/create-department.req';
 import { DepartmentResponseDto } from './dto/department.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
-import {
-  PaginatedResponseDto,
-  PaginationDto,
-} from '@common/dto/pagination.dto';
 import { GetAllDepartments } from './dto/get-all-department.res';
 
 @Injectable()
@@ -20,7 +15,6 @@ export class DepartmentService {
     @InjectModel(Department.name)
     private departmentModel: Model<DepartmentDocument>,
     private readonly departmentRepository: DepartmentRepository,
-    private readonly logger: LoggerService,
   ) {}
 
   async createDepartment(
@@ -29,11 +23,12 @@ export class DepartmentService {
     let response: MessageResponse | null = null;
     try {
       const { departmentName, departmentDescription } = createDepartmentDto;
+
       if (!departmentName) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
-          message: 'Missing required fields: name',
+          info: ERROR_INFO.FAIL,
+          message: 'Missing required fields: departmentName',
         };
         return response;
       }
@@ -44,29 +39,26 @@ export class DepartmentService {
       if (duplicatedDepartment) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
+          info: ERROR_INFO.FAIL,
           message: 'Department already exists',
         };
         return response;
       }
 
-      const newDepartment = new this.departmentModel({
-        departmentName,
-        departmentDescription,
-      });
+      const newDepartment =
+        await this.departmentRepository.create(createDepartmentDto);
 
-      await newDepartment.save();
-
-      response = {
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
-        info: 'SUCCESS',
+        info: ERROR_INFO.SUCCESS,
         message: 'Department created successfully',
+        content: newDepartment,
       };
     } catch (error: any) {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: 'FAIL',
-        message: 'An error occurred while creating the bank',
+        info: ERROR_INFO.FAIL,
+        message: `An error occurred while creating the department: ${error.message}`,
       };
     }
     return response;
@@ -79,7 +71,7 @@ export class DepartmentService {
       response = {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Get all agencies successfully',
+        message: 'Get all departments successfully',
         content: departments,
       };
       return response;
@@ -168,7 +160,7 @@ export class DepartmentService {
         return {
           code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
-          message: `Agency with ID ${id} not found`,
+          message: `Department with ID ${id} not found`,
           content: updatedDepartment || undefined,
         };
       }
@@ -176,14 +168,14 @@ export class DepartmentService {
       return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Agency updated successfully',
+        message: 'Department updated successfully',
         content: updatedDepartment,
       };
     } catch (error: any) {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `Updating department failed: ${error.message}`,
         content: undefined,
       };
     }
@@ -194,13 +186,13 @@ export class DepartmentService {
     if (!deletedDepartment) {
       return {
         code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: `Department with ID ${id} not found`,
       };
     }
     return {
       code: ERROR_RES.SUCCESS.statusCode,
-      info: 'SUCCESS',
+      info: ERROR_INFO.SUCCESS,
       message: `Department ${deletedDepartment.departmentName} deleted successfully`,
     };
   }

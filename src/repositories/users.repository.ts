@@ -24,21 +24,9 @@ export class UsersRepository {
     }
   }
 
-  async findAll(
-    skip: number = 0,
-    limit: number = 10,
-  ): Promise<{ data: UserDocument[]; total: number }> {
+  async findAll(): Promise<UserDocument[]> {
     try {
-      const [data, total] = await Promise.all([
-        this.userModel
-          .find()
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-        this.userModel.countDocuments().exec(),
-      ]);
-      return { data, total };
+      return await this.userModel.find().sort({ createdAt: -1 }).exec();
     } catch (error: any) {
       this.logger.error(`Error fetching users: ${error.message}`);
       throw error;
@@ -101,9 +89,13 @@ export class UsersRepository {
     updateData: Partial<CreateUsersDTO>,
   ): Promise<UserDocument | null> {
     try {
-      return await this.userModel
+      const updateUser = await this.userModel
         .findByIdAndUpdate(id, updateData, { new: true })
         .exec();
+      if (updateUser) {
+        this.logger.error('User updated successfully', 'UserRepository');
+      }
+      return updateUser;
     } catch (error: any) {
       this.logger.error(`Error updating user: ${error.message}`);
       throw error;
@@ -112,7 +104,11 @@ export class UsersRepository {
 
   async delete(id: string): Promise<UserDocument | null> {
     try {
-      return await this.userModel.findByIdAndDelete(id).exec();
+      const deleteUser = await this.userModel.findByIdAndDelete(id).exec();
+      if (deleteUser) {
+        this.logger.error('User deleted successfully', 'UserRepository');
+      }
+      return deleteUser;
     } catch (error: any) {
       this.logger.error(`Error deleting user: ${error.message}`);
       throw error;

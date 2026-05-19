@@ -4,25 +4,49 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Employee, EmployeeDocument } from '@schemas/employee.schema';
 import { Model, Types } from 'mongoose';
+import { Counter, CounterDocument } from '@schemas/counter.schema';
 
 @Injectable()
 export class EmployeeRepository {
   constructor(
     @InjectModel(Employee.name) private employeeModel: Model<EmployeeDocument>,
     private logger: LoggerService,
+    @InjectModel(Counter.name)
+    private readonly counterModel: Model<CounterDocument>,
   ) {}
+
+  private async generateEmployeeNumber(): Promise<string> {
+    const counter = await this.counterModel.findOneAndUpdate(
+      { name: 'employeeNumber' },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true },
+    );
+    return `AG${String(counter.seq).padStart(4, '0')}`;
+  }
 
   async create(
     createEmployeeDto: CreateEmployeeDto,
   ): Promise<EmployeeDocument> {
     try {
-      const newEmployee = new this.employeeModel(createEmployeeDto);
-      const savedEmployee = await newEmployee.save();
+      const { employeeName, employeePhone, employeeEmail, departmentId } =
+        createEmployeeDto;
+
+      const employeeNumber = await this.generateEmployeeNumber();
+
+      const dataSubmit = {
+        ...createEmployeeDto,
+        employeeName,
+        employeePhone,
+        employeeEmail,
+        ...(departmentId && { departmentId: new Types.ObjectId(departmentId) }),
+      };
+
+      const newEmployee = new this.employeeModel(dataSubmit);
       this.logger.log(
-        `Employee created: ${savedEmployee.employeeName}`,
+        `Employee created: ${newEmployee.employeeName}`,
         'BankRepository',
       );
-      return savedEmployee;
+      return await newEmployee.save();
     } catch (error: any) {
       this.logger.error(`Error creating employee: ${error.message}`, undefined);
       throw error;
@@ -46,11 +70,12 @@ export class EmployeeRepository {
   }
 
   async findById(id: string): Promise<EmployeeDocument | null> {
-    if (!Types.ObjectId.isValid(id)) {
-      this.logger.error(`Invalid ObjectId: ${id}`, 'DepartmentRepository');
-      return null;
-    }
     try {
+      if (!Types.ObjectId.isValid(id)) {
+        this.logger.error(`Invalid ObjectId: ${id}`, 'DepartmentRepository');
+        return null;
+      }
+
       return await this.employeeModel
         .findById(id)
         .populate({
@@ -105,9 +130,20 @@ export class EmployeeRepository {
     updateData: Partial<CreateEmployeeDto>,
   ): Promise<EmployeeDocument | null> {
     try {
-      return await this.employeeModel
+      if (!Types.ObjectId.isValid(id)) {
+        return null;
+      }
+
+      const updateEmployee = await this.employeeModel
         .findByIdAndUpdate(id, updateData, { new: true })
         .exec();
+      if (updateEmployee) {
+        this.logger.error(
+          'Employee updated successfully',
+          'EmployeeRepository',
+        );
+      }
+      return updateEmployee;
     } catch (error: any) {
       this.logger.error(`Error updating employee: ${error.message}`);
       throw error;
@@ -116,6 +152,10 @@ export class EmployeeRepository {
 
   async delete(id: string): Promise<EmployeeDocument | null> {
     try {
+      if (!Types.ObjectId.isValid(id)) {
+        return null;
+      }
+
       const deletedEmployee = await this.employeeModel
         .findByIdAndDelete(id)
         .exec();

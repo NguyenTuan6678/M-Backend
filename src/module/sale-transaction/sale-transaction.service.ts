@@ -118,7 +118,7 @@ export class SaleTransactionService {
         return {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
-          message: 'Missing required fields or creation failed',
+          message: `Missing required fields or creation failed ${missing.join(', ')}`,
         };
       }
 
@@ -133,7 +133,7 @@ export class SaleTransactionService {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while creating transaction: ${error.message}`,
       };
     }
   }
@@ -154,7 +154,7 @@ export class SaleTransactionService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while getting all transaction: ${error.message}`,
       };
     }
     return response;
@@ -186,7 +186,7 @@ export class SaleTransactionService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while getting transaction by id: ${error.message}`,
       };
     }
     return response;
@@ -223,7 +223,7 @@ export class SaleTransactionService {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while updating sale transaction: ${error.message}`,
       };
     }
   }
@@ -233,13 +233,13 @@ export class SaleTransactionService {
     if (!deletedTransaction) {
       return {
         code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: `Sale transaction with ID ${id} not found`,
       };
     }
     return {
       code: ERROR_RES.SUCCESS.statusCode,
-      info: 'SUCCESS',
+      info: ERROR_INFO.SUCCESS,
       message: 'Sale transaction deleted successfully',
     };
   }

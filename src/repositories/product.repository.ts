@@ -27,21 +27,9 @@ export class ProductRepository {
     }
   }
 
-  async findAll(
-    skip: number = 0,
-    limit: number = 10,
-  ): Promise<{ data: ProductDocument[]; total: number }> {
+  async findAll(): Promise<ProductDocument[]> {
     try {
-      const [data, total] = await Promise.all([
-        this.productModel
-          .find()
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-        this.productModel.countDocuments().exec(),
-      ]);
-      return { data, total };
+      return await this.productModel.find().sort({ createdAt: -1 }).exec();
     } catch (error: any) {
       this.logger.error(`Error fetching products: ${error.message}`);
       throw error;

@@ -1,4 +1,3 @@
-import { LoggerService } from '@common/logs/logger.service';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ReceiptInvoiceRepository } from '@repositories/receiptinvoice.repository';
@@ -19,19 +18,18 @@ export class ReceiptInvoiceService {
     @InjectModel(ReceiptInvoice.name)
     private receiptModel: Model<ReceiptInvoiceDocument>,
     private readonly receiptInvoiceRepository: ReceiptInvoiceRepository,
-    private readonly logger: LoggerService,
   ) {}
 
   async createReceipt(
-    createReceipt: CreateReceiptInvoiceDto,
+    createReceiptDto: CreateReceiptInvoiceDto,
   ): Promise<ReceiptInvoiceResponseDto> {
     let response: MessageResponse | null = null;
     try {
-      const { inv_invoiceSeries, tax_code } = createReceipt;
+      const { inv_invoiceSeries, tax_code } = createReceiptDto;
       if (!inv_invoiceSeries) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
+          info: ERROR_INFO.FAIL,
           message: 'Missing required fields: inv_invoiceSeries',
         };
         return response;
@@ -40,31 +38,29 @@ export class ReceiptInvoiceService {
       const duplicatedReceipt = await this.receiptModel.findOne({
         inv_invoiceSeries,
       });
+
       if (duplicatedReceipt) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
+          info: ERROR_INFO.FAIL,
           message: 'inv_invoiceSeries already exists',
         };
         return response;
       }
 
-      const newReceipt = new this.receiptModel({
-        inv_invoiceSeries,
-        tax_code,
-      });
+      const newReceipt =
+        await this.receiptInvoiceRepository.create(createReceiptDto);
 
-      await newReceipt.save();
-
-      response = {
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
-        info: 'SUCCESS',
+        info: ERROR_INFO.SUCCESS,
         message: 'inv_invoiceSeries created successfully',
+        content: newReceipt,
       };
     } catch (error: any) {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: 'An error occurred while creating the inv_invoiceSeries',
       };
     }
@@ -86,7 +82,7 @@ export class ReceiptInvoiceService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while getting all receipts: ${error.message}`,
       };
     }
     return response;
@@ -117,7 +113,7 @@ export class ReceiptInvoiceService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while getting receipt by id: ${error.message}`,
       };
     }
     return response;
@@ -152,7 +148,7 @@ export class ReceiptInvoiceService {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while updating the product: ${error.message}`,
         content: undefined,
       };
     }
@@ -163,13 +159,13 @@ export class ReceiptInvoiceService {
     if (!deletedReceipt) {
       return {
         code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: `ReceiptInvoice with ID ${id} not found`,
       };
     }
     return {
       code: ERROR_RES.SUCCESS.statusCode,
-      info: 'SUCCESS',
+      info: ERROR_INFO.SUCCESS,
       message: `ReceiptInvoice ${deletedReceipt.inv_invoiceSeries} deleted successfully`,
     };
   }

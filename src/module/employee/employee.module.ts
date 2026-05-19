@@ -6,11 +6,13 @@ import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { LoggerService } from '@common/logs/logger.service';
 import { EmployeeRepository } from '@repositories/employee.repository';
 import { EmployeeService } from './employee.service';
+import { Counter, CounterSchema } from '@schemas/counter.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Employee.name, schema: EmployeeSchema },
+      { name: Counter.name, schema: CounterSchema },
     ]),
   ],
   controllers: [EmployeeController],
