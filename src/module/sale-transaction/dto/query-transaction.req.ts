@@ -1,90 +1,86 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
   IsMongoId,
+  IsNumber,
   IsOptional,
   IsString,
-  IsDateString,
+  Min,
 } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class QuerySaleTransactionDto {
   @ApiPropertyOptional({
-    description: 'Filter by agency ID',
+    example: true,
+    description: 'Filter by active status',
   })
   @IsOptional()
-  @IsMongoId()
-  agencyId?: string;
+  @Transform(({ obj }) => {
+    const value = obj.isActive;
 
-  @ApiPropertyOptional({
-    description: 'Filter by employee ID',
-  })
-  @IsOptional()
-  @IsMongoId()
-  employeeId?: string;
-
-  @ApiPropertyOptional({
-    description: 'Filter by department ID',
-  })
-  @IsOptional()
-  @IsMongoId()
-  departmentId?: string;
-
-  @ApiPropertyOptional({
-    description: 'Filter by bank ID',
-  })
-  @IsOptional()
-  @IsMongoId()
-  bankId?: string;
-
-  @ApiPropertyOptional({ example: true })
-  @IsOptional()
-  @Transform(({ value }) => {
     if (value === undefined || value === null || value === '') {
       return undefined;
     }
 
-    return value === true || value === 'true';
+    if (value === true || value === 'true') {
+      return true;
+    }
+
+    if (value === false || value === 'false') {
+      return false;
+    }
+
+    return value;
   })
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiPropertyOptional({
-    description: 'Start date filter (createdAt)',
-  })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsMongoId()
+  agencyId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsMongoId()
+  employeeId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsMongoId()
+  departmentId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsMongoId()
+  bankId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   startDate?: string;
 
-  @ApiPropertyOptional({
-    description: 'End date filter (createdAt)',
-  })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsString()
   endDate?: string;
 
-  @ApiPropertyOptional({
-    description:
-      'Text search — tìm trong inv_buyerDisplayName, inv_buyerTaxCode, orderNumber',
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ example: 1, description: 'Page number (default: 1)' })
+  @ApiPropertyOptional({ example: 1, default: 1 })
   @IsOptional()
   @Type(() => Number)
-  page: number = 1;
+  @IsNumber()
+  @Min(1)
+  page?: number = 1;
 
-  @ApiPropertyOptional({
-    example: 10,
-    description: 'Items per page (default: 10)',
-  })
+  @ApiPropertyOptional({ example: 10, default: 10 })
   @IsOptional()
   @Type(() => Number)
+  @IsNumber()
+  @Min(1)
   limit?: number = 10;
-
-  get skip(): number {
-    return ((this.page ?? 1) - 1) * (this.limit ?? 10);
-  }
 }

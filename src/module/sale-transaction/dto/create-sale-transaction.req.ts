@@ -240,15 +240,6 @@ export class CreateSalesTransactionDto {
   agencyId: string;
 
   @ApiProperty({
-    example: '',
-    description: 'Bank ID',
-  })
-  @IsOptional()
-  @IsString({ message: 'bankId must be a string' })
-  @IsMongoId({ message: 'bankId must be a valid MongoDB ObjectId' })
-  bankId: string;
-
-  @ApiProperty({
     type: [TransactionItemDto],
     description: 'List of transaction items',
   })

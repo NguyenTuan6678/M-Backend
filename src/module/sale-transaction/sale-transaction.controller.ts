@@ -28,7 +28,7 @@ import { UpdateSaleTransactionBankDto } from './dto/update-transaction-bank.req'
 @ApiTags('Sale Transaction')
 @Controller('sale-transaction')
 @UseGuards(JwtAuthGuard)
-@UseInterceptors(CacheInterceptor)
+// @UseInterceptors(CacheInterceptor)
 @ApiBearerAuth('authorization')
 export class SaleTransactionController {
   constructor(
@@ -71,32 +71,20 @@ export class SaleTransactionController {
   @Get()
   @ApiOperation({
     summary: 'Get all sale transactions with optional filters & pagination',
-    description:
-      'Filter theo: agencyId, employeeId, departmentId, bankId, isActive, startDate, endDate. ' +
-      'Text search qua param search. ' +
-      'Phân trang qua page và limit. Mặc định trả toàn bộ nếu không có filter.',
   })
   async getAllSaleTransactions(
-    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    @Query(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        transformOptions: {
+          enableImplicitConversion: false,
+        },
+      }),
+    )
     query: QuerySaleTransactionDto,
   ) {
-    const hasFilter =
-      !!query.agencyId ||
-      !!query.employeeId ||
-      !!query.departmentId ||
-      !!query.bankId ||
-      query.isActive !== undefined ||
-      !!query.startDate ||
-      !!query.endDate ||
-      !!query.search ||
-      (query.page !== undefined && query.page > 1) ||
-      (query.limit !== undefined && query.limit !== 10);
-
-    if (hasFilter) {
-      return await this.saleTransactionService.searchSaleTransactions(query);
-    }
-
-    return await this.saleTransactionService.getAllSaleTransactions();
+    return await this.saleTransactionService.searchSaleTransactions(query);
   }
 
   @Get('stats')

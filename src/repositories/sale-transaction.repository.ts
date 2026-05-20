@@ -224,6 +224,11 @@ export class SaleTransactionRepository {
       //   await this.saleTransactionModel.countDocuments(),
       // );
 
+      console.log('QUERY:', query);
+      console.log('IS ACTIVE:', query.isActive);
+      console.log('IS ACTIVE TYPE:', typeof query.isActive);
+      console.log('FILTER:', filter);
+
       return {
         data,
         total,
@@ -418,6 +423,43 @@ export class SaleTransactionRepository {
   //     throw error;
   //   }
   // }
+
+  async markInvoiceCanceled(
+    id: string,
+  ): Promise<SalesTransactionDocument | null> {
+    try {
+      if (!Types.ObjectId.isValid(id)) {
+        this.logger.error(
+          `Invalid transaction ObjectId: ${id}`,
+          'SaleTransactionRepository',
+        );
+        return null;
+      }
+
+      return await this.saleTransactionModel
+        .findByIdAndUpdate(
+          id,
+          {
+            $set: {
+              invoiceStatus: InvoiceStatus.CANCELLED,
+              isActive: false,
+            },
+          },
+          {
+            returnDocument: 'after',
+            runValidators: true,
+          },
+        )
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error canceling sale transaction invoice: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
 
   async update(
     id: string,

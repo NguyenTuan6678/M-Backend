@@ -258,7 +258,6 @@ export class MInvoiceReceiptPostService {
         so_benh_an: orderNumber, // ← tự cập nhật sau khi API thành công
         activationDate,
         invoiceStatus: InvoiceStatus.ISSUED,
-        isActive: false,
       });
     }
 
