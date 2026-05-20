@@ -1,5 +1,6 @@
 import { LoggerService } from '@common/logs/logger.service';
 import { Injectable } from '@nestjs/common';
+import { Types } from 'mongoose';
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
 import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
@@ -68,7 +69,6 @@ export class SaleTransactionService {
     try {
       const { agencyId, bankId, items } = createSaleTransactionDto;
 
-      // Lookup agency để lấy employeeId và departmentId
       const agency = agencyId
         ? await this.agencyRepository.findById(agencyId)
         : null;
@@ -81,17 +81,37 @@ export class SaleTransactionService {
         };
       }
 
-      // Extract employeeId từ agency, departmentId từ employee
-      const employeeId = agency?.employeeId?.toString();
-      const employee = employeeId
-        ? await this.employeeRepository.findById(employeeId)
-        : null;
-      const departmentId = employee?.departmentId?.toString();
+      const populatedEmployee = (agency?.employeeId as any) || null;
+
+      const employeeId = this.extractObjectId(populatedEmployee);
+
+      const departmentId =
+        this.extractObjectId(populatedEmployee?.departmentId) || undefined;
+
+      let employee: any = null;
+
+      if (employeeId) {
+        employee =
+          populatedEmployee && populatedEmployee.employeeName
+            ? populatedEmployee
+            : await this.employeeRepository.findById(employeeId);
+      }
+
+      const finalDepartmentId =
+        departmentId || this.extractObjectId(employee?.departmentId);
 
       const { missing, bank, products } = await this.validateRelatedEntities(
         bankId,
-        items,
+        items ?? [],
       );
+
+      if (!employeeId) {
+        missing.push('Employee');
+      }
+
+      if (!finalDepartmentId) {
+        missing.push('Department');
+      }
 
       if (missing.length > 0) {
         return {
@@ -102,23 +122,22 @@ export class SaleTransactionService {
       }
 
       this.logger.log(
-        `Validated — Agency: ${agency?.agencyName}, Employee: ${employee?.employeeName}, Department: ${departmentId}, Bank: ${bank?.inv_buyerBankName}, Products: ${products?.map((p) => p.inv_itemCode).join(', ')}`,
+        `Validated — Agency: ${agency?.agencyName}, Employee: ${employee?.employeeName}, Department: ${finalDepartmentId}, Bank: ${bank?.inv_buyerBankName}, Products: ${products?.map((p) => p.inv_itemCode).join(', ')}`,
         'SaleTransactionService',
       );
 
       const createdTransaction =
         await this.saleTransactionRepository.createSaleTransaction({
           ...createSaleTransactionDto,
-          // Gắn employeeId và departmentId tự động từ agency
-          ...(employeeId && { employeeId }),
-          ...(departmentId && { departmentId }),
+          employeeId,
+          departmentId: finalDepartmentId,
         });
 
       if (!createdTransaction) {
         return {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
-          message: `Missing required fields or creation failed ${missing.join(', ')}`,
+          message: 'Missing required fields or creation failed',
         };
       }
 
@@ -374,6 +393,25 @@ export class SaleTransactionService {
       );
       throw error;
     }
+  }
+
+  private extractObjectId(value: any): string | undefined {
+    if (!value) return undefined;
+
+    if (typeof value === 'string') {
+      return Types.ObjectId.isValid(value) ? value : undefined;
+    }
+
+    if (value instanceof Types.ObjectId) {
+      return value.toString();
+    }
+
+    if (value._id) {
+      const id = value._id.toString();
+      return Types.ObjectId.isValid(id) ? id : undefined;
+    }
+
+    return undefined;
   }
 
   private mapToResponseDto(transaction: any): SaleTransactionResponseDTO {
