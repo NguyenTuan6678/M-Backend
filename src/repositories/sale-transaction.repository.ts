@@ -66,8 +66,15 @@ export class SaleTransactionRepository {
     const counter = await this.counterModel.findOneAndUpdate(
       { name: 'orderNumber' },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true },
+      {
+        returnDocument: 'after',
+        upsert: true,
+      },
     );
+
+    if (!counter) {
+      throw new Error('Failed to generate sale transaction number');
+    }
     return `HD${String(counter.seq).padStart(4, '0')}`;
   }
 

@@ -27,9 +27,12 @@ export class EmployeeRepository {
     const counter = await this.counterModel.findOneAndUpdate(
       { name: 'employeeNumber' },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true },
+      {
+        returnDocument: 'after',
+        upsert: true,
+      },
     );
-    return `AG${String(counter.seq).padStart(4, '0')}`;
+    return `EN${String(counter.seq).padStart(4, '0')}`;
   }
 
   async create(
@@ -43,6 +46,7 @@ export class EmployeeRepository {
 
       const dataSubmit = {
         ...createEmployeeDto,
+        employeeNumber,
         employeeName,
         employeePhone,
         employeeEmail,
@@ -122,7 +126,7 @@ export class EmployeeRepository {
         const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
         filter.$or = [
-          { employeNumber: { $regex: safeSearch, $options: 'i' } },
+          { employeeNumber: { $regex: safeSearch, $options: 'i' } },
           { employeeName: { $regex: safeSearch, $options: 'i' } },
           { employeeEmail: { $regex: safeSearch, $options: 'i' } },
           { employeePhone: { $regex: safeSearch, $options: 'i' } },

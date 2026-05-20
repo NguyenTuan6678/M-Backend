@@ -33,7 +33,10 @@ export class AgencyRepository {
     const counter = await this.counterModel.findOneAndUpdate(
       { name: 'agencyNumber' },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true },
+      {
+        returnDocument: 'after',
+        upsert: true,
+      },
     );
     return `AG${String(counter.seq).padStart(4, '0')}`;
   }
