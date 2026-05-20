@@ -13,6 +13,7 @@ import { ConfigType } from '@nestjs/config';
 import { CreateInvoiceDto, InvoiceItemDataDto } from './dto/send-receipt.req';
 import { mapTransactionToInvoice } from '@module/sale-transaction/sale-transaction.mapper';
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
+import { InvoiceStatus } from '@utils/transaction-status';
 
 @Injectable()
 export class MInvoiceReceiptPostService {
@@ -256,6 +257,7 @@ export class MInvoiceReceiptPostService {
         inv_invoiceCreatedId: resId,
         so_benh_an: orderNumber, // ← tự cập nhật sau khi API thành công
         activationDate,
+        invoiceStatus: InvoiceStatus.ISSUED,
         isActive: false,
       });
     }

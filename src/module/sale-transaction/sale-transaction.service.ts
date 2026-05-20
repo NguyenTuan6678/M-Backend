@@ -17,6 +17,7 @@ import { Product } from '@schemas/product.schema';
 import { GetAllSaleTransactions } from './dto/get-all-sale-transaction.res';
 import { MessageResponse } from '@app-types/message.res';
 import { QuerySaleTransactionDto } from './dto/query-transaction.req';
+import { InvoiceStatus } from '@utils/transaction-status';
 
 interface ValidatedEntities {
   missing: string[];
@@ -242,6 +243,68 @@ export class SaleTransactionService {
     }
   }
 
+  async updateTransactionBankAfterInvoice(
+    transactionId: string,
+    bankId: string,
+  ): Promise<SaleTransactionResponseDTO> {
+    try {
+      const transaction =
+        await this.saleTransactionRepository.findById(transactionId);
+
+      if (!transaction) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Sale transaction with ID ${transactionId} not found`,
+        };
+      }
+
+      if (
+        (transaction as any).invoiceStatus !== InvoiceStatus.ISSUED ||
+        !(transaction as any).inv_invoiceCreatedId
+      ) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Bank can only be updated after invoice is issued',
+        };
+      }
+
+      const bank = await this.bankRepository.findById(bankId);
+
+      if (!bank) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Bank not found',
+        };
+      }
+
+      const updatedTransaction =
+        await this.saleTransactionRepository.updateBankOnly(
+          transactionId,
+          bankId,
+        );
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Bank updated successfully',
+        content: updatedTransaction || undefined,
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `Error updating transaction bank after invoice: ${error.message}`,
+      );
+
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error updating transaction bank: ${error.message}`,
+      };
+    }
+  }
+
   async deleteSaleTransaction(id: string): Promise<MessageResponse> {
     const deletedTransaction = await this.saleTransactionRepository.delete(id);
     if (!deletedTransaction) {
@@ -270,83 +333,83 @@ export class SaleTransactionService {
     }
   }
 
-  async getSaleTransactionsByEmployee(
-    employeeId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findByEmployeeId(employeeId);
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByEmployee: ${error.message}`,
-      );
-      throw error;
-    }
-  }
+  // async getSaleTransactionsByEmployee(
+  //   employeeId: string,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   try {
+  //     const transactions =
+  //       await this.saleTransactionRepository.findByEmployeeId(employeeId);
+  //     return transactions.map((t) => this.mapToResponseDto(t));
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error in SaleTransactionService.getSaleTransactionsByEmployee: ${error.message}`,
+  //     );
+  //     throw error;
+  //   }
+  // }
 
-  async getSaleTransactionsByAgency(
-    agencyId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findByAgencyId(agencyId);
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByAgency: ${error.message}`,
-      );
-      throw error;
-    }
-  }
+  // async getSaleTransactionsByAgency(
+  //   agencyId: string,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   try {
+  //     const transactions =
+  //       await this.saleTransactionRepository.findByAgencyId(agencyId);
+  //     return transactions.map((t) => this.mapToResponseDto(t));
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error in SaleTransactionService.getSaleTransactionsByAgency: ${error.message}`,
+  //     );
+  //     throw error;
+  //   }
+  // }
 
-  async getSaleTransactionsByDepartment(
-    departmentId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findByDepartmentId(departmentId);
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByDepartment: ${error.message}`,
-      );
-      throw error;
-    }
-  }
+  // async getSaleTransactionsByDepartment(
+  //   departmentId: string,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   try {
+  //     const transactions =
+  //       await this.saleTransactionRepository.findByDepartmentId(departmentId);
+  //     return transactions.map((t) => this.mapToResponseDto(t));
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error in SaleTransactionService.getSaleTransactionsByDepartment: ${error.message}`,
+  //     );
+  //     throw error;
+  //   }
+  // }
 
-  async getSaleTransactionsByBank(
-    bankId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findByBankId(bankId);
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByBank: ${error.message}`,
-      );
-      throw error;
-    }
-  }
+  // async getSaleTransactionsByBank(
+  //   bankId: string,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   try {
+  //     const transactions =
+  //       await this.saleTransactionRepository.findByBankId(bankId);
+  //     return transactions.map((t) => this.mapToResponseDto(t));
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error in SaleTransactionService.getSaleTransactionsByBank: ${error.message}`,
+  //     );
+  //     throw error;
+  //   }
+  // }
 
-  async getSaleTransactionsByDateRange(
-    startDate: Date,
-    endDate: Date,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions = await this.saleTransactionRepository.findByDateRange(
-        startDate,
-        endDate,
-      );
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByDateRange: ${error.message}`,
-      );
-      throw error;
-    }
-  }
+  // async getSaleTransactionsByDateRange(
+  //   startDate: Date,
+  //   endDate: Date,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   try {
+  //     const transactions = await this.saleTransactionRepository.findByDateRange(
+  //       startDate,
+  //       endDate,
+  //     );
+  //     return transactions.map((t) => this.mapToResponseDto(t));
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error in SaleTransactionService.getSaleTransactionsByDateRange: ${error.message}`,
+  //     );
+  //     throw error;
+  //   }
+  // }
 
   async searchSaleTransactions(query: QuerySaleTransactionDto) {
     try {

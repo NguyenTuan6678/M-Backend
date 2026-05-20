@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -22,6 +23,7 @@ import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { MessageResponse } from '@app-types/message.res';
 import { QuerySaleTransactionDto } from './dto/query-transaction.req';
+import { UpdateSaleTransactionBankDto } from './dto/update-transaction-bank.req';
 
 @ApiTags('Sale Transaction')
 @Controller('sale-transaction')
@@ -170,6 +172,28 @@ export class SaleTransactionController {
     return await this.saleTransactionService.updateSaleTransaction(
       id,
       updateData,
+    );
+  }
+
+  @Patch(':id/bank')
+  @ApiOperation({
+    summary: 'Update bank after invoice issued',
+    description: 'Only bankId can be updated after invoiceStatus is ISSUED.',
+  })
+  async updateBankAfterInvoice(
+    @Param('id') id: string,
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    )
+    body: UpdateSaleTransactionBankDto,
+  ) {
+    return await this.saleTransactionService.updateTransactionBankAfterInvoice(
+      id,
+      body.bankId,
     );
   }
 
