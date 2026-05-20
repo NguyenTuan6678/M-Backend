@@ -34,7 +34,7 @@ export class QueryEmployeeDto {
 
   @ApiPropertyOptional({
     description:
-      'Search by employeNumber, employeeName, employeeEmail, or employeePhone',
+      'Search by employeeNumber, employeeName, employeeEmail, or employeePhone',
   })
   @IsOptional()
   @IsString()

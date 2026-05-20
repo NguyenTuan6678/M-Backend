@@ -80,7 +80,7 @@ export class DepartmentService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while fetching all departments: ${error.message}`,
       };
     }
     return response;
@@ -111,7 +111,7 @@ export class DepartmentService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while fetching deparment by id: ${error.message}`,
       };
     }
     return response;

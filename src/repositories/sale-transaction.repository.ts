@@ -10,8 +10,23 @@ import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-s
 import { Counter, CounterDocument } from '@schemas/counter.schema';
 import { UpdateSalesTransactionDto } from '@module/sale-transaction/dto/update-sale-transaction-repository.res';
 import { QuerySaleTransactionDto } from '@module/sale-transaction/dto/query-transaction.req';
+import { InvoiceStatus } from '@utils/transaction-status';
 
-type CreateSalesTransactionPayload = CreateSalesTransactionDto & {
+type SaleTransactionUpdatePayload = Partial<UpdateSalesTransactionDto> & {
+  isActive?: boolean;
+  invoiceStatus?: InvoiceStatus;
+  inv_invoiceCreatedId?: string;
+  inv_invoiceSeries?: string;
+  key_api?: string;
+  inv_invoiceIssuedDate?: string;
+  so_benh_an?: string;
+  activationDate?: string;
+};
+
+type CreateSalesTransactionPayload = Omit<
+  CreateSalesTransactionDto,
+  'bankId'
+> & {
   employeeId?: string;
   departmentId?: string;
 };
@@ -66,8 +81,15 @@ export class SaleTransactionRepository {
     const counter = await this.counterModel.findOneAndUpdate(
       { name: 'orderNumber' },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true },
+      {
+        returnDocument: 'after',
+        upsert: true,
+      },
     );
+
+    if (!counter) {
+      throw new Error('Failed to generate sale transaction number');
+    }
     return `HD${String(counter.seq).padStart(4, '0')}`;
   }
 
@@ -75,7 +97,7 @@ export class SaleTransactionRepository {
     createSaleTransactionDto: CreateSalesTransactionPayload,
   ): Promise<SalesTransactionDocument | null> {
     try {
-      const { agencyId, departmentId, employeeId, bankId, items } =
+      const { agencyId, departmentId, employeeId, items } =
         createSaleTransactionDto;
 
       const orderNumber = await this.generateSaleTransactionNumber();
@@ -89,11 +111,12 @@ export class SaleTransactionRepository {
         orderNumber,
         inv_invoiceIssuedDate:
           createSaleTransactionDto.inv_invoiceIssuedDate ?? formattedNow,
+
         ...(agencyId && { agencyId: new Types.ObjectId(agencyId) }),
         ...(departmentId && { departmentId: new Types.ObjectId(departmentId) }),
         ...(employeeId && { employeeId: new Types.ObjectId(employeeId) }),
-        ...(bankId && { bankId: new Types.ObjectId(bankId) }),
-        items: items.map((item) => ({
+
+        items: (items ?? []).map((item) => ({
           ...item,
           ...(item.productId && {
             productId: new Types.ObjectId(item.productId),
@@ -108,6 +131,7 @@ export class SaleTransactionRepository {
         `Sale transaction created with ID: ${savedTransaction._id}`,
         'SaleTransactionRepository',
       );
+
       return savedTransaction;
     } catch (error: any) {
       this.logger.error(
@@ -167,15 +191,17 @@ export class SaleTransactionRepository {
       }
 
       if (search) {
+        const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
         filter.$or = [
-          { inv_buyerDisplayName: { $regex: search, $options: 'i' } },
-          { inv_buyerTaxCode: { $regex: search, $options: 'i' } },
-          { orderNumber: { $regex: search, $options: 'i' } },
+          { inv_buyerDisplayName: { $regex: safeSearch, $options: 'i' } },
+          { inv_buyerTaxCode: { $regex: safeSearch, $options: 'i' } },
+          { orderNumber: { $regex: safeSearch, $options: 'i' } },
         ];
       }
 
-      console.log('QUERY:', query);
-      console.log('FILTER:', filter);
+      // console.log('QUERY:', query);
+      // console.log('FILTER:', filter);
 
       const [data, total] = await Promise.all([
         this.saleTransactionModel
@@ -189,14 +215,19 @@ export class SaleTransactionRepository {
         this.saleTransactionModel.countDocuments(filter).exec(),
       ]);
 
-      console.log(
-        'MODEL COLLECTION:',
-        this.saleTransactionModel.collection.name,
-      );
-      console.log(
-        'COUNT ALL:',
-        await this.saleTransactionModel.countDocuments(),
-      );
+      // console.log(
+      //   'MODEL COLLECTION:',
+      //   this.saleTransactionModel.collection.name,
+      // );
+      // console.log(
+      //   'COUNT ALL:',
+      //   await this.saleTransactionModel.countDocuments(),
+      // );
+
+      console.log('QUERY:', query);
+      console.log('IS ACTIVE:', query.isActive);
+      console.log('IS ACTIVE TYPE:', typeof query.isActive);
+      console.log('FILTER:', filter);
 
       return {
         data,
@@ -306,87 +337,124 @@ export class SaleTransactionRepository {
     }
   }
 
-  async findByEmployeeId(
-    employeeId: string,
-  ): Promise<SalesTransactionDocument[]> {
-    try {
-      return await this.saleTransactionModel
-        .find({ employeeId: new Types.ObjectId(employeeId) })
-        .sort({ createdAt: -1 })
-        .exec();
-    } catch (error: any) {
-      this.logger.error(
-        `Error finding sale transactions by employee ID: ${error.message}`,
-        'SaleTransactionRepository',
-      );
-      throw error;
-    }
-  }
+  // async findByEmployeeId(
+  //   employeeId: string,
+  // ): Promise<SalesTransactionDocument[]> {
+  //   try {
+  //     return await this.saleTransactionModel
+  //       .find({ employeeId: new Types.ObjectId(employeeId) })
+  //       .sort({ createdAt: -1 })
+  //       .exec();
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error finding sale transactions by employee ID: ${error.message}`,
+  //       'SaleTransactionRepository',
+  //     );
+  //     throw error;
+  //   }
+  // }
 
-  async findByAgencyId(agencyId: string): Promise<SalesTransactionDocument[]> {
-    try {
-      return await this.saleTransactionModel
-        .find({ agencyId: new Types.ObjectId(agencyId) })
-        .sort({ createdAt: -1 })
-        .exec();
-    } catch (error: any) {
-      this.logger.error(
-        `Error finding sale transactions by agency ID: ${error.message}`,
-        'SaleTransactionRepository',
-      );
-      throw error;
-    }
-  }
+  // async findByAgencyId(agencyId: string): Promise<SalesTransactionDocument[]> {
+  //   try {
+  //     return await this.saleTransactionModel
+  //       .find({ agencyId: new Types.ObjectId(agencyId) })
+  //       .sort({ createdAt: -1 })
+  //       .exec();
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error finding sale transactions by agency ID: ${error.message}`,
+  //       'SaleTransactionRepository',
+  //     );
+  //     throw error;
+  //   }
+  // }
 
-  async findByDepartmentId(
-    departmentId: string,
-  ): Promise<SalesTransactionDocument[]> {
-    try {
-      return await this.saleTransactionModel
-        .find({ departmentId: new Types.ObjectId(departmentId) })
-        .sort({ createdAt: -1 })
-        .exec();
-    } catch (error: any) {
-      this.logger.error(
-        `Error finding sale transactions by department ID: ${error.message}`,
-        'SaleTransactionRepository',
-      );
-      throw error;
-    }
-  }
+  // async findByDepartmentId(
+  //   departmentId: string,
+  // ): Promise<SalesTransactionDocument[]> {
+  //   try {
+  //     return await this.saleTransactionModel
+  //       .find({ departmentId: new Types.ObjectId(departmentId) })
+  //       .sort({ createdAt: -1 })
+  //       .exec();
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error finding sale transactions by department ID: ${error.message}`,
+  //       'SaleTransactionRepository',
+  //     );
+  //     throw error;
+  //   }
+  // }
 
-  async findByBankId(bankId: string): Promise<SalesTransactionDocument[]> {
-    try {
-      return await this.saleTransactionModel
-        .find({ bankId: new Types.ObjectId(bankId) })
-        .sort({ createdAt: -1 })
-        .exec();
-    } catch (error: any) {
-      this.logger.error(
-        `Error finding sale transactions by bank ID: ${error.message}`,
-        'SaleTransactionRepository',
-      );
-      throw error;
-    }
-  }
+  // async findByBankId(bankId: string): Promise<SalesTransactionDocument[]> {
+  //   try {
+  //     return await this.saleTransactionModel
+  //       .find({ bankId: new Types.ObjectId(bankId) })
+  //       .sort({ createdAt: -1 })
+  //       .exec();
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error finding sale transactions by bank ID: ${error.message}`,
+  //       'SaleTransactionRepository',
+  //     );
+  //     throw error;
+  //   }
+  // }
 
-  async findByDateRange(
-    startDate: Date,
-    endDate: Date,
-  ): Promise<SalesTransactionDocument[]> {
+  // async findByDateRange(
+  //   startDate: Date,
+  //   endDate: Date,
+  // ): Promise<SalesTransactionDocument[]> {
+  //   try {
+  //     return await this.saleTransactionModel
+  //       .find({
+  //         createdAt: {
+  //           $gte: startDate,
+  //           $lte: endDate,
+  //         },
+  //       })
+  //       .sort({ createdAt: -1 })
+  //       .exec();
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error finding sale transactions by date range: ${error.message}`,
+  //       'SaleTransactionRepository',
+  //     );
+  //     throw error;
+  //   }
+  // }
+
+  async markInvoiceCanceled(
+    id: string,
+  ): Promise<SalesTransactionDocument | null> {
     try {
+      if (!Types.ObjectId.isValid(id)) {
+        this.logger.error(
+          `Invalid transaction ObjectId: ${id}`,
+          'SaleTransactionRepository',
+        );
+        return null;
+      }
+
       return await this.saleTransactionModel
-        .find({
-          createdAt: {
-            $gte: startDate,
-            $lte: endDate,
+        .findByIdAndUpdate(
+          id,
+          {
+            $set: {
+              invoiceStatus: InvoiceStatus.CANCELLED,
+              isActive: false,
+            },
           },
-        })
-        .sort({ createdAt: -1 })
+          {
+            returnDocument: 'after',
+            runValidators: true,
+          },
+        )
+        .populate(POPULATE_OPTIONS)
         .exec();
     } catch (error: any) {
       this.logger.error(
-        `Error finding sale transactions by date range: ${error.message}`,
+        `Error canceling sale transaction invoice: ${error.message}`,
         'SaleTransactionRepository',
       );
       throw error;
@@ -395,11 +463,28 @@ export class SaleTransactionRepository {
 
   async update(
     id: string,
-    updateData: Partial<UpdateSalesTransactionDto> & { isActive?: boolean },
+    updateData: SaleTransactionUpdatePayload,
   ): Promise<SalesTransactionDocument | null> {
     try {
+      if (!Types.ObjectId.isValid(id)) {
+        this.logger.error(
+          `Invalid transaction ObjectId: ${id}`,
+          'SaleTransactionRepository',
+        );
+        return null;
+      }
+
       const updatedTransaction = await this.saleTransactionModel
-        .findByIdAndUpdate(id, updateData, { new: true })
+        .findByIdAndUpdate(
+          id,
+          {
+            $set: updateData,
+          },
+          {
+            returnDocument: 'after',
+            runValidators: true,
+          },
+        )
         .exec();
 
       if (!updatedTransaction) {
@@ -414,10 +499,56 @@ export class SaleTransactionRepository {
         `Sale transaction updated with ID: ${updatedTransaction._id}`,
         'SaleTransactionRepository',
       );
+
       return updatedTransaction;
     } catch (error: any) {
       this.logger.error(
         `Error updating sale transaction: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async updateBankOnly(
+    id: string,
+    bankId: string,
+  ): Promise<SalesTransactionDocument | null> {
+    try {
+      if (!Types.ObjectId.isValid(id)) {
+        this.logger.error(
+          `Invalid transaction ObjectId: ${id}`,
+          'SaleTransactionRepository',
+        );
+        return null;
+      }
+
+      if (!Types.ObjectId.isValid(bankId)) {
+        this.logger.error(
+          `Invalid bank ObjectId: ${bankId}`,
+          'SaleTransactionRepository',
+        );
+        return null;
+      }
+
+      return await this.saleTransactionModel
+        .findByIdAndUpdate(
+          id,
+          {
+            $set: {
+              bankId: new Types.ObjectId(bankId),
+            },
+          },
+          {
+            returnDocument: 'after',
+            runValidators: true,
+          },
+        )
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error updating sale transaction bank: ${error.message}`,
         'SaleTransactionRepository',
       );
       throw error;

@@ -1,6 +1,5 @@
 import { Injectable, Logger as NestLogger } from '@nestjs/common';
 
-//this is a logger
 @Injectable()
 export class LoggerService extends NestLogger {
   debug(message: string, context?: string) {

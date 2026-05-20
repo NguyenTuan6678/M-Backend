@@ -21,7 +21,10 @@ export class DepartmentRepository {
     const counter = await this.counterModel.findOneAndUpdate(
       { name: 'departmentNumber' },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true },
+      {
+        returnDocument: 'after',
+        upsert: true,
+      },
     );
     return `DP${String(counter.seq).padStart(4, '0')}`;
   }

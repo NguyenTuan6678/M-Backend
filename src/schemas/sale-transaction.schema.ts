@@ -5,6 +5,7 @@ import { Department } from './department.schema';
 import { Employee } from './employee.schema';
 import { Bank } from './bank.schema';
 import { Product } from './product.schema';
+import { InvoiceStatus } from '@utils/transaction-status';
 
 export type SalesTransactionDocument = SalesTransaction & Document;
 
@@ -120,8 +121,8 @@ export class SalesTransaction {
   @Prop({ type: Types.ObjectId, ref: Employee.name })
   employeeId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: Bank.name, required: true })
-  bankId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: Bank.name })
+  bankId?: Types.ObjectId;
 
   @Prop({
     type: [
@@ -135,6 +136,13 @@ export class SalesTransaction {
     ],
   })
   items: TransactionItem[];
+
+  @Prop({
+    type: String,
+    enum: InvoiceStatus,
+    default: InvoiceStatus.DRAFT,
+  })
+  invoiceStatus: InvoiceStatus;
 
   @Prop({ default: true })
   isActive: boolean;

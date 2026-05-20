@@ -123,7 +123,7 @@ export class AuthService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while registering account: ${error.message}`,
       };
     }
 
@@ -187,7 +187,7 @@ export class AuthService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while login: ${error.message}`,
         content: null,
       };
     }
@@ -246,7 +246,7 @@ export class AuthService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while changing password: ${error.message}`,
       };
     }
     return response;
@@ -290,7 +290,7 @@ export class AuthService {
       response = {
         code: ERROR_RES.INVALID_CREDENTIALS_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a reToken problem: ${error.message}`,
         content: null,
       };
     }

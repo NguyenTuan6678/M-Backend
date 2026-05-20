@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { UsersRepository } from '@repositories/users.repository';
 import { CreateUsersDTO } from '@users/dto/create-users.req';
 import { UsersResponseDTO } from '@users/dto/users.res';
-import { LoggerService } from '@common/logs/logger.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '@schemas/users.schema';
 import { Model } from 'mongoose';
@@ -17,7 +16,6 @@ export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     private readonly userRepository: UsersRepository,
-    private readonly logger: LoggerService,
   ) {}
 
   async createUser(
@@ -59,29 +57,24 @@ export class UsersService {
       if (duplicateUser) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
+          info: ERROR_INFO.FAIL,
           message: 'Username already exists',
         };
         return response;
       }
 
-      const newUser = new this.userModel({
-        username,
-        password,
-        role: userRole,
-      });
+      const newUser = await this.userRepository.create(createUserDto);
 
-      await newUser.save();
-
-      response = {
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
-        info: 'SUCCESS',
+        info: ERROR_INFO.SUCCESS,
         message: 'User created successfully',
+        content: newUser,
       };
     } catch (error: any) {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: 'An error occurred while creating the user',
       };
     }
@@ -103,7 +96,7 @@ export class UsersService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while fetching all users: ${error.message}`,
       };
     }
     return response;
@@ -134,7 +127,7 @@ export class UsersService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while fetching user by id: ${error.message}`,
       };
     }
     return response;
@@ -151,12 +144,10 @@ export class UsersService {
         ...result,
       };
     } catch (error: any) {
-      this.logger.error(`Error searching users: ${error.message}`);
-
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `Error searching users: ${error.message}`,
       };
     }
   }
@@ -217,7 +208,7 @@ export class UsersService {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while updating the user: ${error.message}`,
         content: undefined,
       };
     }
@@ -273,7 +264,7 @@ export class UsersService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while validating user: ${error.message}`,
       };
     }
     return response;

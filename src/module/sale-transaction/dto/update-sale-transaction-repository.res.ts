@@ -4,5 +4,5 @@ export class UpdateSalesTransactionDto {
   inv_invoiceIssuedDate?: string;
   inv_invoiceCreatedId?: string;
   so_benh_an?: string;
-  activationDate?: string; // ← có ở đây
+  activationDate?: string;
 }

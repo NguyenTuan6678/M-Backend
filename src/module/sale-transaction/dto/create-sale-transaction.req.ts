@@ -14,7 +14,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class TransactionItemDto {
   @ApiProperty({
-    example: '649a6f1e5f1234567890abd0',
+    example: '',
     description: 'Product ID',
   })
   @IsNotEmpty({ message: 'productId is required' })
@@ -48,13 +48,12 @@ export class TransactionItemDto {
 }
 
 export class CreateSalesTransactionDto {
-  @ApiPropertyOptional({ example: '1C26TYY', description: 'Invoice series' })
+  @ApiPropertyOptional({ description: 'Invoice series' })
   @IsOptional()
   @IsString({ message: 'inv_invoiceSeries must be a string' })
   inv_invoiceSeries?: string;
 
   @ApiPropertyOptional({
-    example: '15/01/2026 12:00:00 SA',
     description:
       'Invoice date — neu khong truyen se tu dong lay thoi diem hien tai',
   })
@@ -77,7 +76,7 @@ export class CreateSalesTransactionDto {
   inv_exchangeRate: number;
 
   @ApiPropertyOptional({
-    example: 'A1234DE64',
+    example: '',
     description: 'Order number',
   })
   @IsOptional()
@@ -117,7 +116,7 @@ export class CreateSalesTransactionDto {
   inv_buyerAddressLine: string;
 
   @ApiPropertyOptional({
-    example: 'abc@gmail.com',
+    example: '',
     description: 'Buyer email',
   })
   @IsOptional()
@@ -125,7 +124,7 @@ export class CreateSalesTransactionDto {
   inv_buyerEmail?: string;
 
   @ApiPropertyOptional({
-    example: '6727621923',
+    example: '',
     description: 'Buyer bank account',
   })
   @IsOptional()
@@ -133,7 +132,7 @@ export class CreateSalesTransactionDto {
   inv_buyerBankAccount?: string;
 
   @ApiPropertyOptional({
-    example: 'Ngan Hang TMCP A Chau - ACB',
+    example: '',
     description: 'Buyer bank name',
   })
   @IsOptional()
@@ -173,7 +172,6 @@ export class CreateSalesTransactionDto {
   inv_TotalAmount: number;
 
   @ApiPropertyOptional({
-    example: 'D123123AD1213',
     description: 'Key api',
   })
   @IsOptional()
@@ -181,7 +179,7 @@ export class CreateSalesTransactionDto {
   key_api?: string;
 
   @ApiPropertyOptional({
-    example: '82731893193718',
+    example: '',
     description: 'Citizen identity card',
   })
   @IsOptional()
@@ -189,7 +187,7 @@ export class CreateSalesTransactionDto {
   cccdan?: string;
 
   @ApiPropertyOptional({
-    example: 'G1231D1213',
+    example: '',
     description: 'Passport number',
   })
   @IsOptional()
@@ -197,7 +195,7 @@ export class CreateSalesTransactionDto {
   so_hchieu?: string;
 
   @ApiPropertyOptional({
-    example: '2000005',
+    example: '',
     description: 'Budget relationship unit code',
   })
   @IsOptional()
@@ -233,22 +231,13 @@ export class CreateSalesTransactionDto {
   inv_discountPercentage: number;
 
   @ApiProperty({
-    example: '649a6f1e5f1234567890abcd',
+    example: '',
     description: 'Agency ID',
   })
   @IsNotEmpty({ message: 'agencyId is required' })
   @IsString({ message: 'agencyId must be a string' })
   @IsMongoId({ message: 'agencyId must be a valid MongoDB ObjectId' })
   agencyId: string;
-
-  @ApiProperty({
-    example: '649a6f1e5f1234567890abd0',
-    description: 'Bank ID',
-  })
-  @IsNotEmpty({ message: 'bankId is required' })
-  @IsString({ message: 'bankId must be a string' })
-  @IsMongoId({ message: 'bankId must be a valid MongoDB ObjectId' })
-  bankId: string;
 
   @ApiProperty({
     type: [TransactionItemDto],

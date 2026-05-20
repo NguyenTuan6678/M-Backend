@@ -1,5 +1,6 @@
 import { LoggerService } from '@common/logs/logger.service';
 import { Injectable } from '@nestjs/common';
+import { Types } from 'mongoose';
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
 import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
@@ -16,6 +17,7 @@ import { Product } from '@schemas/product.schema';
 import { GetAllSaleTransactions } from './dto/get-all-sale-transaction.res';
 import { MessageResponse } from '@app-types/message.res';
 import { QuerySaleTransactionDto } from './dto/query-transaction.req';
+import { InvoiceStatus } from '@utils/transaction-status';
 
 interface ValidatedEntities {
   missing: string[];
@@ -36,28 +38,24 @@ export class SaleTransactionService {
   ) {}
 
   private async validateRelatedEntities(
-    bankId: string | undefined,
     items: { productId?: string }[],
   ): Promise<ValidatedEntities> {
     const productIds = items
       ?.map((i) => i.productId)
       .filter((id): id is string => !!id);
 
-    const [bank, products] = await Promise.all([
-      bankId ? this.bankRepository.findById(bankId) : undefined,
+    const [products] = await Promise.all([
       productIds?.length
         ? this.productRepository.findByIds(productIds)
         : undefined,
     ]);
 
     const missing: string[] = [];
-    if (bankId && !bank) missing.push('Bank');
     if (productIds?.length && (!products || products.length === 0))
       missing.push('Products');
 
     return {
       missing,
-      ...(bank && { bank }),
       ...(products?.length && { products }),
     };
   }
@@ -66,9 +64,8 @@ export class SaleTransactionService {
     createSaleTransactionDto: CreateSalesTransactionDto,
   ): Promise<SaleTransactionResponseDTO | null> {
     try {
-      const { agencyId, bankId, items } = createSaleTransactionDto;
+      const { agencyId, items } = createSaleTransactionDto;
 
-      // Lookup agency để lấy employeeId và departmentId
       const agency = agencyId
         ? await this.agencyRepository.findById(agencyId)
         : null;
@@ -81,17 +78,36 @@ export class SaleTransactionService {
         };
       }
 
-      // Extract employeeId từ agency, departmentId từ employee
-      const employeeId = agency?.employeeId?.toString();
-      const employee = employeeId
-        ? await this.employeeRepository.findById(employeeId)
-        : null;
-      const departmentId = employee?.departmentId?.toString();
+      const populatedEmployee = (agency?.employeeId as any) || null;
+
+      const employeeId = this.extractObjectId(populatedEmployee);
+
+      const departmentId =
+        this.extractObjectId(populatedEmployee?.departmentId) || undefined;
+
+      let employee: any = null;
+
+      if (employeeId) {
+        employee =
+          populatedEmployee && populatedEmployee.employeeName
+            ? populatedEmployee
+            : await this.employeeRepository.findById(employeeId);
+      }
+
+      const finalDepartmentId =
+        departmentId || this.extractObjectId(employee?.departmentId);
 
       const { missing, bank, products } = await this.validateRelatedEntities(
-        bankId,
-        items,
+        items ?? [],
       );
+
+      if (!employeeId) {
+        missing.push('Employee');
+      }
+
+      if (!finalDepartmentId) {
+        missing.push('Department');
+      }
 
       if (missing.length > 0) {
         return {
@@ -102,31 +118,30 @@ export class SaleTransactionService {
       }
 
       this.logger.log(
-        `Validated — Agency: ${agency?.agencyName}, Employee: ${employee?.employeeName}, Department: ${departmentId}, Bank: ${bank?.inv_buyerBankName}, Products: ${products?.map((p) => p.inv_itemCode).join(', ')}`,
+        `Validated — Agency: ${agency?.agencyName}, Employee: ${employee?.employeeName}, Department: ${finalDepartmentId}, Bank: ${bank?.inv_buyerBankName}, Products: ${products?.map((p) => p.inv_itemCode).join(', ')}`,
         'SaleTransactionService',
       );
 
       const createdTransaction =
         await this.saleTransactionRepository.createSaleTransaction({
           ...createSaleTransactionDto,
-          // Gắn employeeId và departmentId tự động từ agency
-          ...(employeeId && { employeeId }),
-          ...(departmentId && { departmentId }),
+          employeeId,
+          departmentId: finalDepartmentId,
         });
 
       if (!createdTransaction) {
         return {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
-          message: `Missing required fields or creation failed ${missing.join(', ')}`,
+          message: 'Missing required fields or creation failed',
         };
       }
 
       return {
-        content: createdTransaction,
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Sale transaction created successfully',
+        content: createdTransaction,
       };
     } catch (error: any) {
       this.logger.error(`Error creating sale transaction: ${error.message}`);
@@ -228,6 +243,68 @@ export class SaleTransactionService {
     }
   }
 
+  async updateTransactionBankAfterInvoice(
+    transactionId: string,
+    bankId: string,
+  ): Promise<SaleTransactionResponseDTO> {
+    try {
+      const transaction =
+        await this.saleTransactionRepository.findById(transactionId);
+
+      if (!transaction) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Sale transaction with ID ${transactionId} not found`,
+        };
+      }
+
+      if (
+        (transaction as any).invoiceStatus !== InvoiceStatus.ISSUED ||
+        !(transaction as any).inv_invoiceCreatedId
+      ) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Bank can only be updated after invoice is issued',
+        };
+      }
+
+      const bank = await this.bankRepository.findById(bankId);
+
+      if (!bank) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Bank not found',
+        };
+      }
+
+      const updatedTransaction =
+        await this.saleTransactionRepository.updateBankOnly(
+          transactionId,
+          bankId,
+        );
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Bank updated successfully',
+        content: updatedTransaction || undefined,
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `Error updating transaction bank after invoice: ${error.message}`,
+      );
+
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error updating transaction bank: ${error.message}`,
+      };
+    }
+  }
+
   async deleteSaleTransaction(id: string): Promise<MessageResponse> {
     const deletedTransaction = await this.saleTransactionRepository.delete(id);
     if (!deletedTransaction) {
@@ -256,83 +333,83 @@ export class SaleTransactionService {
     }
   }
 
-  async getSaleTransactionsByEmployee(
-    employeeId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findByEmployeeId(employeeId);
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByEmployee: ${error.message}`,
-      );
-      throw error;
-    }
-  }
+  // async getSaleTransactionsByEmployee(
+  //   employeeId: string,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   try {
+  //     const transactions =
+  //       await this.saleTransactionRepository.findByEmployeeId(employeeId);
+  //     return transactions.map((t) => this.mapToResponseDto(t));
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error in SaleTransactionService.getSaleTransactionsByEmployee: ${error.message}`,
+  //     );
+  //     throw error;
+  //   }
+  // }
 
-  async getSaleTransactionsByAgency(
-    agencyId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findByAgencyId(agencyId);
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByAgency: ${error.message}`,
-      );
-      throw error;
-    }
-  }
+  // async getSaleTransactionsByAgency(
+  //   agencyId: string,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   try {
+  //     const transactions =
+  //       await this.saleTransactionRepository.findByAgencyId(agencyId);
+  //     return transactions.map((t) => this.mapToResponseDto(t));
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error in SaleTransactionService.getSaleTransactionsByAgency: ${error.message}`,
+  //     );
+  //     throw error;
+  //   }
+  // }
 
-  async getSaleTransactionsByDepartment(
-    departmentId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findByDepartmentId(departmentId);
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByDepartment: ${error.message}`,
-      );
-      throw error;
-    }
-  }
+  // async getSaleTransactionsByDepartment(
+  //   departmentId: string,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   try {
+  //     const transactions =
+  //       await this.saleTransactionRepository.findByDepartmentId(departmentId);
+  //     return transactions.map((t) => this.mapToResponseDto(t));
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error in SaleTransactionService.getSaleTransactionsByDepartment: ${error.message}`,
+  //     );
+  //     throw error;
+  //   }
+  // }
 
-  async getSaleTransactionsByBank(
-    bankId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findByBankId(bankId);
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByBank: ${error.message}`,
-      );
-      throw error;
-    }
-  }
+  // async getSaleTransactionsByBank(
+  //   bankId: string,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   try {
+  //     const transactions =
+  //       await this.saleTransactionRepository.findByBankId(bankId);
+  //     return transactions.map((t) => this.mapToResponseDto(t));
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error in SaleTransactionService.getSaleTransactionsByBank: ${error.message}`,
+  //     );
+  //     throw error;
+  //   }
+  // }
 
-  async getSaleTransactionsByDateRange(
-    startDate: Date,
-    endDate: Date,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions = await this.saleTransactionRepository.findByDateRange(
-        startDate,
-        endDate,
-      );
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByDateRange: ${error.message}`,
-      );
-      throw error;
-    }
-  }
+  // async getSaleTransactionsByDateRange(
+  //   startDate: Date,
+  //   endDate: Date,
+  // ): Promise<SaleTransactionResponseDTO[]> {
+  //   try {
+  //     const transactions = await this.saleTransactionRepository.findByDateRange(
+  //       startDate,
+  //       endDate,
+  //     );
+  //     return transactions.map((t) => this.mapToResponseDto(t));
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error in SaleTransactionService.getSaleTransactionsByDateRange: ${error.message}`,
+  //     );
+  //     throw error;
+  //   }
+  // }
 
   async searchSaleTransactions(query: QuerySaleTransactionDto) {
     try {
@@ -351,7 +428,7 @@ export class SaleTransactionService {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `Threse is a problem while searching transaction: ${error.message}`,
       };
     }
   }
@@ -374,6 +451,25 @@ export class SaleTransactionService {
       );
       throw error;
     }
+  }
+
+  private extractObjectId(value: any): string | undefined {
+    if (!value) return undefined;
+
+    if (typeof value === 'string') {
+      return Types.ObjectId.isValid(value) ? value : undefined;
+    }
+
+    if (value instanceof Types.ObjectId) {
+      return value.toString();
+    }
+
+    if (value._id) {
+      const id = value._id.toString();
+      return Types.ObjectId.isValid(id) ? id : undefined;
+    }
+
+    return undefined;
   }
 
   private mapToResponseDto(transaction: any): SaleTransactionResponseDTO {

@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -22,6 +23,7 @@ import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { MessageResponse } from '@app-types/message.res';
 import { QuerySaleTransactionDto } from './dto/query-transaction.req';
+import { UpdateSaleTransactionBankDto } from './dto/update-transaction-bank.req';
 
 @ApiTags('Sale Transaction')
 @Controller('sale-transaction')
@@ -69,32 +71,20 @@ export class SaleTransactionController {
   @Get()
   @ApiOperation({
     summary: 'Get all sale transactions with optional filters & pagination',
-    description:
-      'Filter theo: agencyId, employeeId, departmentId, bankId, isActive, startDate, endDate. ' +
-      'Text search qua param search. ' +
-      'Phân trang qua page và limit. Mặc định trả toàn bộ nếu không có filter.',
   })
   async getAllSaleTransactions(
-    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    @Query(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        transformOptions: {
+          enableImplicitConversion: false,
+        },
+      }),
+    )
     query: QuerySaleTransactionDto,
   ) {
-    const hasFilter =
-      !!query.agencyId ||
-      !!query.employeeId ||
-      !!query.departmentId ||
-      !!query.bankId ||
-      query.isActive !== undefined ||
-      !!query.startDate ||
-      !!query.endDate ||
-      !!query.search ||
-      (query.page !== undefined && query.page > 1) ||
-      (query.limit !== undefined && query.limit !== 10);
-
-    if (hasFilter) {
-      return await this.saleTransactionService.searchSaleTransactions(query);
-    }
-
-    return await this.saleTransactionService.getAllSaleTransactions();
+    return await this.saleTransactionService.searchSaleTransactions(query);
   }
 
   @Get('stats')
@@ -102,56 +92,6 @@ export class SaleTransactionController {
   async getSaleTransactionStats(): Promise<{ totalTransactions: number }> {
     return await this.saleTransactionService.getSaleTransactionStats();
   }
-
-  // @Get('search/date-range')
-  // @ApiOperation({ summary: 'Get sale transactions by date range' })
-  // async getSaleTransactionsByDateRange(
-  //   @Query('startDate') startDate: string,
-  //   @Query('endDate') endDate: string,
-  // ): Promise<SaleTransactionResponseDTO[]> {
-  //   return await this.saleTransactionService.getSaleTransactionsByDateRange(
-  //     new Date(startDate),
-  //     new Date(endDate),
-  //   );
-  // }
-
-  // @Get('by-employee/:employeeId')
-  // @ApiOperation({ summary: 'Get sale transactions by employee ID' })
-  // async getSaleTransactionsByEmployee(
-  //   @Param('employeeId') employeeId: string,
-  // ): Promise<SaleTransactionResponseDTO[]> {
-  //   return await this.saleTransactionService.getSaleTransactionsByEmployee(
-  //     employeeId,
-  //   );
-  // }
-
-  // @Get('by-agency/:agencyId')
-  // @ApiOperation({ summary: 'Get sale transactions by agency ID' })
-  // async getSaleTransactionsByAgency(
-  //   @Param('agencyId') agencyId: string,
-  // ): Promise<SaleTransactionResponseDTO[]> {
-  //   return await this.saleTransactionService.getSaleTransactionsByAgency(
-  //     agencyId,
-  //   );
-  // }
-
-  // @Get('by-department/:departmentId')
-  // @ApiOperation({ summary: 'Get sale transactions by department ID' })
-  // async getSaleTransactionsByDepartment(
-  //   @Param('departmentId') departmentId: string,
-  // ): Promise<SaleTransactionResponseDTO[]> {
-  //   return await this.saleTransactionService.getSaleTransactionsByDepartment(
-  //     departmentId,
-  //   );
-  // }
-
-  // @Get('by-bank/:bankId')
-  // @ApiOperation({ summary: 'Get sale transactions by bank ID' })
-  // async getSaleTransactionsByBank(
-  //   @Param('bankId') bankId: string,
-  // ): Promise<SaleTransactionResponseDTO[]> {
-  //   return await this.saleTransactionService.getSaleTransactionsByBank(bankId);
-  // }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get sale transaction by ID' })
@@ -170,6 +110,28 @@ export class SaleTransactionController {
     return await this.saleTransactionService.updateSaleTransaction(
       id,
       updateData,
+    );
+  }
+
+  @Patch(':id/bank')
+  @ApiOperation({
+    summary: 'Update bank after invoice issued',
+    description: 'Only bankId can be updated after invoiceStatus is ISSUED.',
+  })
+  async updateBankAfterInvoice(
+    @Param('id') id: string,
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    )
+    body: UpdateSaleTransactionBankDto,
+  ) {
+    return await this.saleTransactionService.updateTransactionBankAfterInvoice(
+      id,
+      body.bankId,
     );
   }
 
