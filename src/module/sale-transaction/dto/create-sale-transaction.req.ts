@@ -243,7 +243,7 @@ export class CreateSalesTransactionDto {
     example: '',
     description: 'Bank ID',
   })
-  @IsNotEmpty({ message: 'bankId is required' })
+  @IsOptional()
   @IsString({ message: 'bankId must be a string' })
   @IsMongoId({ message: 'bankId must be a valid MongoDB ObjectId' })
   bankId: string;

@@ -37,28 +37,24 @@ export class SaleTransactionService {
   ) {}
 
   private async validateRelatedEntities(
-    bankId: string | undefined,
     items: { productId?: string }[],
   ): Promise<ValidatedEntities> {
     const productIds = items
       ?.map((i) => i.productId)
       .filter((id): id is string => !!id);
 
-    const [bank, products] = await Promise.all([
-      bankId ? this.bankRepository.findById(bankId) : undefined,
+    const [products] = await Promise.all([
       productIds?.length
         ? this.productRepository.findByIds(productIds)
         : undefined,
     ]);
 
     const missing: string[] = [];
-    if (bankId && !bank) missing.push('Bank');
     if (productIds?.length && (!products || products.length === 0))
       missing.push('Products');
 
     return {
       missing,
-      ...(bank && { bank }),
       ...(products?.length && { products }),
     };
   }
@@ -67,7 +63,7 @@ export class SaleTransactionService {
     createSaleTransactionDto: CreateSalesTransactionDto,
   ): Promise<SaleTransactionResponseDTO | null> {
     try {
-      const { agencyId, bankId, items } = createSaleTransactionDto;
+      const { agencyId, items } = createSaleTransactionDto;
 
       const agency = agencyId
         ? await this.agencyRepository.findById(agencyId)
@@ -101,7 +97,6 @@ export class SaleTransactionService {
         departmentId || this.extractObjectId(employee?.departmentId);
 
       const { missing, bank, products } = await this.validateRelatedEntities(
-        bankId,
         items ?? [],
       );
 
