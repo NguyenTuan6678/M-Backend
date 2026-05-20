@@ -95,7 +95,7 @@ export class MInvoiceReceiptPostService {
 
   private calculateItemFields(item: InvoiceItemDataDto) {
     const price = item.price;
-    const quantity = item.inv_quantity;
+    const quantity = item.inv_quantity || 1;
     const discount = item.inv_discountAmount;
     const discountPercentage =
       item.inv_discountPercentage ||

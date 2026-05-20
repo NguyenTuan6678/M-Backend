@@ -121,7 +121,7 @@ export class SalesTransaction {
   @Prop({ type: Types.ObjectId, ref: Employee.name })
   employeeId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: Bank.name, required: true })
+  @Prop({ type: Types.ObjectId, ref: Bank.name })
   bankId?: Types.ObjectId;
 
   @Prop({
