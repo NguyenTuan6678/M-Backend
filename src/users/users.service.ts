@@ -96,7 +96,7 @@ export class UsersService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while fetching all users: ${error.message}`,
       };
     }
     return response;
@@ -127,7 +127,7 @@ export class UsersService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while fetching user by id: ${error.message}`,
       };
     }
     return response;
@@ -208,7 +208,7 @@ export class UsersService {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while updating the user: ${error.message}`,
         content: undefined,
       };
     }
@@ -264,7 +264,7 @@ export class UsersService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while validating user: ${error.message}`,
       };
     }
     return response;

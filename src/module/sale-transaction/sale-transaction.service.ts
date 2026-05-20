@@ -351,7 +351,7 @@ export class SaleTransactionService {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `Threse is a problem while searching transaction: ${error.message}`,
       };
     }
   }
