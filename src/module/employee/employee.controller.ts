@@ -40,7 +40,7 @@ export class EmployeeController {
     summary: 'Get all employees with optional filters & pagination',
     description:
       'Filter theo: departmentId, isActive. ' +
-      'Text search employeNumber, employeeName, employeeEmail, employeePhone qua param search. ' +
+      'Text search employeeNumber, employeeName, employeeEmail, employeePhone qua param search. ' +
       'Phân trang qua page và limit.',
   })
   async getAllEmployees(
