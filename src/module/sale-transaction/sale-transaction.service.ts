@@ -123,10 +123,10 @@ export class SaleTransactionService {
       }
 
       return {
-        content: createdTransaction,
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Sale transaction created successfully',
+        content: createdTransaction,
       };
     } catch (error: any) {
       this.logger.error(`Error creating sale transaction: ${error.message}`);
