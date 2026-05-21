@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
 import { InvoiceQueueService } from '../../api/queues/invoice-queue.service';
+import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 
 @Injectable()
 export class InvoiceIssueService {
@@ -23,16 +24,16 @@ export class InvoiceIssueService {
 
     if (!transaction) {
       return {
-        code: 404,
-        info: 'FAIL',
+        code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
         message: 'Sale transaction not found',
       };
     }
 
     if ((transaction as any).invoiceStatus === 'ISSUED') {
       return {
-        code: 200,
-        info: 'SUCCESS',
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
         message: 'Invoice already issued',
         content: transaction,
       };
