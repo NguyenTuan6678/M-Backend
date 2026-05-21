@@ -130,8 +130,8 @@ export class CreateInvoiceFromTransactionDto {
   @IsNotEmpty()
   saleTransactionId: string;
 
-  @ApiPropertyOptional({ example: '1C26TYY', description: 'Invoice series' })
-  @IsOptional()
+  @ApiProperty({ example: '1C26TYY', description: 'Invoice series' })
+  @IsNotEmpty()
   @IsString()
   inv_invoiceSeries: string;
 
