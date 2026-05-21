@@ -56,15 +56,6 @@ export class DepartmentRepository {
     }
   }
 
-  async findAll(): Promise<DepartmentDocument[]> {
-    try {
-      return await this.departmentModel.find().sort({ createdAt: -1 }).exec();
-    } catch (error: any) {
-      this.logger.error(`Error fetching departments: ${error.message}`);
-      throw error;
-    }
-  }
-
   async findById(id: string): Promise<DepartmentDocument | null> {
     try {
       return await this.departmentModel.findById(id).exec();
@@ -126,39 +117,6 @@ export class DepartmentRepository {
       this.logger.error(
         `Error finding departments with filters: ${error.message}`,
       );
-      throw error;
-    }
-  }
-
-  async searchByName(
-    keyword: string,
-    skip = 0,
-    limit = 10,
-  ): Promise<{ data: DepartmentDocument[]; total: number }> {
-    try {
-      const safeKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-      const filter = {
-        departmentName: {
-          $regex: safeKeyword,
-          $options: 'i',
-        },
-      };
-
-      const [data, total] = await Promise.all([
-        this.departmentModel
-          .find(filter)
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-
-        this.departmentModel.countDocuments(filter).exec(),
-      ]);
-
-      return { data, total };
-    } catch (error: any) {
-      this.logger.error(`Error searching agency by name: ${error.message}`);
       throw error;
     }
   }

@@ -7,7 +7,6 @@ import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { GetAllEmployees } from './dto/get-all-employee.res';
 import { QueryEmployeeDto } from './dto/query-employee.req';
 
 @Injectable()
@@ -64,25 +63,23 @@ export class EmployeeService {
     return response;
   }
 
-  async getAllEmployees(): Promise<GetAllEmployees> {
-    let response: GetAllEmployees | null = null;
+  async searchEmployees(query: QueryEmployeeDto) {
     try {
-      const employees = await this.employeeRepository.findAll();
-      response = {
+      const result = await this.employeeRepository.findAllWithFilters(query);
+
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Get all employees successfully',
-        content: employees,
+        message: 'Employees fetched successfully',
+        ...result,
       };
-      return response;
     } catch (error: any) {
-      response = {
+      return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: `An error occurred while getting all emplyoyees: ${error.message}`,
+        message: `Error searching employees: ${error.message}`,
       };
     }
-    return response;
   }
 
   async getEmployeeById(id: string): Promise<EmployeeResponseDto | null> {
@@ -114,55 +111,6 @@ export class EmployeeService {
       };
     }
     return response;
-  }
-
-  async searchEmployees(query: QueryEmployeeDto) {
-    try {
-      const result = await this.employeeRepository.findAllWithFilters(query);
-
-      return {
-        code: ERROR_RES.SUCCESS.statusCode,
-        info: ERROR_INFO.SUCCESS,
-        message: 'Employees fetched successfully',
-        ...result,
-      };
-    } catch (error: any) {
-      return {
-        code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: ERROR_INFO.FAIL,
-        message: `Error searching employees: ${error.message}`,
-      };
-    }
-  }
-
-  async searchEmployeesByName(keyword: string, page = 1, limit = 10) {
-    if (!keyword || !keyword.trim()) {
-      return {
-        data: [],
-        total: 0,
-        page,
-        limit,
-        totalPages: 0,
-      };
-    }
-
-    const currentPage = Number(page) || 1;
-    const currentLimit = Number(limit) || 10;
-    const skip = (currentPage - 1) * currentLimit;
-
-    const { data, total } = await this.employeeRepository.searchByName(
-      keyword.trim(),
-      skip,
-      currentLimit,
-    );
-
-    return {
-      data: data.map((agency) => this.mapToResponseDto(agency)),
-      total,
-      page: currentPage,
-      limit: currentLimit,
-      totalPages: Math.ceil(total / currentLimit),
-    };
   }
 
   async updateEmployee(
@@ -214,11 +162,5 @@ export class EmployeeService {
       info: ERROR_INFO.SUCCESS,
       message: `Employee ${deletedEmployee.employeeName} deleted successfully`,
     };
-  }
-
-  private mapToResponseDto(employee: any): EmployeeResponseDto {
-    const response = new EmployeeResponseDto();
-    response.content = employee.toObject();
-    return response;
   }
 }

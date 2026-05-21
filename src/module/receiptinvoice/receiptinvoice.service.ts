@@ -10,7 +10,6 @@ import { CreateReceiptInvoiceDto } from './dto/create-receiptinvoice.req';
 import { ReceiptInvoiceResponseDto } from './dto/reiptinvoice.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
-import { GetAllReceiptInvoices } from './dto/get-all-reiptinvoice.res';
 import { QueryReceiptInvoiceDto } from './dto/query-receiptinvoice.req';
 
 @Injectable()
@@ -68,25 +67,24 @@ export class ReceiptInvoiceService {
     return response;
   }
 
-  async getAllReceipts(): Promise<GetAllReceiptInvoices> {
-    let response: GetAllReceiptInvoices | null = null;
+  async searchReceiptInvoices(query: QueryReceiptInvoiceDto) {
     try {
-      const receipt = await this.receiptModel.find().exec();
-      response = {
+      const result =
+        await this.receiptInvoiceRepository.findAllWithFilters(query);
+
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Get all employees successfully',
-        content: receipt,
+        message: 'Receipt invoices fetched successfully',
+        ...result,
       };
-      return response;
     } catch (error: any) {
-      response = {
+      return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: `An error occurred while getting all receipts: ${error.message}`,
+        message: `Error searching receipt invoices: ${error.message}`,
       };
     }
-    return response;
   }
 
   async getReceiptById(id: string): Promise<ReceiptInvoiceResponseDto | null> {
@@ -118,26 +116,6 @@ export class ReceiptInvoiceService {
       };
     }
     return response;
-  }
-
-  async searchReceiptInvoices(query: QueryReceiptInvoiceDto) {
-    try {
-      const result =
-        await this.receiptInvoiceRepository.findAllWithFilters(query);
-
-      return {
-        code: ERROR_RES.SUCCESS.statusCode,
-        info: ERROR_INFO.SUCCESS,
-        message: 'Receipt invoices fetched successfully',
-        ...result,
-      };
-    } catch (error: any) {
-      return {
-        code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: ERROR_INFO.FAIL,
-        message: `Error searching receipt invoices: ${error.message}`,
-      };
-    }
   }
 
   async updateReceipt(

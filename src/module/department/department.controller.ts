@@ -59,20 +59,6 @@ export class DepartmentController {
     return await this.departmentService.getDepartmentById(id);
   }
 
-  // @Get('search-name/search')
-  // @ApiOperation({ summary: 'Search departments by name' })
-  // async searchAgencies(
-  //   @Query('keyword') keyword: string,
-  //   @Query('page') page = '1',
-  //   @Query('limit') limit = '10',
-  // ) {
-  //   return this.departmentService.searchDepartmentsByName(
-  //     keyword,
-  //     Number(page),
-  //     Number(limit),
-  //   );
-  // }
-
   @Patch(':id')
   @ApiOperation({ summary: 'Updated bank by ID' })
   async update(

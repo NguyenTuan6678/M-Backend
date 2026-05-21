@@ -64,20 +64,6 @@ export class ProductController {
     return await this.productService.getProductById(id);
   }
 
-  // @Get('search-name/search')
-  // @ApiOperation({ summary: 'Search products by product code' })
-  // async searchAgencies(
-  //   @Query('keyword') keyword: string,
-  //   @Query('page') page = '1',
-  //   @Query('limit') limit = '10',
-  // ) {
-  //   return this.productService.searchProductsByName(
-  //     keyword,
-  //     Number(page),
-  //     Number(limit),
-  //   );
-  // }
-
   @Patch(':id')
   @ApiOperation({ summary: 'Updated bank by ID' })
   async update(

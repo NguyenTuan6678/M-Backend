@@ -25,15 +25,6 @@ export class UsersRepository {
     }
   }
 
-  async findAll(): Promise<UserDocument[]> {
-    try {
-      return await this.userModel.find().sort({ createdAt: -1 }).exec();
-    } catch (error: any) {
-      this.logger.error(`Error fetching users: ${error.message}`);
-      throw error;
-    }
-  }
-
   async findById(id: string): Promise<UserDocument | null> {
     try {
       return await this.userModel.findById(id).exec();
@@ -110,39 +101,6 @@ export class UsersRepository {
       };
     } catch (error: any) {
       this.logger.error(`Error finding users with filters: ${error.message}`);
-      throw error;
-    }
-  }
-
-  async searchByName(
-    keyword: string,
-    skip = 0,
-    limit = 10,
-  ): Promise<{ data: UserDocument[]; total: number }> {
-    try {
-      const safeKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-      const filter = {
-        username: {
-          $regex: safeKeyword,
-          $options: 'i',
-        },
-      };
-
-      const [data, total] = await Promise.all([
-        this.userModel
-          .find(filter)
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-
-        this.userModel.countDocuments(filter).exec(),
-      ]);
-
-      return { data, total };
-    } catch (error: any) {
-      this.logger.error(`Error searching agency by name: ${error.message}`);
       throw error;
     }
   }
