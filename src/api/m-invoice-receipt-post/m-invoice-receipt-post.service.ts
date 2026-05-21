@@ -110,8 +110,13 @@ export class MInvoiceReceiptPostService {
     const totalBeforeDiscount = totalAmountWithVat / (1 - discountPercentage);
     const unitPrice = totalBeforeDiscount / quantity;
 
+    console.log('item1', item);
+
     return {
       ...item,
+      inv_quantity: quantity,
+      inv_discountAmount: discount,
+      inv_discountPercentage: discountPercentage,
       inv_TotalAmountWithoutVat: totalAmountWithVat,
       inv_vatAmount: vatAmount,
       inv_TotalAmount: totalPrice,
@@ -120,6 +125,7 @@ export class MInvoiceReceiptPostService {
   }
 
   private buildPayload(dto: CreateInvoiceDto): CreateInvoiceDto {
+    console.log('item', dto);
     return {
       ...dto,
       data: dto.data.map((invoiceData) => {
