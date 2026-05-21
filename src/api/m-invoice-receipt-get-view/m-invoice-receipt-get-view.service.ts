@@ -110,14 +110,18 @@ export class ViewMInvoiceReceiptService {
       );
     }
 
-    const url = `https://${tax_code}.${baseUrl}/api/InvoiceApi78/PrintInvoice?id=${inv_invoiceCreatedId}`;
+    const url = `https://${tax_code}.${baseUrl}/api/InvoiceApi78/PrintInvoice?id=${
+      inv_invoiceCreatedId
+    }`;
+
     const response = await this.callExternalApiWithRetry(() =>
       firstValueFrom(
         this.httpService.get(url, {
           timeout: 15000,
+          responseType: 'arraybuffer',
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            Accept: 'application/json',
           },
         }),
       ),
