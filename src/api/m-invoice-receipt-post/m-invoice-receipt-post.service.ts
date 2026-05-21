@@ -196,17 +196,6 @@ export class MInvoiceReceiptPostService {
       };
     }
 
-    if ((transaction as any).invoiceStatus === InvoiceStatus.ISSUING) {
-      return {
-        ok: false,
-        message: 'Invoice is already being issued',
-        data: {
-          saleTransactionId,
-          invoiceStatus: InvoiceStatus.ISSUING,
-        },
-      };
-    }
-
     await this.saleTransactionRepository.update(saleTransactionId, {
       invoiceStatus: InvoiceStatus.ISSUING,
       isActive: true,
