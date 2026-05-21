@@ -153,26 +153,26 @@ export class SaleTransactionService {
     }
   }
 
-  async getAllSaleTransactions(): Promise<GetAllSaleTransactions> {
-    let response: GetAllSaleTransactions | null = null;
+  async searchSaleTransactions(query: QuerySaleTransactionDto) {
     try {
-      const saleTransactions =
-        await this.saleTransactionRepository.findAllWithPopulate();
-      response = {
+      const result =
+        await this.saleTransactionRepository.findAllWithFilters(query);
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Get all sale transactions successfully',
-        content: saleTransactions,
+        message: 'Sale transactions fetched successfully',
+        ...result,
       };
-      return response;
     } catch (error: any) {
-      response = {
+      this.logger.error(
+        `Error in SaleTransactionService.searchSaleTransactions: ${error.message}`,
+      );
+      return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: `An error occurred while getting all transaction: ${error.message}`,
+        message: `Threse is a problem while searching transaction: ${error.message}`,
       };
     }
-    return response;
   }
 
   async getSaleTransactionById(
@@ -328,126 +328,6 @@ export class SaleTransactionService {
     } catch (error: any) {
       this.logger.error(
         `Error in SaleTransactionService.getSaleTransactionStats: ${error.message}`,
-      );
-      throw error;
-    }
-  }
-
-  // async getSaleTransactionsByEmployee(
-  //   employeeId: string,
-  // ): Promise<SaleTransactionResponseDTO[]> {
-  //   try {
-  //     const transactions =
-  //       await this.saleTransactionRepository.findByEmployeeId(employeeId);
-  //     return transactions.map((t) => this.mapToResponseDto(t));
-  //   } catch (error: any) {
-  //     this.logger.error(
-  //       `Error in SaleTransactionService.getSaleTransactionsByEmployee: ${error.message}`,
-  //     );
-  //     throw error;
-  //   }
-  // }
-
-  // async getSaleTransactionsByAgency(
-  //   agencyId: string,
-  // ): Promise<SaleTransactionResponseDTO[]> {
-  //   try {
-  //     const transactions =
-  //       await this.saleTransactionRepository.findByAgencyId(agencyId);
-  //     return transactions.map((t) => this.mapToResponseDto(t));
-  //   } catch (error: any) {
-  //     this.logger.error(
-  //       `Error in SaleTransactionService.getSaleTransactionsByAgency: ${error.message}`,
-  //     );
-  //     throw error;
-  //   }
-  // }
-
-  // async getSaleTransactionsByDepartment(
-  //   departmentId: string,
-  // ): Promise<SaleTransactionResponseDTO[]> {
-  //   try {
-  //     const transactions =
-  //       await this.saleTransactionRepository.findByDepartmentId(departmentId);
-  //     return transactions.map((t) => this.mapToResponseDto(t));
-  //   } catch (error: any) {
-  //     this.logger.error(
-  //       `Error in SaleTransactionService.getSaleTransactionsByDepartment: ${error.message}`,
-  //     );
-  //     throw error;
-  //   }
-  // }
-
-  // async getSaleTransactionsByBank(
-  //   bankId: string,
-  // ): Promise<SaleTransactionResponseDTO[]> {
-  //   try {
-  //     const transactions =
-  //       await this.saleTransactionRepository.findByBankId(bankId);
-  //     return transactions.map((t) => this.mapToResponseDto(t));
-  //   } catch (error: any) {
-  //     this.logger.error(
-  //       `Error in SaleTransactionService.getSaleTransactionsByBank: ${error.message}`,
-  //     );
-  //     throw error;
-  //   }
-  // }
-
-  // async getSaleTransactionsByDateRange(
-  //   startDate: Date,
-  //   endDate: Date,
-  // ): Promise<SaleTransactionResponseDTO[]> {
-  //   try {
-  //     const transactions = await this.saleTransactionRepository.findByDateRange(
-  //       startDate,
-  //       endDate,
-  //     );
-  //     return transactions.map((t) => this.mapToResponseDto(t));
-  //   } catch (error: any) {
-  //     this.logger.error(
-  //       `Error in SaleTransactionService.getSaleTransactionsByDateRange: ${error.message}`,
-  //     );
-  //     throw error;
-  //   }
-  // }
-
-  async searchSaleTransactions(query: QuerySaleTransactionDto) {
-    try {
-      const result =
-        await this.saleTransactionRepository.findAllWithFilters(query);
-      return {
-        code: ERROR_RES.SUCCESS.statusCode,
-        info: ERROR_INFO.SUCCESS,
-        message: 'Sale transactions fetched successfully',
-        ...result,
-      };
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.searchSaleTransactions: ${error.message}`,
-      );
-      return {
-        code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: ERROR_INFO.FAIL,
-        message: `Threse is a problem while searching transaction: ${error.message}`,
-      };
-    }
-  }
-
-  async buildInvoicePayload(transactionId: string): Promise<CreateInvoiceDto> {
-    try {
-      const transaction =
-        await this.saleTransactionRepository.findByIdWithPopulate(
-          transactionId,
-        );
-
-      if (!transaction) {
-        throw new Error(`Transaction ${transactionId} not found`);
-      }
-
-      return mapTransactionToInvoice(transaction as any);
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.buildInvoicePayload: ${error.message}`,
       );
       throw error;
     }

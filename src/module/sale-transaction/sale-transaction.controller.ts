@@ -142,11 +142,4 @@ export class SaleTransactionController {
   ): Promise<MessageResponse> {
     return await this.saleTransactionService.deleteSaleTransaction(id);
   }
-
-  // @Post(':id/send-receipt')
-  // @ApiOperation({ summary: 'Build and send invoice payload for a transaction' })
-  // @HttpCode(HttpStatus.OK)
-  // async sendReceipt(@Param('id') id: string) {
-  //   return await this.saleTransactionService.buildInvoicePayload(id);
-  // }
 }

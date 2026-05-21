@@ -58,27 +58,6 @@ export class AgencyService {
     }
   }
 
-  // async getAllAgencies(): Promise<GetAllAgencies> {
-  //   let response: GetAllAgencies | null = null;
-  //   try {
-  //     const agencies = await this.agencyRepository.findAll();
-  //     response = {
-  //       code: ERROR_RES.SUCCESS.statusCode,
-  //       info: ERROR_INFO.SUCCESS,
-  //       message: 'Get all agencies successfully',
-  //       content: agencies,
-  //     };
-  //     return response;
-  //   } catch (error: any) {
-  //     response = {
-  //       code: ERROR_RES.INTERNAL_ERROR.statusCode,
-  //       info: ERROR_INFO.FAIL,
-  //       message: `An error occurred while getting all agencies: ${error.message}`,
-  //     };
-  //   }
-  //   return response;
-  // }
-
   async getAgencyById(id: string): Promise<AgencyResponseDto | null> {
     let response: AgencyResponseDto | null = null;
     try {
@@ -129,36 +108,6 @@ export class AgencyService {
     }
   }
 
-  async searchAgenciesByName(keyword: string, page = 1, limit = 10) {
-    if (!keyword || !keyword.trim()) {
-      return {
-        data: [],
-        total: 0,
-        page,
-        limit,
-        totalPages: 0,
-      };
-    }
-
-    const currentPage = Number(page) || 1;
-    const currentLimit = Number(limit) || 10;
-    const skip = (currentPage - 1) * currentLimit;
-
-    const { data, total } = await this.agencyRepository.searchByName(
-      keyword.trim(),
-      skip,
-      currentLimit,
-    );
-
-    return {
-      data: data.map((agency) => this.mapToResponseDto(agency)),
-      total,
-      page: currentPage,
-      limit: currentLimit,
-      totalPages: Math.ceil(total / currentLimit),
-    };
-  }
-
   async updateAgency(
     id: string,
     updateData: Partial<CreateAgencyDto>,
@@ -205,11 +154,5 @@ export class AgencyService {
       info: ERROR_INFO.SUCCESS,
       message: 'Agency deleted successfully',
     };
-  }
-
-  private mapToResponseDto(agency: any): AgencyResponseDto {
-    const response = new AgencyResponseDto();
-    response.content = agency.toObject();
-    return response;
   }
 }

@@ -8,7 +8,6 @@ import { Model } from 'mongoose';
 import { ERROR_RES, ERROR_INFO } from '@common/constants/error.const';
 import { MessageResponse } from '@app-types/message.res';
 import { Role } from '@utils/role.enum';
-import { GetAllUsers } from './dto/get-all-users.res';
 import { QueryUserDto } from './dto/query-user.req';
 
 @Injectable()
@@ -81,25 +80,23 @@ export class UsersService {
     return response;
   }
 
-  async getAllUsers(): Promise<GetAllUsers> {
-    let response: GetAllUsers | null = null;
+  async searchUsers(query: QueryUserDto) {
     try {
-      const users = await this.userModel.find().exec();
-      response = {
+      const result = await this.userRepository.findAllWithFilters(query);
+
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Get all users successfully',
-        content: users,
+        message: 'Users fetched successfully',
+        ...result,
       };
-      return response;
     } catch (error: any) {
-      response = {
+      return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: `There is a problem while fetching all users: ${error.message}`,
+        message: `Error searching users: ${error.message}`,
       };
     }
-    return response;
   }
 
   async getUserById(id: string): Promise<UsersResponseDTO> {
@@ -131,55 +128,6 @@ export class UsersService {
       };
     }
     return response;
-  }
-
-  async searchUsers(query: QueryUserDto) {
-    try {
-      const result = await this.userRepository.findAllWithFilters(query);
-
-      return {
-        code: ERROR_RES.SUCCESS.statusCode,
-        info: ERROR_INFO.SUCCESS,
-        message: 'Users fetched successfully',
-        ...result,
-      };
-    } catch (error: any) {
-      return {
-        code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: ERROR_INFO.FAIL,
-        message: `Error searching users: ${error.message}`,
-      };
-    }
-  }
-
-  async searchUsersByName(keyword: string, page = 1, limit = 10) {
-    if (!keyword || !keyword.trim()) {
-      return {
-        data: [],
-        total: 0,
-        page,
-        limit,
-        totalPages: 0,
-      };
-    }
-
-    const currentPage = Number(page) || 1;
-    const currentLimit = Number(limit) || 10;
-    const skip = (currentPage - 1) * currentLimit;
-
-    const { data, total } = await this.userRepository.searchByName(
-      keyword.trim(),
-      skip,
-      currentLimit,
-    );
-
-    return {
-      data: data.map((user) => this.mapToResponseDto(user)),
-      total,
-      page: currentPage,
-      limit: currentLimit,
-      totalPages: Math.ceil(total / currentLimit),
-    };
   }
 
   async updateUser(
@@ -273,11 +221,5 @@ export class UsersService {
   async getUserStats(): Promise<{ totalUsers: number }> {
     const total = await this.userRepository.countAll();
     return { totalUsers: total };
-  }
-
-  private mapToResponseDto(user: any): UsersResponseDTO {
-    const response = new UsersResponseDTO();
-    response.content = user.toObject();
-    return response;
   }
 }

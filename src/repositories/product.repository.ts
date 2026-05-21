@@ -28,15 +28,6 @@ export class ProductRepository {
     }
   }
 
-  async findAll(): Promise<ProductDocument[]> {
-    try {
-      return await this.productModel.find().sort({ createdAt: -1 }).exec();
-    } catch (error: any) {
-      this.logger.error(`Error fetching products: ${error.message}`);
-      throw error;
-    }
-  }
-
   async findById(id: string): Promise<ProductDocument | null> {
     try {
       return await this.productModel.findById(id).exec();
@@ -121,39 +112,6 @@ export class ProductRepository {
       this.logger.error(
         `Error finding products with filters: ${error.message}`,
       );
-      throw error;
-    }
-  }
-
-  async searchByCode(
-    keyword: string,
-    skip = 0,
-    limit = 10,
-  ): Promise<{ data: ProductDocument[]; total: number }> {
-    try {
-      const safeKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-      const filter = {
-        inv_itemCode: {
-          $regex: safeKeyword,
-          $options: 'i',
-        },
-      };
-
-      const [data, total] = await Promise.all([
-        this.productModel
-          .find(filter)
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-
-        this.productModel.countDocuments(filter).exec(),
-      ]);
-
-      return { data, total };
-    } catch (error: any) {
-      this.logger.error(`Error searching agency by name: ${error.message}`);
       throw error;
     }
   }

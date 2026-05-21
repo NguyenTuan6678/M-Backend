@@ -158,7 +158,7 @@ export class MInvoiceReceiptPostService {
     };
   }
 
-  async createInvoice(
+  async processCreateInvoice(
     tax_code: string,
     saleTransactionId: string,
     inv_invoiceSeries: string,
@@ -191,9 +191,15 @@ export class MInvoiceReceiptPostService {
           inv_invoiceSeries: (transaction as any).inv_invoiceSeries,
           key_api: (transaction as any).key_api,
           inv_invoiceIssuedDate: (transaction as any).inv_invoiceIssuedDate,
+          invoiceStatus: (transaction as any).invoiceStatus,
         },
       };
     }
+
+    await this.saleTransactionRepository.update(saleTransactionId, {
+      invoiceStatus: InvoiceStatus.ISSUING,
+      isActive: true,
+    });
 
     const invoiceDto = mapTransactionToInvoice(transaction as any);
 
@@ -220,30 +226,41 @@ export class MInvoiceReceiptPostService {
 
     const url = `https://${tax_code}.${baseUrl}/api/InvoiceApi78/Save`;
 
-    const response = await this.callExternalApiWithRetry(() =>
-      firstValueFrom(
-        this.httpService.post(url, payload, {
-          timeout: 15000,
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }),
-      ),
-    );
+    let response: any;
+
+    try {
+      response = await this.callExternalApiWithRetry(() =>
+        firstValueFrom(
+          this.httpService.post(url, payload, {
+            timeout: 15000,
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }),
+        ),
+      );
+    } catch (error) {
+      try {
+        await this.saleTransactionRepository.update(saleTransactionId, {
+          invoiceStatus: InvoiceStatus.FAILED,
+        });
+      } catch (updateError) {
+        console.error('[UPDATE TRANSACTION FAILED STATUS ERROR]', updateError);
+      }
+
+      throw error;
+    }
 
     const responseData = response.data;
 
-    // Lưu lại thông tin hoá đơn sau khi tạo thành công
     if (responseData?.ok && responseData?.data) {
       const {
         inv_invoiceSeries: resSeries,
-        key_api: resKeyApi,
         id: resId,
         inv_invoiceIssuedDate: resIssuedDate,
       } = responseData.data;
 
-      // Lấy orderNumber từ transaction đã fetch trước đó
       const orderNumber = (transaction as any).orderNumber;
 
       const activationDate = new Date().toLocaleString('vi-VN', {
@@ -252,12 +269,18 @@ export class MInvoiceReceiptPostService {
 
       await this.saleTransactionRepository.update(saleTransactionId, {
         inv_invoiceSeries: resSeries,
-        key_api: resKeyApi,
+        key_api: saleTransactionId,
         inv_invoiceIssuedDate: resIssuedDate,
         inv_invoiceCreatedId: resId,
-        so_benh_an: orderNumber, // ← tự cập nhật sau khi API thành công
+        so_benh_an: orderNumber,
         activationDate,
         invoiceStatus: InvoiceStatus.ISSUED,
+        isActive: true,
+      });
+    } else {
+      await this.saleTransactionRepository.update(saleTransactionId, {
+        invoiceStatus: InvoiceStatus.FAILED,
+        isActive: true,
       });
     }
 

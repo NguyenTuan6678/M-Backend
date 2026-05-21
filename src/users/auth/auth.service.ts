@@ -138,7 +138,7 @@ export class AuthService {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
-          message: 'Invalid input',
+          message: 'Invalid input missing require: username or password',
           content: null,
         };
         return response;
@@ -159,7 +159,6 @@ export class AuthService {
       }
 
       const isMatch = await comparePassword(password, admin.password);
-      // this.logger.log(`Password match result: ${isMatch}`);
 
       if (!isMatch) {
         response = {
@@ -199,7 +198,6 @@ export class AuthService {
     userId: string,
   ): Promise<MessageResponse | null> {
     let response: MessageResponse | null = null;
-    // console.log('🚀 ~ AuthService ~ userId:', userId);
     try {
       const { new_password, old_password } = changePasswordDto;
       if (!new_password && !old_password) {

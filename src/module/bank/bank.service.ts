@@ -21,7 +21,6 @@ export class BankService {
     let response: MessageResponse | null = null;
     try {
       const { inv_buyerBankName } = createBankDto;
-      // console.log(createBankDto);
       if (!inv_buyerBankName) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
@@ -61,25 +60,23 @@ export class BankService {
     return response;
   }
 
-  async getAllBanks(): Promise<GetAllBanks> {
-    let response: GetAllBanks | null = null;
+  async searchBanks(query: QueryBankDto) {
     try {
-      const banks = await this.bankModel.find().exec();
-      response = {
+      const result = await this.bankRepository.findAllWithFilters(query);
+
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Get all banks successfully',
-        content: banks,
+        message: 'Banks fetched successfully',
+        ...result,
       };
-      return response;
     } catch (error: any) {
-      response = {
+      return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: `An error occurred while getting all banks: ${error.message}`,
+        message: `Error searching banks: ${error.message}`,
       };
     }
-    return response;
   }
 
   async getBankById(id: string): Promise<BankResponseDto | null> {
@@ -111,55 +108,6 @@ export class BankService {
       };
     }
     return response;
-  }
-
-  async searchBanks(query: QueryBankDto) {
-    try {
-      const result = await this.bankRepository.findAllWithFilters(query);
-
-      return {
-        code: ERROR_RES.SUCCESS.statusCode,
-        info: ERROR_INFO.SUCCESS,
-        message: 'Banks fetched successfully',
-        ...result,
-      };
-    } catch (error: any) {
-      return {
-        code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: ERROR_INFO.FAIL,
-        message: `Error searching banks: ${error.message}`,
-      };
-    }
-  }
-
-  async searchBanksByName(keyword: string, page = 1, limit = 10) {
-    if (!keyword || !keyword.trim()) {
-      return {
-        data: [],
-        total: 0,
-        page,
-        limit,
-        totalPages: 0,
-      };
-    }
-
-    const currentPage = Number(page) || 1;
-    const currentLimit = Number(limit) || 10;
-    const skip = (currentPage - 1) * currentLimit;
-
-    const { data, total } = await this.bankRepository.searchByName(
-      keyword.trim(),
-      skip,
-      currentLimit,
-    );
-
-    return {
-      data: data.map((agency) => this.mapToResponseDto(agency)),
-      total,
-      page: currentPage,
-      limit: currentLimit,
-      totalPages: Math.ceil(total / currentLimit),
-    };
   }
 
   async updateBank(
@@ -206,11 +154,5 @@ export class BankService {
       info: ERROR_INFO.SUCCESS,
       message: `Bank ${deletedBank.inv_buyerBankName} deleted successfully`,
     };
-  }
-
-  private mapToResponseDto(bank: any): BankResponseDto {
-    const response = new BankResponseDto();
-    response.content = bank.toObject();
-    return response;
   }
 }

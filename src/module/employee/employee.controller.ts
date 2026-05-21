@@ -56,20 +56,6 @@ export class EmployeeController {
     return await this.employeeService.getEmployeeById(id);
   }
 
-  // @Get('search-name/search')
-  // @ApiOperation({ summary: 'Search employees by name' })
-  // async searchEmployees(
-  //   @Query('keyword') keyword: string,
-  //   @Query('page') page = '1',
-  //   @Query('limit') limit = '10',
-  // ) {
-  //   return this.employeeService.searchEmployeesByName(
-  //     keyword,
-  //     Number(page),
-  //     Number(limit),
-  //   );
-  // }
-
   @Patch(':id')
   @ApiOperation({ summary: 'Updated employee by ID' })
   async update(

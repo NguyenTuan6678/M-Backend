@@ -160,39 +160,6 @@ export class EmployeeRepository {
     }
   }
 
-  async searchByName(
-    keyword: string,
-    skip = 0,
-    limit = 10,
-  ): Promise<{ data: EmployeeDocument[]; total: number }> {
-    try {
-      const safeKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-      const filter = {
-        employeeName: {
-          $regex: safeKeyword,
-          $options: 'i',
-        },
-      };
-
-      const [data, total] = await Promise.all([
-        this.employeeModel
-          .find(filter)
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-
-        this.employeeModel.countDocuments(filter).exec(),
-      ]);
-
-      return { data, total };
-    } catch (error: any) {
-      this.logger.error(`Error searching employee by name: ${error.message}`);
-      throw error;
-    }
-  }
-
   async update(
     id: string,
     updateData: Partial<CreateEmployeeDto>,

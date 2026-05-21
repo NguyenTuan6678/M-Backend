@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MInvoiceReceiptPostService } from './m-invoice-receipt-post.service';
 import { MInvoiceReceiptPostController } from './m-invoice-receipt-post.controller';
 import { HttpModule } from '@nestjs/axios';
@@ -9,6 +9,7 @@ import {
 } from '@schemas/sale-transaction.schema';
 import { SaleTransactionModule } from '@module/sale-transaction/sale-transaction.module';
 import { ReceiptInvoiceModule } from '@module/receiptinvoice/receiptinvoice.module';
+import { InvoiceIssueModule } from '@utils/invoice-issue/invoice-issue.module';
 
 @Module({
   imports: [
@@ -24,8 +25,10 @@ import { ReceiptInvoiceModule } from '@module/receiptinvoice/receiptinvoice.modu
     ]),
     SaleTransactionModule,
     ReceiptInvoiceModule,
+    forwardRef(() => InvoiceIssueModule),
   ],
   providers: [MInvoiceReceiptPostService],
   controllers: [MInvoiceReceiptPostController],
+  exports: [MInvoiceReceiptPostService],
 })
 export class MInvoiceReceiptPostModule {}

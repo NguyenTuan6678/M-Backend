@@ -37,15 +37,6 @@ export class ReceiptInvoiceRepository {
     }
   }
 
-  async findAll(): Promise<ReceiptInvoiceDocument[]> {
-    try {
-      return await this.receiptModel.find().sort({ createdAt: -1 }).exec();
-    } catch (error: any) {
-      this.logger.error(`Error fetching receiptinvoices: ${error.message}`);
-      throw error;
-    }
-  }
-
   async findById(id: string): Promise<ReceiptInvoiceDocument | null> {
     try {
       return await this.receiptModel.findById(id).exec();
@@ -64,39 +55,6 @@ export class ReceiptInvoiceRepository {
       this.logger.error(
         `Error finding receiptinvoice by tax_code: ${error.message}`,
       );
-      throw error;
-    }
-  }
-
-  async searchByName(
-    keyword: string,
-    skip = 0,
-    limit = 10,
-  ): Promise<{ data: ReceiptInvoiceDocument[]; total: number }> {
-    try {
-      const safeKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-      const filter = {
-        employeeName: {
-          $regex: safeKeyword,
-          $options: 'i',
-        },
-      };
-
-      const [data, total] = await Promise.all([
-        this.receiptModel
-          .find(filter)
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-
-        this.receiptModel.countDocuments(filter).exec(),
-      ]);
-
-      return { data, total };
-    } catch (error: any) {
-      this.logger.error(`Error searching employee by name: ${error.message}`);
       throw error;
     }
   }

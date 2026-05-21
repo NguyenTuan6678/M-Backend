@@ -66,20 +66,6 @@ export class UsersController {
     return await this.usersService.getUserById(id);
   }
 
-  // @Get('search-name/search')
-  // @ApiOperation({ summary: 'Search user by name' })
-  // async searchAgencies(
-  //   @Query('keyword') keyword: string,
-  //   @Query('page') page = '1',
-  //   @Query('limit') limit = '10',
-  // ) {
-  //   return this.usersService.searchUsersByName(
-  //     keyword,
-  //     Number(page),
-  //     Number(limit),
-  //   );
-  // }
-
   @Patch(':id')
   @ApiOperation({ summary: 'Update user by ID' })
   async update(

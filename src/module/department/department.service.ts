@@ -7,7 +7,6 @@ import { CreateDepartmentDto } from './dto/create-department.req';
 import { DepartmentResponseDto } from './dto/department.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
-import { GetAllDepartments } from './dto/get-all-department.res';
 import { QueryDepartmentDto } from './dto/query-department.req';
 
 @Injectable()
@@ -65,25 +64,23 @@ export class DepartmentService {
     return response;
   }
 
-  async getAllDepartments(): Promise<GetAllDepartments> {
-    let response: GetAllDepartments | null = null;
+  async searchDepartments(query: QueryDepartmentDto) {
     try {
-      const departments = await this.departmentRepository.findAll();
-      response = {
+      const result = await this.departmentRepository.findAllWithFilters(query);
+
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Get all departments successfully',
-        content: departments,
+        message: 'Departments fetched successfully',
+        ...result,
       };
-      return response;
     } catch (error: any) {
-      response = {
+      return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: `There is a problem while fetching all departments: ${error.message}`,
+        message: `Error searching departments: ${error.message}`,
       };
     }
-    return response;
   }
 
   async getDepartmentById(id: string): Promise<DepartmentResponseDto | null> {
@@ -115,55 +112,6 @@ export class DepartmentService {
       };
     }
     return response;
-  }
-
-  async searchDepartments(query: QueryDepartmentDto) {
-    try {
-      const result = await this.departmentRepository.findAllWithFilters(query);
-
-      return {
-        code: ERROR_RES.SUCCESS.statusCode,
-        info: ERROR_INFO.SUCCESS,
-        message: 'Departments fetched successfully',
-        ...result,
-      };
-    } catch (error: any) {
-      return {
-        code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: ERROR_INFO.FAIL,
-        message: `Error searching departments: ${error.message}`,
-      };
-    }
-  }
-
-  async searchDepartmentsByName(keyword: string, page = 1, limit = 10) {
-    if (!keyword || !keyword.trim()) {
-      return {
-        data: [],
-        total: 0,
-        page,
-        limit,
-        totalPages: 0,
-      };
-    }
-
-    const currentPage = Number(page) || 1;
-    const currentLimit = Number(limit) || 10;
-    const skip = (currentPage - 1) * currentLimit;
-
-    const { data, total } = await this.departmentRepository.searchByName(
-      keyword.trim(),
-      skip,
-      currentLimit,
-    );
-
-    return {
-      data: data.map((agency) => this.mapToResponseDto(agency)),
-      total,
-      page: currentPage,
-      limit: currentLimit,
-      totalPages: Math.ceil(total / currentLimit),
-    };
   }
 
   async updateDepartment(
@@ -215,11 +163,5 @@ export class DepartmentService {
       info: ERROR_INFO.SUCCESS,
       message: `Department ${deletedDepartment.departmentName} deleted successfully`,
     };
-  }
-
-  private mapToResponseDto(department: any): DepartmentResponseDto {
-    const response = new DepartmentResponseDto();
-    response.content = department.toObject();
-    return response;
   }
 }
