@@ -135,6 +135,15 @@ export class SaleTransactionController {
     );
   }
 
+  @Patch(':id/cancel-invoice')
+  @ApiOperation({
+    summary: 'Cancel sale transaction invoice',
+    description: 'Mark invoiceStatus as CANCELLED and set isActive to false.',
+  })
+  async cancelSaleTransactionInvoice(@Param('id') id: string) {
+    return await this.saleTransactionService.cancelSaleTransactionInvoice(id);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a sale transaction' })
   async deleteSaleTransaction(

@@ -58,6 +58,25 @@ export class AgencyService {
     }
   }
 
+  async searchAgencies(query: QueryAgencyDto) {
+    try {
+      const result = await this.agencyRepository.findAllWithFilters(query);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Agencies fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error searching agencies: ${error.message}`,
+      };
+    }
+  }
+
   async getAgencyById(id: string): Promise<AgencyResponseDto | null> {
     let response: AgencyResponseDto | null = null;
     try {
@@ -87,25 +106,6 @@ export class AgencyService {
       };
     }
     return response;
-  }
-
-  async searchAgencies(query: QueryAgencyDto) {
-    try {
-      const result = await this.agencyRepository.findAllWithFilters(query);
-
-      return {
-        code: ERROR_RES.SUCCESS.statusCode,
-        info: ERROR_INFO.SUCCESS,
-        message: 'Agencies fetched successfully',
-        ...result,
-      };
-    } catch (error: any) {
-      return {
-        code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: ERROR_INFO.FAIL,
-        message: `Error searching agencies: ${error.message}`,
-      };
-    }
   }
 
   async updateAgency(

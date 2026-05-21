@@ -28,21 +28,6 @@ export class ProductRepository {
     }
   }
 
-  async findById(id: string): Promise<ProductDocument | null> {
-    try {
-      return await this.productModel.findById(id).exec();
-    } catch (error: any) {
-      this.logger.error(`Error finding product by ID: ${error.message}`);
-      throw error;
-    }
-  }
-
-  async findByIds(ids: string[]) {
-    return this.productModel.find({
-      _id: { $in: ids },
-    });
-  }
-
   async findAllWithFilters(query: QueryProductDto): Promise<{
     data: ProductDocument[];
     total: number;
@@ -114,6 +99,21 @@ export class ProductRepository {
       );
       throw error;
     }
+  }
+
+  async findById(id: string): Promise<ProductDocument | null> {
+    try {
+      return await this.productModel.findById(id).exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding product by ID: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findByIds(ids: string[]) {
+    return this.productModel.find({
+      _id: { $in: ids },
+    });
   }
 
   async update(

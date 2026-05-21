@@ -28,18 +28,6 @@ export class BankRepository {
     }
   }
 
-  async findById(id: string): Promise<BankDocument | null> {
-    try {
-      return await this.bankModel
-        .findById(id)
-        .populate('inv_buyerBankName')
-        .exec();
-    } catch (error: any) {
-      this.logger.error(`Error finding bank by ID: ${error.message}`);
-      throw error;
-    }
-  }
-
   async findAllWithFilters(query: QueryBankDto): Promise<{
     data: BankDocument[];
     total: number;
@@ -93,6 +81,18 @@ export class BankRepository {
       };
     } catch (error: any) {
       this.logger.error(`Error finding banks with filters: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findById(id: string): Promise<BankDocument | null> {
+    try {
+      return await this.bankModel
+        .findById(id)
+        .populate('inv_buyerBankName')
+        .exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding bank by ID: ${error.message}`);
       throw error;
     }
   }

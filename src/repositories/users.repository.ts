@@ -25,24 +25,6 @@ export class UsersRepository {
     }
   }
 
-  async findById(id: string): Promise<UserDocument | null> {
-    try {
-      return await this.userModel.findById(id).exec();
-    } catch (error: any) {
-      this.logger.error(`Error finding user by ID: ${error.message}`);
-      throw error;
-    }
-  }
-
-  async findByUsername(username: string): Promise<UserDocument | null> {
-    try {
-      return await this.userModel.findOne({ username }).exec();
-    } catch (error: any) {
-      this.logger.error(`Error finding user by username: ${error.message}`);
-      throw error;
-    }
-  }
-
   async findAllWithFilters(query: QueryUserDto): Promise<{
     data: UserDocument[];
     total: number;
@@ -101,6 +83,24 @@ export class UsersRepository {
       };
     } catch (error: any) {
       this.logger.error(`Error finding users with filters: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findById(id: string): Promise<UserDocument | null> {
+    try {
+      return await this.userModel.findById(id).exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding user by ID: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findByUsername(username: string): Promise<UserDocument | null> {
+    try {
+      return await this.userModel.findOne({ username }).exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding user by username: ${error.message}`);
       throw error;
     }
   }

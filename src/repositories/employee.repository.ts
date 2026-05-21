@@ -65,39 +65,6 @@ export class EmployeeRepository {
     }
   }
 
-  async findAll(): Promise<EmployeeDocument[]> {
-    try {
-      return await this.employeeModel
-        .find()
-        .populate(POPULATE_OPTIONS)
-        .sort({ createdAt: -1 })
-        .exec();
-    } catch (error: any) {
-      this.logger.error(`Error fetching employees: ${error.message}`);
-      throw error;
-    }
-  }
-
-  async findById(id: string): Promise<EmployeeDocument | null> {
-    try {
-      if (!Types.ObjectId.isValid(id)) {
-        this.logger.error(`Invalid ObjectId: ${id}`, 'DepartmentRepository');
-        return null;
-      }
-
-      return await this.employeeModel
-        .findById(id)
-        .populate(POPULATE_OPTIONS)
-        .exec();
-    } catch (error: any) {
-      this.logger.error(
-        `Error finding sale transaction with employee: ${error.message}`,
-        'SaleTransactionRepository',
-      );
-      throw error;
-    }
-  }
-
   async findAllWithFilters(query: QueryEmployeeDto): Promise<{
     data: EmployeeDocument[];
     total: number;
@@ -155,6 +122,26 @@ export class EmployeeRepository {
     } catch (error: any) {
       this.logger.error(
         `Error finding employees with filters: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  async findById(id: string): Promise<EmployeeDocument | null> {
+    try {
+      if (!Types.ObjectId.isValid(id)) {
+        this.logger.error(`Invalid ObjectId: ${id}`, 'DepartmentRepository');
+        return null;
+      }
+
+      return await this.employeeModel
+        .findById(id)
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transaction with employee: ${error.message}`,
+        'SaleTransactionRepository',
       );
       throw error;
     }

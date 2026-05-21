@@ -65,22 +65,6 @@ export class AgencyRepository {
     }
   }
 
-  async findById(id: string): Promise<AgencyDocument | null> {
-    try {
-      if (!Types.ObjectId.isValid(id)) {
-        return null;
-      }
-
-      return await this.agencyModel
-        .findById(id)
-        .populate(POPULATE_OPTIONS)
-        .exec();
-    } catch (error: any) {
-      this.logger.error(`Error finding agency by ID: ${error.message}`);
-      throw error;
-    }
-  }
-
   async findAllWithFilters(query: QueryAgencyDto): Promise<{
     data: AgencyDocument[];
     total: number;
@@ -138,6 +122,22 @@ export class AgencyRepository {
       this.logger.error(
         `Error finding agencies with filters: ${error.message}`,
       );
+      throw error;
+    }
+  }
+
+  async findById(id: string): Promise<AgencyDocument | null> {
+    try {
+      if (!Types.ObjectId.isValid(id)) {
+        return null;
+      }
+
+      return await this.agencyModel
+        .findById(id)
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding agency by ID: ${error.message}`);
       throw error;
     }
   }

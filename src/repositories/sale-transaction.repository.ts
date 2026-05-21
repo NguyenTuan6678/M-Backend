@@ -200,9 +200,6 @@ export class SaleTransactionRepository {
         ];
       }
 
-      // console.log('QUERY:', query);
-      // console.log('FILTER:', filter);
-
       const [data, total] = await Promise.all([
         this.saleTransactionModel
           .find(filter)
@@ -214,20 +211,6 @@ export class SaleTransactionRepository {
 
         this.saleTransactionModel.countDocuments(filter).exec(),
       ]);
-
-      // console.log(
-      //   'MODEL COLLECTION:',
-      //   this.saleTransactionModel.collection.name,
-      // );
-      // console.log(
-      //   'COUNT ALL:',
-      //   await this.saleTransactionModel.countDocuments(),
-      // );
-
-      console.log('QUERY:', query);
-      console.log('IS ACTIVE:', query.isActive);
-      console.log('IS ACTIVE TYPE:', typeof query.isActive);
-      console.log('FILTER:', filter);
 
       return {
         data,
@@ -251,22 +234,6 @@ export class SaleTransactionRepository {
     } catch (error: any) {
       this.logger.error(
         `Error finding sale transaction by ID: ${error.message}`,
-        'SaleTransactionRepository',
-      );
-      throw error;
-    }
-  }
-
-  async findAllWithPopulate(): Promise<SalesTransactionDocument[]> {
-    try {
-      return await this.saleTransactionModel
-        .find()
-        .populate(POPULATE_OPTIONS)
-        .sort({ createdAt: -1 })
-        .exec();
-    } catch (error: any) {
-      this.logger.error(
-        `Error finding sale transactions with populate: ${error.message}`,
         'SaleTransactionRepository',
       );
       throw error;
@@ -306,31 +273,6 @@ export class SaleTransactionRepository {
     } catch (error: any) {
       this.logger.error(
         `Error finding sale transaction by inv_invoiceCreatedId: ${error.message}`,
-        'SaleTransactionRepository',
-      );
-      throw error;
-    }
-  }
-
-  async findAllWithPopulatePaginated(
-    skip = 0,
-    limit = 10,
-  ): Promise<{ data: SalesTransactionDocument[]; total: number }> {
-    try {
-      const [data, total] = await Promise.all([
-        this.saleTransactionModel
-          .find()
-          .skip(skip)
-          .limit(limit)
-          .populate(POPULATE_OPTIONS)
-          .sort({ createdAt: -1 })
-          .exec(),
-        this.saleTransactionModel.countDocuments().exec(),
-      ]);
-      return { data, total };
-    } catch (error: any) {
-      this.logger.error(
-        `Error finding sale transactions paginated with populate: ${error.message}`,
         'SaleTransactionRepository',
       );
       throw error;

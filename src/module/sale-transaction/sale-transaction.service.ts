@@ -305,6 +305,46 @@ export class SaleTransactionService {
     }
   }
 
+  async cancelSaleTransactionInvoice(
+    id: string,
+  ): Promise<SaleTransactionResponseDTO> {
+    try {
+      const transaction = await this.saleTransactionRepository.findById(id);
+
+      if (!transaction) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Sale transaction with ID ${id} not found`,
+        };
+      }
+
+      const updatedTransaction =
+        await this.saleTransactionRepository.markInvoiceCanceled(id);
+
+      if (!updatedTransaction) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Sale transaction with ID ${id} not found`,
+        };
+      }
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Invoice canceled successfully',
+        content: updatedTransaction,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `An error occurred while canceling invoice: ${error.message}`,
+      };
+    }
+  }
+
   async deleteSaleTransaction(id: string): Promise<MessageResponse> {
     const deletedTransaction = await this.saleTransactionRepository.delete(id);
     if (!deletedTransaction) {
@@ -350,13 +390,5 @@ export class SaleTransactionService {
     }
 
     return undefined;
-  }
-
-  private mapToResponseDto(transaction: any): SaleTransactionResponseDTO {
-    const response = new SaleTransactionResponseDTO();
-    response.content = transaction.toObject
-      ? transaction.toObject()
-      : transaction;
-    return response;
   }
 }

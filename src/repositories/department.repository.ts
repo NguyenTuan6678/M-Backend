@@ -56,15 +56,6 @@ export class DepartmentRepository {
     }
   }
 
-  async findById(id: string): Promise<DepartmentDocument | null> {
-    try {
-      return await this.departmentModel.findById(id).exec();
-    } catch (error: any) {
-      this.logger.error(`Error finding department by ID: ${error.message}`);
-      throw error;
-    }
-  }
-
   async findAllWithFilters(query: QueryDepartmentDto): Promise<{
     data: DepartmentDocument[];
     total: number;
@@ -117,6 +108,15 @@ export class DepartmentRepository {
       this.logger.error(
         `Error finding departments with filters: ${error.message}`,
       );
+      throw error;
+    }
+  }
+
+  async findById(id: string): Promise<DepartmentDocument | null> {
+    try {
+      return await this.departmentModel.findById(id).exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding department by ID: ${error.message}`);
       throw error;
     }
   }
