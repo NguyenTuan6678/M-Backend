@@ -4,19 +4,24 @@ import { InvoiceQueueService } from './invoice-queue.service';
 import { InvoiceProcessor } from './invoice.processor';
 import { MInvoiceReceiptPostModule } from '../m-invoice-receipt-post/m-invoice-receipt-post.module';
 
+const queueEnabled = process.env.QUEUE_ENABLED === 'true';
 @Module({
   imports: [
-    BullModule.registerQueue({
-      name: 'invoice',
-      connection: {
-        host: process.env.REDIS_HOST || '127.0.0.1',
-        port: Number(process.env.REDIS_PORT) || 6379,
-        password: process.env.REDIS_PASSWORD || undefined,
-      },
-    }),
+    ...(queueEnabled
+      ? [
+          BullModule.registerQueue({
+            name: 'invoice',
+            connection: {
+              host: process.env.REDIS_HOST || '127.0.0.1',
+              port: Number(process.env.REDIS_PORT) || 6379,
+              password: process.env.REDIS_PASSWORD || undefined,
+            },
+          }),
+        ]
+      : []),
     forwardRef(() => MInvoiceReceiptPostModule),
   ],
-  providers: [InvoiceQueueService, InvoiceProcessor],
-  exports: [InvoiceQueueService],
+  providers: [...(queueEnabled ? [InvoiceQueueService, InvoiceProcessor] : [])],
+  exports: [...(queueEnabled ? [InvoiceQueueService] : [])],
 })
 export class InvoiceQueueModule {}

@@ -15,7 +15,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { CreateInvoiceFromTransactionDto } from './dto/send-receipt.req';
-import { InvoiceIssueService } from '@utils/invoice-issue/invoice-issue.service';
+// import { InvoiceIssueService } from '@utils/invoice-issue/invoice-issue.service';
 import { MInvoiceReceiptPostService } from './m-invoice-receipt-post.service';
 
 @ApiTags('M-Invoice Receipt Post')
@@ -24,7 +24,7 @@ import { MInvoiceReceiptPostService } from './m-invoice-receipt-post.service';
 @ApiBearerAuth('authorization')
 export class MInvoiceReceiptPostController {
   constructor(
-    private readonly invoiceIssueService: InvoiceIssueService,
+    // private readonly invoiceIssueService: InvoiceIssueService,
     private readonly mInvoiceReceiptPostService: MInvoiceReceiptPostService,
   ) {}
 
@@ -64,41 +64,41 @@ export class MInvoiceReceiptPostController {
     );
   }
 
-  @Post('with-redis')
-  @ApiQuery({
-    name: 'tax_code',
-    required: true,
-    example: '0106026495-999',
-    description: 'Tax code used to build M-Invoice API URL',
-  })
-  async createInvoiceWithRedis(
-    @Query('tax_code') tax_code: string,
-    @Body(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    )
-    body: CreateInvoiceFromTransactionDto,
-  ) {
-    if (!tax_code) {
-      throw new BadRequestException('tax_code is required');
-    }
+  // @Post('with-redis')
+  // @ApiQuery({
+  //   name: 'tax_code',
+  //   required: true,
+  //   example: '0106026495-999',
+  //   description: 'Tax code used to build M-Invoice API URL',
+  // })
+  // async createInvoiceWithRedis(
+  //   @Query('tax_code') tax_code: string,
+  //   @Body(
+  //     new ValidationPipe({
+  //       whitelist: true,
+  //       forbidNonWhitelisted: true,
+  //       transform: true,
+  //     }),
+  //   )
+  //   body: CreateInvoiceFromTransactionDto,
+  // ) {
+  //   if (!tax_code) {
+  //     throw new BadRequestException('tax_code is required');
+  //   }
 
-    console.log('[CREATE INVOICE CONTROLLER]', {
-      tax_code,
-      body,
-    });
+  //   console.log('[CREATE INVOICE CONTROLLER]', {
+  //     tax_code,
+  //     body,
+  //   });
 
-    return await this.invoiceIssueService.enqueueIssueInvoice(
-      body.saleTransactionId,
-      {
-        tax_code,
-        inv_invoiceSeries: body.inv_invoiceSeries,
-        inv_invoiceIssuedDate: body.inv_invoiceIssuedDate,
-        editmode: body.editmode,
-      },
-    );
-  }
+  //   return await this.invoiceIssueService.enqueueIssueInvoice(
+  //     body.saleTransactionId,
+  //     {
+  //       tax_code,
+  //       inv_invoiceSeries: body.inv_invoiceSeries,
+  //       inv_invoiceIssuedDate: body.inv_invoiceIssuedDate,
+  //       editmode: body.editmode,
+  //     },
+  //   );
+  // }
 }

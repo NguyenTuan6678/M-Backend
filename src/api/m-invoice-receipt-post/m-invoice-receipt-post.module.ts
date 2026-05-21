@@ -9,7 +9,7 @@ import {
 } from '@schemas/sale-transaction.schema';
 import { SaleTransactionModule } from '@module/sale-transaction/sale-transaction.module';
 import { ReceiptInvoiceModule } from '@module/receiptinvoice/receiptinvoice.module';
-import { InvoiceIssueModule } from '@utils/invoice-issue/invoice-issue.module';
+// import { InvoiceIssueModule } from '@utils/invoice-issue/invoice-issue.module';
 
 @Module({
   imports: [
@@ -25,7 +25,7 @@ import { InvoiceIssueModule } from '@utils/invoice-issue/invoice-issue.module';
     ]),
     SaleTransactionModule,
     ReceiptInvoiceModule,
-    forwardRef(() => InvoiceIssueModule),
+    // forwardRef(() => InvoiceIssueModule),
   ],
   providers: [MInvoiceReceiptPostService],
   controllers: [MInvoiceReceiptPostController],

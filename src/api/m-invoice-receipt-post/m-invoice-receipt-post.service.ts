@@ -95,9 +95,10 @@ export class MInvoiceReceiptPostService {
 
   private calculateItemFields(item: InvoiceItemDataDto) {
     const price = item.price;
-    const quantity = item.inv_quantity || 1;
-    console.log('quantity', quantity);
-    const discount = item.inv_discountAmount;
+    const quantity = item.inv_quantity ?? 1;
+    // console.log('quantity', quantity);
+    const discount = item.inv_discountAmount ?? 0;
+
     const discountPercentage =
       item.inv_discountPercentage ||
       item.inv_discountAmount / (price * quantity) ||
@@ -107,10 +108,11 @@ export class MInvoiceReceiptPostService {
     const totalPrice = price * quantity - discount;
     const totalAmountWithVat = totalPrice / (1 + tax);
     const vatAmount = totalPrice - totalAmountWithVat;
+
     const totalBeforeDiscount = totalAmountWithVat / (1 - discountPercentage);
     const unitPrice = totalBeforeDiscount / quantity;
 
-    console.log('item1', item);
+    // console.log('item1', item);
 
     return {
       ...item,
@@ -125,7 +127,7 @@ export class MInvoiceReceiptPostService {
   }
 
   private buildPayload(dto: CreateInvoiceDto): CreateInvoiceDto {
-    console.log('item', dto);
+    // console.log('item', dto);
     return {
       ...dto,
       data: dto.data.map((invoiceData) => {
@@ -223,6 +225,8 @@ export class MInvoiceReceiptPostService {
     }));
 
     const builtPayload = this.buildPayload(invoiceDto);
+
+    // console.log('AFTER BUILD PAYLOAD:', JSON.stringify(builtPayload, null, 2));
 
     const payload = {
       editmode: editmode ?? 1,
