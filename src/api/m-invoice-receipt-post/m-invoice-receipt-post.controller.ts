@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Post,
@@ -6,9 +7,8 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
-import { MInvoiceReceiptPostService } from './m-invoice-receipt-post.service';
 import { CreateInvoiceFromTransactionDto } from './dto/send-receipt.req';
 import { InvoiceIssueService } from '@utils/invoice-issue/invoice-issue.service';
 
@@ -17,9 +17,15 @@ import { InvoiceIssueService } from '@utils/invoice-issue/invoice-issue.service'
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('authorization')
 export class MInvoiceReceiptPostController {
-  constructor(private invoiceIssueService: InvoiceIssueService) {}
+  constructor(private readonly invoiceIssueService: InvoiceIssueService) {}
 
   @Post()
+  @ApiQuery({
+    name: 'tax_code',
+    required: true,
+    example: '0106026495-999',
+    description: 'Tax code used to build M-Invoice API URL',
+  })
   async createInvoice(
     @Query('tax_code') tax_code: string,
     @Body(
@@ -31,7 +37,16 @@ export class MInvoiceReceiptPostController {
     )
     body: CreateInvoiceFromTransactionDto,
   ) {
-    return this.invoiceIssueService.enqueueIssueInvoice(
+    if (!tax_code) {
+      throw new BadRequestException('tax_code is required');
+    }
+
+    console.log('[CREATE INVOICE CONTROLLER]', {
+      tax_code,
+      body,
+    });
+
+    return await this.invoiceIssueService.enqueueIssueInvoice(
       body.saleTransactionId,
       {
         tax_code,

@@ -16,6 +16,9 @@ export class InvoiceProcessor extends WorkerHost {
   }
 
   async process(job: Job<IssueInvoiceJob>): Promise<any> {
+    console.log('[INVOICE PROCESSOR INIT]');
+    console.log('[INVOICE JOB START]', job.id, job.name, job.data);
+
     if (job.name !== 'issue-invoice') {
       return;
     }
@@ -28,12 +31,21 @@ export class InvoiceProcessor extends WorkerHost {
       editmode,
     } = job.data;
 
-    return await this.mInvoiceReceiptPostService.processCreateInvoice(
-      tax_code,
-      saleTransactionId,
-      inv_invoiceSeries,
-      inv_invoiceIssuedDate,
-      editmode,
-    );
+    try {
+      const result = await this.mInvoiceReceiptPostService.processCreateInvoice(
+        tax_code,
+        saleTransactionId,
+        inv_invoiceSeries,
+        inv_invoiceIssuedDate,
+        editmode,
+      );
+
+      console.log('[INVOICE JOB DONE]', job.id, result);
+
+      return result;
+    } catch (error) {
+      console.error('[INVOICE JOB FAILED]', job.id, error);
+      throw error;
+    }
   }
 }
