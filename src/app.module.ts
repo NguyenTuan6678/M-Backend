@@ -18,9 +18,17 @@ import { MInvoiceReceiptGetModule } from './api/m-invoice-receipt-get/m-invoice-
 import { MInvoiceReceiptPostModule } from './api/m-invoice-receipt-post/m-invoice-receipt-post.module';
 import { ReceiptInvoiceModule } from '@module/receiptinvoice/receiptinvoice.module';
 import { ViewMInvoiceReceiptModule } from './api/m-invoice-receipt-get-view/m-invoice-receipt-get-view.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number(process.env.REDIS_PORT) || 6379,
+        password: process.env.REDIS_PASSWORD || undefined,
+      },
+    }),
     CacheModule.register({ ttl: 5000, isGlobal: true }),
     ConfigModule.forRoot({
       load: [configuration],
