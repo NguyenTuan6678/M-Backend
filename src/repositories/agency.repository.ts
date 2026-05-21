@@ -38,7 +38,7 @@ export class AgencyRepository {
         upsert: true,
       },
     );
-    return `AG${String(counter.seq).padStart(4, '0')}`;
+    return `DL${String(counter.seq).padStart(4, '0')}`;
   }
 
   async create(createAgencyDto: CreateAgencyDto): Promise<AgencyDocument> {
