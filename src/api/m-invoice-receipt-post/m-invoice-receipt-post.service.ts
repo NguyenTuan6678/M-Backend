@@ -158,7 +158,7 @@ export class MInvoiceReceiptPostService {
     };
   }
 
-  async createInvoice(
+  async processCreateInvoice(
     tax_code: string,
     saleTransactionId: string,
     inv_invoiceSeries: string,

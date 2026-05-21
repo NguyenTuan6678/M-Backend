@@ -1,27 +1,44 @@
-import { Body, Controller, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Query,
+  UseGuards,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { MInvoiceReceiptPostService } from './m-invoice-receipt-post.service';
 import { CreateInvoiceFromTransactionDto } from './dto/send-receipt.req';
+import { InvoiceIssueService } from '@utils/invoice-issue/invoice-issue.service';
 
 @ApiTags('M-Invoice Receipt Post')
 @Controller('m-invoice-receipt-post')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('authorization')
 export class MInvoiceReceiptPostController {
-  constructor(private receiptPostService: MInvoiceReceiptPostService) {}
+  constructor(private invoiceIssueService: InvoiceIssueService) {}
 
   @Post()
   async createInvoice(
     @Query('tax_code') tax_code: string,
-    @Body() body: CreateInvoiceFromTransactionDto,
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    )
+    body: CreateInvoiceFromTransactionDto,
   ) {
-    return this.receiptPostService.createInvoice(
-      tax_code,
+    return this.invoiceIssueService.enqueueIssueInvoice(
       body.saleTransactionId,
-      body.inv_invoiceSeries,
-      body.inv_invoiceIssuedDate,
-      body.editmode,
+      {
+        tax_code,
+        inv_invoiceSeries: body.inv_invoiceSeries,
+        inv_invoiceIssuedDate: body.inv_invoiceIssuedDate,
+        editmode: body.editmode,
+      },
     );
   }
 }
