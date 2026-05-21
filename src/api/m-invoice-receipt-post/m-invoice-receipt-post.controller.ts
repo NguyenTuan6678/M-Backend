@@ -28,7 +28,7 @@ export class MInvoiceReceiptPostController {
     private readonly mInvoiceReceiptPostService: MInvoiceReceiptPostService,
   ) {}
 
-  @Post()
+  @Post('without-redis')
   @ApiOperation({
     summary: 'Create invoice from sale transaction',
     description:
@@ -64,7 +64,7 @@ export class MInvoiceReceiptPostController {
     );
   }
 
-  @Post()
+  @Post('with-redis')
   @ApiQuery({
     name: 'tax_code',
     required: true,
