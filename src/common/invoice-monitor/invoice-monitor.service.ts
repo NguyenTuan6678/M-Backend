@@ -12,7 +12,7 @@ export class InvoiceMonitorService {
     private readonly alertService: AlertService,
   ) {}
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async monitorInvoices() {
     this.logger.log('[INVOICE MONITOR] Start checking invoice health');
 
