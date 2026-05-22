@@ -21,9 +21,9 @@ export class ProductService {
   ): Promise<ProductResponseDto> {
     let response: MessageResponse | null = null;
     try {
-      const { inv_itemCode, ma_thue } = createProductDto;
+      const { ma_thue } = createProductDto;
 
-      if (!inv_itemCode || !ma_thue) {
+      if (!ma_thue) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
@@ -31,16 +31,16 @@ export class ProductService {
         };
       }
 
-      const duplicatedProduct = await this.productModel.findOne({
-        inv_itemCode,
-      });
-      if (duplicatedProduct) {
-        response = {
-          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: ERROR_INFO.FAIL,
-          message: `Product with code ${inv_itemCode} already exists`,
-        };
-      }
+      // const duplicatedProduct = await this.productModel.findOne({
+      //   inv_itemCode,
+      // });
+      // if (duplicatedProduct) {
+      //   response = {
+      //     code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+      //     info: ERROR_INFO.FAIL,
+      //     message: `Product with code ${inv_itemCode} already exists`,
+      //   };
+      // }
 
       const newProduct = await this.productRepository.create(createProductDto);
 
