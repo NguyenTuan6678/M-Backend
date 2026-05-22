@@ -26,7 +26,7 @@ export class DepartmentRepository {
         upsert: true,
       },
     );
-    return `DP${String(counter.seq).padStart(4, '0')}`;
+    return `PB${String(counter.seq).padStart(4, '0')}`;
   }
 
   async create(

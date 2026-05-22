@@ -32,7 +32,7 @@ export class EmployeeRepository {
         upsert: true,
       },
     );
-    return `EN${String(counter.seq).padStart(4, '0')}`;
+    return `NV${String(counter.seq).padStart(4, '0')}`;
   }
 
   async create(

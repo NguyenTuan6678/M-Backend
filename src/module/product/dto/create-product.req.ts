@@ -3,11 +3,6 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateProductDto {
-  @ApiProperty({ example: 'HH001' })
-  @IsString()
-  @IsNotEmpty()
-  inv_itemCode: string;
-
   @ApiPropertyOptional({ example: 'Hang hoa 001' })
   @IsString()
   @IsOptional()

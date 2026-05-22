@@ -5,23 +5,58 @@ import { CreateProductDto } from '../module/product/dto/create-product.req';
 import { Product, ProductDocument } from '@schemas/product.schema';
 import { Model } from 'mongoose';
 import { QueryProductDto } from '@module/product/dto/query-product.req';
+import { Counter, CounterDocument } from '@schemas/counter.schema';
 
 @Injectable()
 export class ProductRepository {
   constructor(
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
     private logger: LoggerService,
+    @InjectModel(Counter.name)
+    private readonly counterModel: Model<CounterDocument>,
   ) {}
+
+  private async generateProductNumber(): Promise<string> {
+    const counter = await this.counterModel.findOneAndUpdate(
+      { name: 'inv_itemCode' },
+      { $inc: { seq: 1 } },
+      {
+        returnDocument: 'after',
+        upsert: true,
+      },
+    );
+    return `SP${String(counter.seq).padStart(4, '0')}`;
+  }
 
   async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
     try {
-      const newProduct = new this.productModel(createProductDto);
-      const savedProduct = await newProduct.save();
+      const {
+        inv_itemName,
+        inv_unitCode,
+        inv_unitPrice,
+        ma_thue,
+        inv_quantity,
+        inv_discountAmount,
+      } = createProductDto;
+      const inv_itemCode = await this.generateProductNumber();
+
+      const dataSubmit = {
+        ...createProductDto,
+        inv_itemCode,
+        inv_itemName,
+        inv_unitCode,
+        inv_unitPrice,
+        ma_thue,
+        inv_quantity,
+        inv_discountAmount,
+      };
+
+      const newProduct = new this.productModel(dataSubmit);
       this.logger.log(
-        `Product created: ${savedProduct.inv_itemCode}`,
+        `Product created: ${newProduct.inv_itemName}`,
         'ProductRepository',
       );
-      return savedProduct;
+      return await newProduct.save();
     } catch (error: any) {
       this.logger.error(`Error creating product: ${error.message}`, undefined);
       throw error;

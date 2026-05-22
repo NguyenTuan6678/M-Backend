@@ -136,7 +136,7 @@ export class CreateInvoiceFromTransactionDto {
   inv_invoiceSeries: string;
 
   @ApiPropertyOptional({
-    example: '2026-01-15',
+    example: '',
     description: 'Invoice Issued Date',
   })
   @IsOptional()

@@ -30,6 +30,7 @@ type CreateSalesTransactionPayload = Omit<
   employeeId?: string;
   departmentId?: string;
 };
+
 const POPULATE_OPTIONS = [
   {
     path: 'agencyId',

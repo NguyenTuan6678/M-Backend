@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
 import { InvoiceQueueService } from '../../api/queues/invoice-queue.service';
 import { InvoiceStatus } from '@utils/transaction-status';
+import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 
 @Injectable()
 export class InvoiceIssueService {
@@ -24,16 +25,16 @@ export class InvoiceIssueService {
 
     if (!transaction) {
       return {
-        code: 404,
-        info: 'FAIL',
+        code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
         message: 'Sale transaction not found',
       };
     }
 
     if ((transaction as any).inv_invoiceCreatedId) {
       return {
-        code: 200,
-        info: 'SUCCESS',
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
         message: 'Invoice already issued',
         content: transaction,
       };
@@ -46,8 +47,8 @@ export class InvoiceIssueService {
 
       if (now - updatedAt < timeoutMs) {
         return {
-          code: 202,
-          info: 'PROCESSING',
+          code: ERROR_RES.ACCEPTED.statusCode,
+          info: ERROR_INFO.PROCESSING,
           message: 'Invoice is already being issued',
           content: transaction,
         };
@@ -74,8 +75,8 @@ export class InvoiceIssueService {
       });
 
       return {
-        code: 202,
-        info: 'PROCESSING',
+        code: ERROR_RES.ACCEPTED.statusCode,
+        info: ERROR_INFO.PROCESSING,
         message: 'Invoice issue job has been queued',
         jobId: job.id,
         saleTransactionId,
@@ -87,8 +88,8 @@ export class InvoiceIssueService {
       });
 
       return {
-        code: 500,
-        info: 'FAIL',
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
         message: `Failed to queue invoice job: ${error.message}`,
       };
     }

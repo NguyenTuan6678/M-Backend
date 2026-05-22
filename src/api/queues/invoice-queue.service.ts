@@ -25,7 +25,6 @@ export class InvoiceQueueService {
         age: 60 * 60 * 24 * 7,
       },
 
-      // Tạm thời dùng Date.now để tránh duplicate jobId khi debug
       jobId: `issue-invoice:${data.saleTransactionId}:${Date.now()}`,
     });
 
