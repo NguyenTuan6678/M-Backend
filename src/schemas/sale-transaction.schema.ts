@@ -144,6 +144,9 @@ export class SalesTransaction {
   })
   invoiceStatus: InvoiceStatus;
 
+  @Prop({ default: false })
+  isPaid: boolean;
+
   @Prop({ default: true })
   isActive: boolean;
 }
