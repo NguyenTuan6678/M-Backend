@@ -131,6 +131,10 @@ export class MInvoiceReceiptPostService {
 
         const allItems = calculatedDetails.flatMap((detail) => detail.data);
 
+        const inv_quantity = allItems.reduce(
+          (sum, item) => sum + (item.inv_quantity ?? 0),
+          0,
+        );
         const inv_discountAmount = allItems.reduce(
           (sum, item) => sum + (item.inv_discountAmount ?? 0),
           0,
@@ -150,6 +154,7 @@ export class MInvoiceReceiptPostService {
 
         return {
           ...invoiceData,
+          inv_quantity,
           inv_discountAmount,
           inv_TotalAmountWithoutVat,
           inv_vatAmount,

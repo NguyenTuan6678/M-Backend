@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+// import { InjectModel } from '@nestjs/mongoose';
+// import { Model } from 'mongoose';
 import { ProductRepository } from '@repositories/product.repository';
-import { Product, ProductDocument } from '@schemas/product.schema';
+import { ProductDocument } from '@schemas/product.schema';
 import { CreateProductDto } from './dto/create-product.req';
 import { ProductResponseDto } from './dto/product.res';
 import { MessageResponse } from '@app-types/message.res';
@@ -12,7 +12,7 @@ import { QueryProductDto } from './dto/query-product.req';
 @Injectable()
 export class ProductService {
   constructor(
-    @InjectModel(Product.name) private productModel: Model<ProductDocument>,
+    // @InjectModel(Product.name) private productModel: Model<ProductDocument>,
     private readonly productRepository: ProductRepository,
   ) {}
 
@@ -27,20 +27,9 @@ export class ProductService {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
-          message: 'Missing required fields: inv_itemCode or ma_thue',
+          message: 'Missing required fields: ma_thue',
         };
       }
-
-      // const duplicatedProduct = await this.productModel.findOne({
-      //   inv_itemCode,
-      // });
-      // if (duplicatedProduct) {
-      //   response = {
-      //     code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-      //     info: ERROR_INFO.FAIL,
-      //     message: `Product with code ${inv_itemCode} already exists`,
-      //   };
-      // }
 
       const newProduct = await this.productRepository.create(createProductDto);
 
