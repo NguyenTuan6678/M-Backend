@@ -41,6 +41,8 @@ async function bootstrap() {
     credentials: true,
   });
 
+  app.enableShutdownHooks();
+
   const config = new DocumentBuilder()
     .setTitle('M-Invoice API')
     .addBearerAuth(

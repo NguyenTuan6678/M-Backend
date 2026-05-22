@@ -168,7 +168,7 @@ export class SaleTransactionService {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: `Threse is a problem while searching transaction: ${error.message}`,
+        message: `There is a problem while searching transaction: ${error.message}`,
       };
     }
   }

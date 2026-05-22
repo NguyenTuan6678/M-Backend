@@ -17,6 +17,7 @@ import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { CreateInvoiceFromTransactionDto } from './dto/send-receipt.req';
 // import { InvoiceIssueService } from '@utils/invoice-issue/invoice-issue.service';
 import { MInvoiceReceiptPostService } from './m-invoice-receipt-post.service';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('M-Invoice Receipt Post')
 @Controller('m-invoice-receipt-post')
@@ -28,6 +29,12 @@ export class MInvoiceReceiptPostController {
     private readonly mInvoiceReceiptPostService: MInvoiceReceiptPostService,
   ) {}
 
+  @Throttle({
+    default: {
+      limit: 5,
+      ttl: 60000,
+    },
+  })
   @Post('without-redis')
   @ApiOperation({
     summary: 'Create invoice from sale transaction',

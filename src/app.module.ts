@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CacheModule, CacheInterceptor } from '@nestjs/cache-manager';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from '@users/users.module';
@@ -18,7 +18,11 @@ import { MInvoiceReceiptGetModule } from './api/m-invoice-receipt-get/m-invoice-
 import { MInvoiceReceiptPostModule } from './api/m-invoice-receipt-post/m-invoice-receipt-post.module';
 import { ReceiptInvoiceModule } from '@module/receiptinvoice/receiptinvoice.module';
 import { ViewMInvoiceReceiptModule } from './api/m-invoice-receipt-get-view/m-invoice-receipt-get-view.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 // import { BullModule } from '@nestjs/bullmq';
+import { HealthModule } from './health/health.module';
+import { ShutdownService } from './common/shutdown/shutdown.service';
+import { RequestLoggingInterceptor } from '@common/request-logging/request-logging.interceptor';
 
 // const queueEnabled = process.env.QUEUE_ENABLED === 'true';
 @Module({
@@ -42,6 +46,14 @@ import { ViewMInvoiceReceiptModule } from './api/m-invoice-receipt-get-view/m-in
     //       }),
     //     ]
     //   : []),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 10,
+        },
+      ],
+    }),
     CacheModule.register({ ttl: 5000, isGlobal: true }),
     ConfigModule.forRoot({
       load: [configuration],
@@ -70,14 +82,24 @@ import { ViewMInvoiceReceiptModule } from './api/m-invoice-receipt-get-view/m-in
     MInvoiceReceiptGetModule,
     MInvoiceReceiptPostModule,
     ViewMInvoiceReceiptModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RequestLoggingInterceptor,
+    },
+    {
       provide: APP_INTERCEPTOR,
       useClass: CacheInterceptor,
     },
+    ShutdownService,
   ],
 })
 export class AppModule {}

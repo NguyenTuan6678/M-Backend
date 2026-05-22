@@ -21,6 +21,7 @@ import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-s
 import { SaleTransactionResponseDTO } from '@module/sale-transaction/dto/sale-transaction.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import { Throttle } from '@nestjs/throttler';
 import { MessageResponse } from '@app-types/message.res';
 import { QuerySaleTransactionDto } from './dto/query-transaction.req';
 import { UpdateSaleTransactionBankDto } from './dto/update-transaction-bank.req';
@@ -68,6 +69,12 @@ export class SaleTransactionController {
     );
   }
 
+  @Throttle({
+    default: {
+      limit: 10,
+      ttl: 60000,
+    },
+  })
   @Get()
   @ApiOperation({
     summary: 'Get all sale transactions with optional filters & pagination',

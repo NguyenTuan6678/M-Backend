@@ -126,7 +126,7 @@ export class BankService {
       return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Bank updated succcessfully',
+        message: 'Bank updated successfully',
         content: updatedBank,
       };
     } catch (error: any) {

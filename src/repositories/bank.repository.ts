@@ -106,7 +106,7 @@ export class BankRepository {
         .findByIdAndUpdate(id, updateData, { new: true })
         .exec();
       if (updateBank) {
-        this.logger.error('Bank updated succesfully', 'BankRepository');
+        this.logger.error('Bank updated successfully', 'BankRepository');
       }
       return updateBank;
     } catch (error: any) {
