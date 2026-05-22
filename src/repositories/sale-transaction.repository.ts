@@ -317,6 +317,58 @@ export class SaleTransactionRepository {
     }
   }
 
+  async findStuckIssuingInvoices(minutes: number) {
+    const thresholdDate = new Date(Date.now() - minutes * 60 * 1000);
+
+    return await this.saleTransactionModel
+      .find({
+        invoiceStatus: InvoiceStatus.ISSUING,
+        updatedAt: { $lte: thresholdDate },
+      })
+      .select(
+        '_id orderNumber inv_buyerDisplayName invoiceStatus updatedAt createdAt',
+      )
+      .sort({ updatedAt: 1 })
+      .limit(20)
+      .exec();
+  }
+
+  async countFailedInvoicesRecently(minutes: number): Promise<number> {
+    const thresholdDate = new Date(Date.now() - minutes * 60 * 1000);
+
+    return await this.saleTransactionModel
+      .countDocuments({
+        invoiceStatus: InvoiceStatus.FAILED,
+        updatedAt: { $gte: thresholdDate },
+      })
+      .exec();
+  }
+
+  async countIssuedWithoutCreatedId(): Promise<number> {
+    return await this.saleTransactionModel
+      .countDocuments({
+        invoiceStatus: InvoiceStatus.ISSUED,
+        $or: [
+          { inv_invoiceCreatedId: { $exists: false } },
+          { inv_invoiceCreatedId: null },
+          { inv_invoiceCreatedId: '' },
+        ],
+      })
+      .exec();
+  }
+
+  async countCreatedIdButNotIssued(): Promise<number> {
+    return await this.saleTransactionModel
+      .countDocuments({
+        inv_invoiceCreatedId: {
+          $exists: true,
+          $nin: [null, ''],
+        },
+        invoiceStatus: { $ne: InvoiceStatus.ISSUED },
+      })
+      .exec();
+  }
+
   async update(
     id: string,
     updateData: SaleTransactionUpdatePayload,

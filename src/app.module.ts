@@ -23,6 +23,8 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { HealthModule } from './health/health.module';
 import { ShutdownService } from './common/shutdown/shutdown.service';
 import { RequestLoggingInterceptor } from '@common/request-logging/request-logging.interceptor';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AlertModule } from '@common/alerts/alert.module';
 
 // const queueEnabled = process.env.QUEUE_ENABLED === 'true';
 @Module({
@@ -46,6 +48,7 @@ import { RequestLoggingInterceptor } from '@common/request-logging/request-loggi
     //       }),
     //     ]
     //   : []),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot({
       throttlers: [
         {
@@ -70,6 +73,7 @@ import { RequestLoggingInterceptor } from '@common/request-logging/request-loggi
         retryDelay: 1000,
       }),
     }),
+
     UsersModule,
     SaleTransactionModule,
     AgencyModule,
@@ -83,6 +87,7 @@ import { RequestLoggingInterceptor } from '@common/request-logging/request-loggi
     MInvoiceReceiptPostModule,
     ViewMInvoiceReceiptModule,
     HealthModule,
+    AlertModule,
   ],
   controllers: [AppController],
   providers: [
