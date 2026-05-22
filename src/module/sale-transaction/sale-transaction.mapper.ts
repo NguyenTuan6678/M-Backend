@@ -32,7 +32,7 @@ export function mapTransactionToInvoice(
         inv_unitCode: product.inv_unitCode,
         inv_discountPercentage: transaction.inv_discountPercentage,
         price: product.inv_unitPrice,
-        inv_quantity: product.inv_quantity,
+        inv_quantity: transaction.inv_quantity ?? 1,
         inv_discountAmount: product.inv_discountAmount,
         ma_thue: parseFloat(product.ma_thue),
       };
