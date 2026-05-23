@@ -25,6 +25,8 @@ import { ShutdownService } from './common/shutdown/shutdown.service';
 import { RequestLoggingInterceptor } from '@common/request-logging/request-logging.interceptor';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AlertModule } from '@common/alerts/alert.module';
+import { SaleTransactionImportController } from './module/sale-transaction/import/sale-transaction-import.controller';
+import { SaleTransactionImportService } from './module/sale-transaction/import/sale-transaction-import.service';
 
 // const queueEnabled = process.env.QUEUE_ENABLED === 'true';
 @Module({
@@ -89,7 +91,7 @@ import { AlertModule } from '@common/alerts/alert.module';
     HealthModule,
     AlertModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, SaleTransactionImportController],
   providers: [
     AppService,
     {
@@ -105,6 +107,7 @@ import { AlertModule } from '@common/alerts/alert.module';
       useClass: CacheInterceptor,
     },
     ShutdownService,
+    SaleTransactionImportService,
   ],
 })
 export class AppModule {}

@@ -142,6 +142,47 @@ export class AgencyRepository {
     }
   }
 
+  async findByEmail(email: string): Promise<AgencyDocument | null> {
+    try {
+      return await this.agencyModel
+        .findOne({ agencyEmail: email })
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding agency by Email: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findByName(name: string): Promise<AgencyDocument | null> {
+    try {
+      return await this.agencyModel
+        .findOne({ agencyName: name })
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding agency by name: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findByAgencyNumber(
+    agencyNumber: string,
+  ): Promise<AgencyDocument | null> {
+    try {
+      return await this.agencyModel
+        .findOne({ agencyNumber })
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding agency by agencyNumber: ${error.message}`,
+        'AgencyRepository',
+      );
+      throw error;
+    }
+  }
+
   async update(
     id: string,
     updateAgencyDto: UpdateAgencyDto,

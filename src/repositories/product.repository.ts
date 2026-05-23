@@ -151,6 +151,34 @@ export class ProductRepository {
     });
   }
 
+  async findByItemCode(itemCode: string): Promise<ProductDocument | null> {
+    try {
+      return await this.productModel.findOne({ inv_itemCode: itemCode }).exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding product by ID: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findByItemName(name: string): Promise<ProductDocument | null> {
+    try {
+      return await this.productModel
+        .findOne({
+          inv_itemName: {
+            $regex: `^${name}$`,
+            $options: 'i',
+          },
+        })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding product by item name: ${error.message}`,
+        'ProductRepository',
+      );
+      throw error;
+    }
+  }
+
   async update(
     id: string,
     updateData: Partial<CreateProductDto>,

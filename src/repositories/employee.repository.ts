@@ -147,6 +147,21 @@ export class EmployeeRepository {
     }
   }
 
+  async findByEmail(email: string): Promise<EmployeeDocument | null> {
+    try {
+      return await this.employeeModel
+        .findOne({ employeeEmail: email })
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transaction with employee: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
   async update(
     id: string,
     updateData: Partial<CreateEmployeeDto>,
