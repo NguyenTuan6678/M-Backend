@@ -22,6 +22,7 @@ interface ErrorResponse {
   path: string;
   errors?: unknown;
 }
+
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   constructor(private logger: LoggerService) {}

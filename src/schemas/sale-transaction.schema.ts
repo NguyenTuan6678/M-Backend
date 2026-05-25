@@ -1,10 +1,16 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { Agency } from './agency.schema';
+import { Department } from './department.schema';
+import { Employee } from './employee.schema';
+import { Bank } from './bank.schema';
+import { Product } from './product.schema';
+import { InvoiceStatus } from '@utils/transaction-status';
 
 export type SalesTransactionDocument = SalesTransaction & Document;
 
 export class TransactionItem {
-  @Prop({ type: Types.ObjectId, ref: 'Product' })
+  @Prop({ type: Types.ObjectId, ref: Product.name })
   productId: Types.ObjectId;
 
   @Prop()
@@ -22,6 +28,12 @@ export class TransactionItem {
 
 @Schema({ timestamps: true })
 export class SalesTransaction {
+  @Prop({ default: null })
+  activationDate: string;
+
+  @Prop({ default: null })
+  inv_invoiceCreatedId: string;
+
   @Prop()
   inv_invoiceSeries: string;
 
@@ -33,6 +45,9 @@ export class SalesTransaction {
 
   @Prop()
   inv_exchangeRate: number;
+
+  @Prop({ unique: true })
+  orderNumber: string;
 
   @Prop()
   so_benh_an: string;
@@ -97,22 +112,22 @@ export class SalesTransaction {
   @Prop()
   inv_discountPercentage: number;
 
-  @Prop({ type: Types.ObjectId, ref: 'Agency' })
+  @Prop({ type: Types.ObjectId, ref: Agency.name, required: true })
   agencyId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Department' })
+  @Prop({ type: Types.ObjectId, ref: Department.name })
   departmentId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Employee' })
+  @Prop({ type: Types.ObjectId, ref: Employee.name })
   employeeId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Bank' })
-  bankId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: Bank.name })
+  bankId?: Types.ObjectId;
 
   @Prop({
     type: [
       {
-        productId: { type: Types.ObjectId, ref: 'Product' },
+        productId: { type: Types.ObjectId, ref: Product.name },
         revenue: Number,
         capitalPrice: Number,
         totalSalary: Number,
@@ -121,6 +136,19 @@ export class SalesTransaction {
     ],
   })
   items: TransactionItem[];
+
+  @Prop({
+    type: String,
+    enum: InvoiceStatus,
+    default: InvoiceStatus.DRAFT,
+  })
+  invoiceStatus: InvoiceStatus;
+
+  @Prop({ default: false })
+  isPaid: boolean;
+
+  @Prop({ default: true })
+  isActive: boolean;
 }
 
 export const SalesTransactionSchema =

@@ -16,19 +16,10 @@ import {
 import { UsersService } from '@users/users.service';
 import { CreateUsersDTO } from '@users/dto/create-users.req';
 import { UsersResponseDTO } from '@users/dto/users.res';
-import {
-  PaginationDto,
-  PaginatedResponseDto,
-} from '@common/dto/pagination.dto';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessageResponse } from '@app-types/message.res';
-import { GetAllUsers } from './dto/get-all-users.res';
+import { QueryUserDto } from './dto/query-user.req';
 
 @ApiTags('Users')
 @Controller('users')
@@ -55,30 +46,24 @@ export class UsersController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get a paginated list of users' })
-  async findAll(): Promise<GetAllUsers> {
-    return await this.usersService.getAllUsers();
+  @ApiOperation({
+    summary: 'Get all users with optional filters & pagination',
+    description:
+      'Filter theo: isActive, role. ' +
+      'Text search username qua param search. ' +
+      'Phân trang qua page và limit.',
+  })
+  async getAllUsers(
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    query: QueryUserDto,
+  ) {
+    return await this.usersService.searchUsers(query);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID' })
   async findOne(@Param('id') id: string): Promise<UsersResponseDTO> {
     return await this.usersService.getUserById(id);
-  }
-
-  @Get('search-name/search')
-  @ApiOperation({ summary: 'Search user by name' })
-  @ApiResponse({ status: 200, description: 'Success.' })
-  async searchAgencies(
-    @Query('keyword') keyword: string,
-    @Query('page') page = '1',
-    @Query('limit') limit = '10',
-  ) {
-    return this.usersService.searchUsersByName(
-      keyword,
-      Number(page),
-      Number(limit),
-    );
   }
 
   @Patch(':id')

@@ -115,7 +115,7 @@ export class AuthService {
       await newAdmin.save();
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Register successfully',
       };
@@ -123,7 +123,7 @@ export class AuthService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while registering account: ${error.message}`,
       };
     }
 
@@ -138,7 +138,7 @@ export class AuthService {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
-          message: 'Invalid input',
+          message: 'Invalid input missing require: username or password',
           content: null,
         };
         return response;
@@ -159,7 +159,6 @@ export class AuthService {
       }
 
       const isMatch = await comparePassword(password, admin.password);
-      // this.logger.log(`Password match result: ${isMatch}`);
 
       if (!isMatch) {
         response = {
@@ -173,7 +172,7 @@ export class AuthService {
 
       const token = await this.generateToken(admin);
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Login successfully',
         content: {
@@ -187,7 +186,7 @@ export class AuthService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while login: ${error.message}`,
         content: null,
       };
     }
@@ -199,7 +198,6 @@ export class AuthService {
     userId: string,
   ): Promise<MessageResponse | null> {
     let response: MessageResponse | null = null;
-    // console.log('🚀 ~ AuthService ~ userId:', userId);
     try {
       const { new_password, old_password } = changePasswordDto;
       if (!new_password && !old_password) {
@@ -238,7 +236,7 @@ export class AuthService {
       await user.save();
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Change password successfully',
       };
@@ -246,7 +244,7 @@ export class AuthService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while changing password: ${error.message}`,
       };
     }
     return response;
@@ -276,7 +274,7 @@ export class AuthService {
 
       const token = await this.generateToken(admin);
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Token refreshed successfully',
         content: {
@@ -290,7 +288,7 @@ export class AuthService {
       response = {
         code: ERROR_RES.INVALID_CREDENTIALS_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a reToken problem: ${error.message}`,
         content: null,
       };
     }

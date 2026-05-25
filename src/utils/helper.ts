@@ -1,4 +1,5 @@
 import { MessageResponse } from '@app-types/message.res';
+import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 
 /**
  * @param content
@@ -12,7 +13,12 @@ export function responseHelper<T extends null>(
   info?: string,
   message?: string,
 ): MessageResponse {
-  const res = { code: 200, info: 'Success', message, content: null };
+  const res = {
+    code: ERROR_RES.SUCCESS.statusCode,
+    info: ERROR_INFO.SUCCESS,
+    message,
+    content: null,
+  };
   res.content = content;
   if (code) {
     res.code = code;

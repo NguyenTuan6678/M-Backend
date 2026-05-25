@@ -4,12 +4,15 @@
 /build
 
 # Logs
-*.log
+# *.log
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+
+# Files
+files
 
 # OS
 .DS_Store

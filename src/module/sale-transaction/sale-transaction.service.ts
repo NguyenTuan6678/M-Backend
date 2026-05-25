@@ -1,227 +1,281 @@
 import { LoggerService } from '@common/logs/logger.service';
-import {
-  Injectable,
-  BadRequestException,
-  InternalServerErrorException,
-} from '@nestjs/common';
-
+import { Injectable } from '@nestjs/common';
+import { Types } from 'mongoose';
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
 import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { SaleTransactionResponseDTO } from '@module/sale-transaction/dto/sale-transaction.res';
-import {
-  PaginationDto,
-  PaginatedResponseDto,
-} from '@common/dto/pagination.dto';
 import { AgencyRepository } from '@repositories/agency.repository';
-import { DepartmentRepository } from '@repositories/department.repository';
 import { EmployeeRepository } from '@repositories/employee.repository';
 import { BankRepository } from '@repositories/bank.repository';
 import { ProductRepository } from '@repositories/product.repository';
-import { mapTransactionToInvoice } from '@module/sale-transaction/sale-transaction.mapper';
 import { CreateInvoiceDto } from '../../api/m-invoice-receipt-post/dto/send-receipt.req';
 import { Agency } from '@schemas/agency.schema';
-import { Department } from '@schemas/department.schema';
-import { Employee } from '@schemas/employee.schema';
 import { Bank } from '@schemas/bank.schema';
 import { Product } from '@schemas/product.schema';
-import { Model, Types } from 'mongoose';
-import { GetAllSaleTransactions } from './dto/get-all-sale-transaction.res';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  SalesTransaction,
-  SalesTransactionDocument,
-} from '@schemas/sale-transaction.schema';
 import { MessageResponse } from '@app-types/message.res';
+import { QuerySaleTransactionDto } from './dto/query-transaction.req';
+import { InvoiceStatus } from '@utils/transaction-status';
+import { DepartmentRepository } from '@repositories/department.repository';
 
 interface ValidatedEntities {
   missing: string[];
+  inactive: string[];
   agency?: Agency;
-  department?: Department;
-  employee?: Employee;
-  bank?: Bank;
+  employee?: any;
+  department?: any;
   products?: Product[];
 }
 
 @Injectable()
 export class SaleTransactionService {
   constructor(
-    @InjectModel(SalesTransaction.name)
-    private transactionModel: Model<SalesTransactionDocument>,
     private readonly saleTransactionRepository: SaleTransactionRepository,
     private readonly agencyRepository: AgencyRepository,
-    private readonly departmentRepository: DepartmentRepository,
     private readonly employeeRepository: EmployeeRepository,
     private readonly bankRepository: BankRepository,
+    private readonly departmentRepository: DepartmentRepository,
     private readonly productRepository: ProductRepository,
     private readonly logger: LoggerService,
   ) {}
 
-  private async validateObjectId(fieldName: string, value?: string) {
-    if (!value) {
-      throw new BadRequestException({
-        message: 'Validation failed',
-        errors: [
-          {
-            field: fieldName,
-            message: `${fieldName} is required`,
-          },
-        ],
-      });
-    }
-
-    if (!Types.ObjectId.isValid(value)) {
-      throw new BadRequestException({
-        message: 'Validation failed',
-        errors: [
-          {
-            field: fieldName,
-            message: `${fieldName} must be a valid MongoDB ObjectId`,
-          },
-        ],
-      });
-    }
-  }
-
   private async validateRelatedEntities(
     agencyId: string | undefined,
-    departmentId: string | undefined,
-    employeeId: string | undefined,
-    bankId: string | undefined,
+    employeeIdFromClient: string | undefined,
     items: { productId?: string }[],
   ): Promise<ValidatedEntities> {
+    const missing: string[] = [];
+    const inactive: string[] = [];
+
+    let agency: any = null;
+    let employee: any = null;
+    let department: any = null;
+    let products: Product[] = [];
+
+    /**
+     * 1. Validate Agency
+     */
+    if (!agencyId || !Types.ObjectId.isValid(agencyId)) {
+      missing.push('Agency');
+    } else {
+      agency = await this.agencyRepository.findById(agencyId);
+
+      if (!agency) {
+        missing.push('Agency');
+      } else if (agency.isActive === false) {
+        inactive.push('Agency');
+      }
+    }
+
+    /**
+     * 2. Choose employee
+     *
+     * Nếu client gửi employeeId:
+     * → dùng employeeId đó
+     *
+     * Nếu client không gửi:
+     * → fallback agency.employeeId
+     */
+    const agencyEmployeeId = this.extractObjectId((agency as any)?.employeeId);
+
+    const selectedEmployeeId =
+      employeeIdFromClient && Types.ObjectId.isValid(employeeIdFromClient)
+        ? employeeIdFromClient
+        : agencyEmployeeId;
+
+    if (!selectedEmployeeId) {
+      missing.push('Employee');
+    } else {
+      employee = await this.employeeRepository.findById(selectedEmployeeId);
+
+      if (!employee) {
+        missing.push('Employee');
+      } else if (employee.isActive === false) {
+        inactive.push('Employee');
+      }
+    }
+
+    /**
+     * 3. Validate Department from selected employee
+     */
+    const departmentId = this.extractObjectId((employee as any)?.departmentId);
+
+    if (!departmentId) {
+      missing.push('Department');
+    } else {
+      department = await this.departmentRepository.findById(departmentId);
+
+      if (!department) {
+        missing.push('Department');
+      } else if (department.isActive === false) {
+        inactive.push('Department');
+      }
+    }
+
+    /**
+     * 4. Validate Products
+     */
     const productIds = items
       ?.map((i) => i.productId)
       .filter((id): id is string => !!id);
 
-    const [agency, department, employee, bank, products] = await Promise.all([
-      agencyId ? this.agencyRepository.findById(agencyId) : undefined,
-      departmentId
-        ? this.departmentRepository.findById(departmentId)
-        : undefined,
-      employeeId ? this.employeeRepository.findById(employeeId) : undefined,
-      bankId ? this.bankRepository.findById(bankId) : undefined,
-      productIds?.length
-        ? this.productRepository.findByIds(productIds)
-        : undefined,
-    ]);
-
-    const missing: string[] = [];
-    if (agencyId && !agency) missing.push('Agency');
-    if (departmentId && !department) missing.push('Department');
-    if (employeeId && !employee) missing.push('Employee');
-    if (bankId && !bank) missing.push('Bank');
-    if (productIds?.length && (!products || products.length === 0))
+    if (!productIds?.length) {
       missing.push('Products');
+    } else {
+      const invalidProductIds = productIds.filter(
+        (id) => !Types.ObjectId.isValid(id),
+      );
+
+      if (invalidProductIds.length > 0) {
+        missing.push(`Invalid productIds: ${invalidProductIds.join(', ')}`);
+      }
+
+      products = await this.productRepository.findByIds(productIds);
+
+      const foundProductIds = new Set(
+        products.map((product: any) => String(product._id)),
+      );
+
+      const missingProductIds = productIds.filter(
+        (productId) => !foundProductIds.has(productId),
+      );
+
+      if (missingProductIds.length > 0) {
+        missing.push(`Products: ${missingProductIds.join(', ')}`);
+      }
+
+      const inactiveProducts = products.filter(
+        (product: any) => product.isActive === false,
+      );
+
+      if (inactiveProducts.length > 0) {
+        inactive.push(
+          `Products: ${inactiveProducts
+            .map((product: any) => product.inv_itemCode || product._id)
+            .join(', ')}`,
+        );
+      }
+    }
 
     return {
       missing,
+      inactive,
       ...(agency && { agency }),
-      ...(department && { department }),
       ...(employee && { employee }),
-      ...(bank && { bank }),
+      ...(department && { department }),
       ...(products?.length && { products }),
     };
   }
 
   async createSaleTransaction(
-    createSalesTransactionDto: CreateSalesTransactionDto,
-  ) {
+    createSaleTransactionDto: CreateSalesTransactionDto,
+  ): Promise<SaleTransactionResponseDTO | null> {
     try {
-      const errors: { field: string; message: string }[] = [];
+      const { agencyId, employeeId, items } = createSaleTransactionDto;
 
-      const requiredObjectIds = [
-        'agencyId',
-        'departmentId',
-        'employeeId',
-        'bankId',
-      ] as const;
+      const { missing, inactive, agency, employee, department, products } =
+        await this.validateRelatedEntities(agencyId, employeeId, items ?? []);
 
-      for (const field of requiredObjectIds) {
-        const value = createSalesTransactionDto[field];
-
-        if (!value) {
-          errors.push({
-            field,
-            message: `${field} is required`,
-          });
-        } else if (!Types.ObjectId.isValid(value)) {
-          errors.push({
-            field,
-            message: `${field} must be a valid MongoDB ObjectId`,
-          });
-        }
+      if (missing.length > 0) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Missing entities: ${missing.join(', ')}`,
+        };
       }
 
-      if (
-        !createSalesTransactionDto.items ||
-        !Array.isArray(createSalesTransactionDto.items) ||
-        createSalesTransactionDto.items.length === 0
-      ) {
-        errors.push({
-          field: 'items',
-          message: 'items must contain at least one product item',
-        });
-      } else {
-        createSalesTransactionDto.items.forEach((item, index) => {
-          if (!item.productId) {
-            errors.push({
-              field: `items[${index}].productId`,
-              message: `items[${index}].productId is required`,
-            });
-          } else if (!Types.ObjectId.isValid(item.productId)) {
-            errors.push({
-              field: `items[${index}].productId`,
-              message: `items[${index}].productId must be a valid MongoDB ObjectId`,
-            });
-          }
-        });
+      if (inactive.length > 0) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Inactive entities cannot be used: ${inactive.join(', ')}`,
+        };
       }
 
-      if (errors.length > 0) {
-        throw new BadRequestException({
-          message: 'Create sale transaction failed',
-          errors,
-        });
+      const finalEmployeeId = this.extractObjectId((employee as any)?._id);
+      const finalDepartmentId = this.extractObjectId((department as any)?._id);
+
+      if (!finalEmployeeId) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Employee is invalid or inactive',
+        };
       }
 
-      const saleTransaction =
-        await this.saleTransactionRepository.createSaleTransaction(
-          createSalesTransactionDto,
-        );
+      if (!finalDepartmentId) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Department is invalid or inactive',
+        };
+      }
 
-      return this.mapToResponseDto(saleTransaction);
+      this.logger.log(
+        `Validated — Agency: ${(agency as any)?.agencyName}, Employee: ${(employee as any)?.employeeName}, Department: ${(department as any)?.departmentName}, Products: ${products
+          ?.map((p: any) => p.inv_itemCode)
+          .join(', ')}`,
+        'SaleTransactionService',
+      );
+
+      const createdTransaction =
+        await this.saleTransactionRepository.createSaleTransaction({
+          ...createSaleTransactionDto,
+
+          /**
+           * Override lại để đảm bảo:
+           * - employeeId là employee được chọn hoặc fallback từ agency
+           * - departmentId lấy từ employee đó
+           */
+          employeeId: finalEmployeeId,
+          departmentId: finalDepartmentId,
+        });
+
+      if (!createdTransaction) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Missing required fields or creation failed',
+        };
+      }
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Sale transaction created successfully',
+        content: createdTransaction,
+      };
     } catch (error: any) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
+      this.logger.error(`Error creating sale transaction: ${error.message}`);
 
-      throw new InternalServerErrorException({
-        message: 'Create sale transaction failed',
-        detail: error.message,
-      });
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `An error occurred while creating transaction: ${error.message}`,
+      };
     }
   }
 
-  async getAllSaleTransactions(): Promise<GetAllSaleTransactions> {
-    let response: GetAllSaleTransactions | null = null;
+  async searchSaleTransactions(query: QuerySaleTransactionDto) {
     try {
-      const saleTransactions = await this.transactionModel.find().exec();
-      response = {
-        code: 200,
+      const result =
+        await this.saleTransactionRepository.findAllWithFilters(query);
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Get all agencies successfully',
-        content: saleTransactions,
+        message: 'Sale transactions fetched successfully',
+        ...result,
       };
-      return response;
     } catch (error: any) {
-      response = {
+      this.logger.error(
+        `Error in SaleTransactionService.searchSaleTransactions: ${error.message}`,
+      );
+      return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while searching transaction: ${error.message}`,
       };
     }
-    return response;
   }
 
   async getSaleTransactionById(
@@ -229,32 +283,115 @@ export class SaleTransactionService {
   ): Promise<SaleTransactionResponseDTO> {
     let response: SaleTransactionResponseDTO | null = null;
     try {
-      const transaction = await this.saleTransactionRepository.findById(id);
+      const transaction =
+        await this.saleTransactionRepository.findByIdWithPopulate(id);
 
       if (!transaction) {
-        response = {
+        return {
           code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
           message: `Sale transaction with ID ${id} not found`,
         };
-
-        return response;
       }
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Agency fetched successfully',
+        message: 'Sale transaction fetched successfully',
         content: transaction,
       };
     } catch (error: any) {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `An error occurred while getting transaction by id: ${error.message}`,
       };
     }
     return response;
+  }
+
+  async markSaleTransactionPaid(
+    transactionId: string,
+    bankId: string,
+  ): Promise<SaleTransactionResponseDTO> {
+    try {
+      const transaction =
+        await this.saleTransactionRepository.findById(transactionId);
+
+      if (!transaction) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Sale transaction with ID ${transactionId} not found`,
+        };
+      }
+
+      if ((transaction as any).isActive === false) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Inactive transaction cannot be marked as paid',
+        };
+      }
+
+      if ((transaction as any).invoiceStatus !== InvoiceStatus.ISSUED) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Only issued invoices can be marked as paid',
+        };
+      }
+
+      if (!(transaction as any).inv_invoiceCreatedId) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Cannot mark as paid because invoice has not been created',
+        };
+      }
+
+      const bank = await this.bankRepository.findActiveById(bankId);
+
+      if (!bank) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message:
+            'Bank not found or inactive. Cannot assign inactive bank to transaction',
+        };
+      }
+
+      const updatedTransaction =
+        await this.saleTransactionRepository.markPaidWithBank(
+          transactionId,
+          bankId,
+        );
+
+      if (!updatedTransaction) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Failed to mark sale transaction as paid',
+        };
+      }
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Sale transaction marked as paid successfully',
+        content: updatedTransaction,
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `Error marking sale transaction as paid: ${error.message}`,
+      );
+
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error marking sale transaction as paid: ${error.message}`,
+      };
+    }
   }
 
   async updateSaleTransaction(
@@ -262,32 +399,92 @@ export class SaleTransactionService {
     updateData: Partial<CreateSalesTransactionDto>,
   ): Promise<SaleTransactionResponseDTO> {
     try {
-      const updatedTransation = await this.saleTransactionRepository.update(
+      const updatedTransaction = await this.saleTransactionRepository.update(
         id,
         updateData,
       );
 
-      if (!updatedTransation) {
+      if (!updatedTransaction) {
         return {
           code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
           message: `Sale transaction with ID ${id} not found`,
-          content: updatedTransation || undefined,
         };
       }
 
+      const populatedTransaction =
+        await this.saleTransactionRepository.findByIdWithPopulate(id);
+
       return {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Agency updated successfully',
-        content: updatedTransation,
+        message: 'Sale transaction updated successfully',
+        content: populatedTransaction || updatedTransaction,
       };
     } catch (error: any) {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
-        content: undefined,
+        message: `An error occurred while updating sale transaction: ${error.message}`,
+      };
+    }
+  }
+
+  async updateTransactionBankAfterInvoice(
+    transactionId: string,
+    bankId: string,
+  ): Promise<SaleTransactionResponseDTO> {
+    try {
+      return await this.markSaleTransactionPaid(transactionId, bankId);
+    } catch (error: any) {
+      this.logger.error(
+        `Error updating transaction bank after invoice: ${error.message}`,
+      );
+
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error updating transaction bank: ${error.message}`,
+      };
+    }
+  }
+
+  async cancelSaleTransactionInvoice(
+    id: string,
+  ): Promise<SaleTransactionResponseDTO> {
+    try {
+      const transaction = await this.saleTransactionRepository.findById(id);
+
+      if (!transaction) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Sale transaction with ID ${id} not found`,
+        };
+      }
+
+      const updatedTransaction =
+        await this.saleTransactionRepository.markInvoiceCanceled(id);
+
+      if (!updatedTransaction) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Sale transaction with ID ${id} not found`,
+        };
+      }
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Invoice canceled successfully',
+        content: updatedTransaction,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `An error occurred while canceling invoice: ${error.message}`,
       };
     }
   }
@@ -297,13 +494,13 @@ export class SaleTransactionService {
     if (!deletedTransaction) {
       return {
         code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: `Sale transaction with ID ${id} not found`,
       };
     }
     return {
       code: ERROR_RES.SUCCESS.statusCode,
-      info: 'SUCCESS',
+      info: ERROR_INFO.SUCCESS,
       message: 'Sale transaction deleted successfully',
     };
   }
@@ -320,109 +517,22 @@ export class SaleTransactionService {
     }
   }
 
-  async getSaleTransactionsByEmployee(
-    employeeId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findByEmployeeId(employeeId);
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByEmployee: ${error.message}`,
-      );
-      throw error;
+  private extractObjectId(value: any): string | undefined {
+    if (!value) return undefined;
+
+    if (typeof value === 'string') {
+      return Types.ObjectId.isValid(value) ? value : undefined;
     }
-  }
 
-  async getSaleTransactionsByAgency(
-    agencyId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findByAgencyId(agencyId);
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByAgency: ${error.message}`,
-      );
-      throw error;
+    if (value instanceof Types.ObjectId) {
+      return value.toString();
     }
-  }
 
-  async getSaleTransactionsByDepartment(
-    departmentId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findByDepartmentId(departmentId);
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByDepartment: ${error.message}`,
-      );
-      throw error;
+    if (value._id) {
+      const id = value._id.toString();
+      return Types.ObjectId.isValid(id) ? id : undefined;
     }
-  }
 
-  async getSaleTransactionsByBank(
-    bankId: string,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions =
-        await this.saleTransactionRepository.findByBankId(bankId);
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByDepartment: ${error.message}`,
-      );
-      throw error;
-    }
-  }
-
-  async getSaleTransactionsByDateRange(
-    startDate: Date,
-    endDate: Date,
-  ): Promise<SaleTransactionResponseDTO[]> {
-    try {
-      const transactions = await this.saleTransactionRepository.findByDateRange(
-        startDate,
-        endDate,
-      );
-      return transactions.map((t) => this.mapToResponseDto(t));
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.getSaleTransactionsByDateRange: ${error.message}`,
-      );
-      throw error;
-    }
-  }
-
-  async buildInvoicePayload(transactionId: string): Promise<CreateInvoiceDto> {
-    try {
-      const transaction =
-        await this.saleTransactionRepository.findByIdWithPopulate(
-          transactionId,
-        );
-
-      if (!transaction) {
-        throw new Error(`Transaction ${transactionId} not found`);
-      }
-
-      return mapTransactionToInvoice(transaction as any);
-    } catch (error: any) {
-      this.logger.error(
-        `Error in SaleTransactionService.buildInvoicePayload: ${error.message}`,
-      );
-      throw error;
-    }
-  }
-
-  private mapToResponseDto(transaction: any): SaleTransactionResponseDTO {
-    const response = new SaleTransactionResponseDTO();
-    response.content = transaction.toObject
-      ? transaction.toObject()
-      : transaction;
-    return response;
+    return undefined;
   }
 }

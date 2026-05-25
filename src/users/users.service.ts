@@ -1,26 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UsersRepository } from '@repositories/users.repository';
 import { CreateUsersDTO } from '@users/dto/create-users.req';
 import { UsersResponseDTO } from '@users/dto/users.res';
-import { LoggerService } from '@common/logs/logger.service';
-import {
-  PaginationDto,
-  PaginatedResponseDto,
-} from '@common/dto/pagination.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '@schemas/users.schema';
 import { Model } from 'mongoose';
 import { ERROR_RES, ERROR_INFO } from '@common/constants/error.const';
 import { MessageResponse } from '@app-types/message.res';
 import { Role } from '@utils/role.enum';
-import { GetAllUsers } from './dto/get-all-users.res';
+import { QueryUserDto } from './dto/query-user.req';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     private readonly userRepository: UsersRepository,
-    private readonly logger: LoggerService,
   ) {}
 
   async createUser(
@@ -62,54 +56,47 @@ export class UsersService {
       if (duplicateUser) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: 'FAIL',
+          info: ERROR_INFO.FAIL,
           message: 'Username already exists',
         };
         return response;
       }
 
-      const newUser = new this.userModel({
-        username,
-        password,
-        role: userRole,
-      });
+      const newUser = await this.userRepository.create(createUserDto);
 
-      await newUser.save();
-
-      response = {
-        code: 200,
-        info: 'SUCCESS',
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
         message: 'User created successfully',
+        content: newUser,
       };
     } catch (error: any) {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: 'FAIL',
+        info: ERROR_INFO.FAIL,
         message: 'An error occurred while creating the user',
       };
     }
     return response;
   }
 
-  async getAllUsers(): Promise<GetAllUsers> {
-    let response: GetAllUsers | null = null;
+  async searchUsers(query: QueryUserDto) {
     try {
-      const users = await this.userModel.find().exec();
-      response = {
-        code: 200,
+      const result = await this.userRepository.findAllWithFilters(query);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Get all users successfully',
-        content: users,
+        message: 'Users fetched successfully',
+        ...result,
       };
-      return response;
     } catch (error: any) {
-      response = {
+      return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `Error searching users: ${error.message}`,
       };
     }
-    return response;
   }
 
   async getUserById(id: string): Promise<UsersResponseDTO> {
@@ -128,7 +115,7 @@ export class UsersService {
       }
 
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'User fetched successfully',
         content: user,
@@ -137,40 +124,10 @@ export class UsersService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while fetching user by id: ${error.message}`,
       };
     }
     return response;
-  }
-
-  async searchUsersByName(keyword: string, page = 1, limit = 10) {
-    if (!keyword || !keyword.trim()) {
-      return {
-        data: [],
-        total: 0,
-        page,
-        limit,
-        totalPages: 0,
-      };
-    }
-
-    const currentPage = Number(page) || 1;
-    const currentLimit = Number(limit) || 10;
-    const skip = (currentPage - 1) * currentLimit;
-
-    const { data, total } = await this.userRepository.searchByName(
-      keyword.trim(),
-      skip,
-      currentLimit,
-    );
-
-    return {
-      data: data.map((user) => this.mapToResponseDto(user)),
-      total,
-      page: currentPage,
-      limit: currentLimit,
-      totalPages: Math.ceil(total / currentLimit),
-    };
   }
 
   async updateUser(
@@ -190,7 +147,7 @@ export class UsersService {
       }
 
       return {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Agency updated successfully',
         content: updatedUser,
@@ -199,7 +156,7 @@ export class UsersService {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while updating the user: ${error.message}`,
         content: undefined,
       };
     }
@@ -247,7 +204,7 @@ export class UsersService {
         };
       }
       response = {
-        code: 200,
+        code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: `Validated user success`,
       };
@@ -255,7 +212,7 @@ export class UsersService {
       response = {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: error.message,
+        message: `There is a problem while validating user: ${error.message}`,
       };
     }
     return response;
@@ -264,11 +221,5 @@ export class UsersService {
   async getUserStats(): Promise<{ totalUsers: number }> {
     const total = await this.userRepository.countAll();
     return { totalUsers: total };
-  }
-
-  private mapToResponseDto(user: any): UsersResponseDTO {
-    const response = new UsersResponseDTO();
-    response.content = user.toObject();
-    return response;
   }
 }

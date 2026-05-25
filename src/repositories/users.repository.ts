@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { User, UserDocument } from '@schemas/users.schema';
 import { CreateUsersDTO } from '@users/dto/create-users.req';
 import { LoggerService } from '@common/logs/logger.service';
+import { QueryUserDto } from '@users/dto/query-user.req';
 
 @Injectable()
 export class UsersRepository {
@@ -24,23 +25,64 @@ export class UsersRepository {
     }
   }
 
-  async findAll(
-    skip: number = 0,
-    limit: number = 10,
-  ): Promise<{ data: UserDocument[]; total: number }> {
+  async findAllWithFilters(query: QueryUserDto): Promise<{
+    data: UserDocument[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     try {
+      const { isActive, role, search } = query;
+
+      const page = Number(query.page) || 1;
+      const limit = Number(query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const filter: Record<string, any> = {};
+
+      if (isActive !== undefined) {
+        filter.isActive = isActive;
+      }
+
+      if (role) {
+        filter.role = role;
+      }
+
+      if (search) {
+        const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        filter.$or = [
+          {
+            username: {
+              $regex: safeSearch,
+              $options: 'i',
+            },
+          },
+        ];
+      }
+
       const [data, total] = await Promise.all([
         this.userModel
-          .find()
+          .find(filter)
+          .select('-password')
           .skip(skip)
           .limit(limit)
           .sort({ createdAt: -1 })
           .exec(),
-        this.userModel.countDocuments().exec(),
+
+        this.userModel.countDocuments(filter).exec(),
       ]);
-      return { data, total };
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
     } catch (error: any) {
-      this.logger.error(`Error fetching users: ${error.message}`);
+      this.logger.error(`Error finding users with filters: ${error.message}`);
       throw error;
     }
   }
@@ -63,47 +105,18 @@ export class UsersRepository {
     }
   }
 
-  async searchByName(
-    keyword: string,
-    skip = 0,
-    limit = 10,
-  ): Promise<{ data: UserDocument[]; total: number }> {
-    try {
-      const safeKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-      const filter = {
-        username: {
-          $regex: safeKeyword,
-          $options: 'i',
-        },
-      };
-
-      const [data, total] = await Promise.all([
-        this.userModel
-          .find(filter)
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-
-        this.userModel.countDocuments(filter).exec(),
-      ]);
-
-      return { data, total };
-    } catch (error: any) {
-      this.logger.error(`Error searching agency by name: ${error.message}`);
-      throw error;
-    }
-  }
-
   async update(
     id: string,
     updateData: Partial<CreateUsersDTO>,
   ): Promise<UserDocument | null> {
     try {
-      return await this.userModel
+      const updateUser = await this.userModel
         .findByIdAndUpdate(id, updateData, { new: true })
         .exec();
+      if (updateUser) {
+        this.logger.error('User updated successfully', 'UserRepository');
+      }
+      return updateUser;
     } catch (error: any) {
       this.logger.error(`Error updating user: ${error.message}`);
       throw error;
@@ -112,7 +125,11 @@ export class UsersRepository {
 
   async delete(id: string): Promise<UserDocument | null> {
     try {
-      return await this.userModel.findByIdAndDelete(id).exec();
+      const deleteUser = await this.userModel.findByIdAndDelete(id).exec();
+      if (deleteUser) {
+        this.logger.error('User deleted successfully', 'UserRepository');
+      }
+      return deleteUser;
     } catch (error: any) {
       this.logger.error(`Error deleting user: ${error.message}`);
       throw error;

@@ -13,21 +13,12 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateProductDto } from './dto/create-product.req';
 import { ProductResponseDto } from './dto/product.res';
-import {
-  PaginatedResponseDto,
-  PaginationDto,
-} from '@common/dto/pagination.dto';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
-import { GetAllProducts } from './dto/get-all-product.res';
+import { QueryProductDto } from './dto/query-product.req';
 
 @ApiTags('Product')
 @Controller('products')
@@ -38,7 +29,6 @@ export class ProductController {
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new bank' })
-  @ApiResponse({ status: 404, description: 'Can not create product.' })
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body(
@@ -54,40 +44,28 @@ export class ProductController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get a paginated list of banks' })
-  @ApiResponse({ status: 200, description: 'Success.' })
-  @ApiResponse({ status: 404, description: 'Product not found.' })
-  async findAll(): Promise<GetAllProducts> {
-    return await this.productService.getAllProducts();
+  @ApiOperation({
+    summary: 'Get all products with optional filters & pagination',
+    description:
+      'Filter theo: isActive, ma_thue, minPrice, maxPrice. ' +
+      'Text search inv_itemCode, inv_itemName, inv_unitCode, ma_thue qua param search. ' +
+      'Phân trang qua page và limit.',
+  })
+  async getAllProducts(
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    query: QueryProductDto,
+  ) {
+    return await this.productService.searchProducts(query);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get bank by ID' })
-  @ApiResponse({ status: 200, description: 'Success.' })
-  @ApiResponse({ status: 404, description: 'Product not found.' })
   async findOne(@Param('id') id: string): Promise<ProductResponseDto> {
     return await this.productService.getProductById(id);
   }
 
-  @Get('search-name/search')
-  @ApiOperation({ summary: 'Search agencies by product code' })
-  @ApiResponse({ status: 200, description: 'Success.' })
-  async searchAgencies(
-    @Query('keyword') keyword: string,
-    @Query('page') page = '1',
-    @Query('limit') limit = '10',
-  ) {
-    return this.productService.searchProductsByName(
-      keyword,
-      Number(page),
-      Number(limit),
-    );
-  }
-
   @Patch(':id')
   @ApiOperation({ summary: 'Updated bank by ID' })
-  @ApiResponse({ status: 200, description: 'Success.' })
-  @ApiResponse({ status: 404, description: 'Product not found.' })
   async update(
     @Param('id') id: string,
     @Body(
@@ -103,9 +81,7 @@ export class ProductController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete bank by ID' })
-  @ApiResponse({ status: 200, description: 'Product deleted.' })
-  @ApiResponse({ status: 404, description: 'Product not found.' })
+  @ApiOperation({ summary: 'Delete product by ID' })
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string): Promise<MessageResponse> {
     return await this.productService.deleteProduct(id);

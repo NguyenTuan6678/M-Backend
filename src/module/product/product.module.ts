@@ -6,10 +6,14 @@ import { ProductService } from './product.service';
 import { ProductRepository } from '@repositories/product.repository';
 import { LoggerService } from '@common/logs/logger.service';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
+import { Counter, CounterSchema } from '@schemas/counter.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
+    MongooseModule.forFeature([
+      { name: Product.name, schema: ProductSchema },
+      { name: Counter.name, schema: CounterSchema },
+    ]),
   ],
   controllers: [ProductController],
   providers: [ProductService, ProductRepository, LoggerService, JwtAuthGuard],

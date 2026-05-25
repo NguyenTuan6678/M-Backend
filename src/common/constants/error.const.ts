@@ -51,14 +51,14 @@ export const ERROR_RES = {
     name: 'SUCCESS',
     statusCode: 200,
   },
-};
-
-export const ERROR_TYPE = {
-  BUSINESS: 'business',
-  VALIDATION: 'validation',
+  ACCEPTED: {
+    name: 'ACCEPTED',
+    statusCode: 202,
+  },
 };
 
 export const ERROR_INFO = {
   SUCCESS: 'SUCCESS',
   FAIL: 'FAIL',
+  PROCESSING: 'PROCESSING',
 };

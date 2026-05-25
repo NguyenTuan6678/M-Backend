@@ -14,10 +14,11 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class TransactionItemDto {
   @ApiProperty({
-    example: '649a6f1e5f1234567890abd0',
+    example: '',
     description: 'Product ID',
   })
   @IsNotEmpty({ message: 'productId is required' })
+  @IsString({ message: 'productId must be a string' })
   @IsMongoId({ message: 'productId must be a valid MongoDB ObjectId' })
   productId: string;
 
@@ -39,7 +40,7 @@ export class TransactionItemDto {
   @IsNumber({}, { message: 'totalSalary must be a number' })
   totalSalary: number;
 
-  @ApiProperty({ example: 200, description: 'Accounting account code' })
+  @ApiProperty({ example: 2000, description: 'Accounting account code' })
   @Type(() => Number)
   @IsNotEmpty({ message: 'accountingAccountCode is required' })
   @IsNumber({}, { message: 'accountingAccountCode must be a number' })
@@ -47,13 +48,12 @@ export class TransactionItemDto {
 }
 
 export class CreateSalesTransactionDto {
-  @ApiPropertyOptional({ example: '1C26TYY', description: 'Invoice series' })
+  @ApiPropertyOptional({ description: 'Invoice series' })
   @IsOptional()
   @IsString({ message: 'inv_invoiceSeries must be a string' })
   inv_invoiceSeries?: string;
 
   @ApiPropertyOptional({
-    example: '15/01/2026 12:00:00 SA',
     description:
       'Invoice date — neu khong truyen se tu dong lay thoi diem hien tai',
   })
@@ -76,7 +76,7 @@ export class CreateSalesTransactionDto {
   inv_exchangeRate: number;
 
   @ApiPropertyOptional({
-    example: 'A1234DE64',
+    example: '',
     description: 'Order number',
   })
   @IsOptional()
@@ -116,7 +116,7 @@ export class CreateSalesTransactionDto {
   inv_buyerAddressLine: string;
 
   @ApiPropertyOptional({
-    example: 'abc@gmail.com',
+    example: '',
     description: 'Buyer email',
   })
   @IsOptional()
@@ -124,7 +124,7 @@ export class CreateSalesTransactionDto {
   inv_buyerEmail?: string;
 
   @ApiPropertyOptional({
-    example: '6727621923',
+    example: '',
     description: 'Buyer bank account',
   })
   @IsOptional()
@@ -132,7 +132,7 @@ export class CreateSalesTransactionDto {
   inv_buyerBankAccount?: string;
 
   @ApiPropertyOptional({
-    example: 'Ngan Hang TMCP A Chau - ACB',
+    example: '',
     description: 'Buyer bank name',
   })
   @IsOptional()
@@ -172,7 +172,6 @@ export class CreateSalesTransactionDto {
   inv_TotalAmount: number;
 
   @ApiPropertyOptional({
-    example: 'D123123AD1213',
     description: 'Key api',
   })
   @IsOptional()
@@ -180,7 +179,7 @@ export class CreateSalesTransactionDto {
   key_api?: string;
 
   @ApiPropertyOptional({
-    example: '82731893193718',
+    example: '',
     description: 'Citizen identity card',
   })
   @IsOptional()
@@ -188,7 +187,7 @@ export class CreateSalesTransactionDto {
   cccdan?: string;
 
   @ApiPropertyOptional({
-    example: 'G1231D1213',
+    example: '',
     description: 'Passport number',
   })
   @IsOptional()
@@ -196,7 +195,7 @@ export class CreateSalesTransactionDto {
   so_hchieu?: string;
 
   @ApiPropertyOptional({
-    example: '2000005',
+    example: '',
     description: 'Budget relationship unit code',
   })
   @IsOptional()
@@ -232,36 +231,22 @@ export class CreateSalesTransactionDto {
   inv_discountPercentage: number;
 
   @ApiProperty({
-    example: '649a6f1e5f1234567890abcd',
+    example: '',
     description: 'Agency ID',
   })
   @IsNotEmpty({ message: 'agencyId is required' })
+  @IsString({ message: 'agencyId must be a string' })
   @IsMongoId({ message: 'agencyId must be a valid MongoDB ObjectId' })
   agencyId: string;
 
-  @ApiProperty({
-    example: '649a6f1e5f1234567890abce',
-    description: 'Department ID',
+  @ApiPropertyOptional({
+    example: '',
+    description:
+      'Employee handling this transaction. If not provided, agency employee will be used.',
   })
-  @IsNotEmpty({ message: 'departmentId is required' })
-  @IsMongoId({ message: 'departmentId must be a valid MongoDB ObjectId' })
-  departmentId: string;
-
-  @ApiProperty({
-    example: '649a6f1e5f1234567890abcf',
-    description: 'Employee ID',
-  })
-  @IsNotEmpty({ message: 'employeeId is required' })
+  @IsOptional()
   @IsMongoId({ message: 'employeeId must be a valid MongoDB ObjectId' })
-  employeeId: string;
-
-  @ApiProperty({
-    example: '649a6f1e5f1234567890abd0',
-    description: 'Bank ID',
-  })
-  @IsNotEmpty({ message: 'bankId is required' })
-  @IsMongoId({ message: 'bankId must be a valid MongoDB ObjectId' })
-  bankId: string;
+  employeeId?: string;
 
   @ApiProperty({
     type: [TransactionItemDto],

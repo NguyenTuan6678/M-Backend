@@ -3,47 +3,135 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateProductDto } from '../module/product/dto/create-product.req';
 import { Product, ProductDocument } from '@schemas/product.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
+import { QueryProductDto } from '@module/product/dto/query-product.req';
+import { Counter, CounterDocument } from '@schemas/counter.schema';
 
 @Injectable()
 export class ProductRepository {
   constructor(
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
     private logger: LoggerService,
+    @InjectModel(Counter.name)
+    private readonly counterModel: Model<CounterDocument>,
   ) {}
+
+  private async generateProductNumber(): Promise<string> {
+    const counter = await this.counterModel.findOneAndUpdate(
+      { name: 'inv_itemCode' },
+      { $inc: { seq: 1 } },
+      {
+        returnDocument: 'after',
+        upsert: true,
+      },
+    );
+    return `SP${String(counter.seq).padStart(4, '0')}`;
+  }
 
   async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
     try {
-      const newProduct = new this.productModel(createProductDto);
-      const savedProduct = await newProduct.save();
+      const {
+        inv_itemName,
+        inv_unitCode,
+        inv_unitPrice,
+        ma_thue,
+        inv_quantity,
+        inv_discountAmount,
+      } = createProductDto;
+      const inv_itemCode = await this.generateProductNumber();
+
+      const dataSubmit = {
+        ...createProductDto,
+        inv_itemCode,
+        inv_itemName,
+        inv_unitCode,
+        inv_unitPrice,
+        ma_thue,
+        inv_quantity,
+        inv_discountAmount,
+      };
+
+      const newProduct = new this.productModel(dataSubmit);
       this.logger.log(
-        `Product created: ${savedProduct.inv_itemCode}`,
+        `Product created: ${newProduct.inv_itemName}`,
         'ProductRepository',
       );
-      return savedProduct;
+      return await newProduct.save();
     } catch (error: any) {
       this.logger.error(`Error creating product: ${error.message}`, undefined);
       throw error;
     }
   }
 
-  async findAll(
-    skip: number = 0,
-    limit: number = 10,
-  ): Promise<{ data: ProductDocument[]; total: number }> {
+  async findAllWithFilters(query: QueryProductDto): Promise<{
+    data: ProductDocument[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     try {
+      const { isActive, ma_thue, search, minPrice, maxPrice } = query;
+
+      const page = Number(query.page) || 1;
+      const limit = Number(query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const filter: Record<string, any> = {};
+
+      if (isActive !== undefined) {
+        filter.isActive = isActive;
+      }
+
+      if (ma_thue) {
+        filter.ma_thue = ma_thue;
+      }
+
+      if (minPrice !== undefined || maxPrice !== undefined) {
+        filter.inv_unitPrice = {};
+
+        if (minPrice !== undefined) {
+          filter.inv_unitPrice.$gte = minPrice;
+        }
+
+        if (maxPrice !== undefined) {
+          filter.inv_unitPrice.$lte = maxPrice;
+        }
+      }
+
+      if (search) {
+        const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        filter.$or = [
+          { inv_itemCode: { $regex: safeSearch, $options: 'i' } },
+          { inv_itemName: { $regex: safeSearch, $options: 'i' } },
+          { inv_unitCode: { $regex: safeSearch, $options: 'i' } },
+          { ma_thue: { $regex: safeSearch, $options: 'i' } },
+        ];
+      }
+
       const [data, total] = await Promise.all([
         this.productModel
-          .find()
+          .find(filter)
           .skip(skip)
           .limit(limit)
           .sort({ createdAt: -1 })
           .exec(),
-        this.productModel.countDocuments().exec(),
+
+        this.productModel.countDocuments(filter).exec(),
       ]);
-      return { data, total };
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
     } catch (error: any) {
-      this.logger.error(`Error fetching products: ${error.message}`);
+      this.logger.error(
+        `Error finding products with filters: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -63,35 +151,43 @@ export class ProductRepository {
     });
   }
 
-  async searchByCode(
-    keyword: string,
-    skip = 0,
-    limit = 10,
-  ): Promise<{ data: ProductDocument[]; total: number }> {
+  async findActiveById(id: string): Promise<ProductDocument | null> {
+    if (!Types.ObjectId.isValid(id)) {
+      return null;
+    }
+
+    return await this.productModel
+      .findOne({
+        _id: id,
+        isActive: true,
+      })
+      .exec();
+  }
+
+  async findByItemCode(itemCode: string): Promise<ProductDocument | null> {
     try {
-      const safeKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-      const filter = {
-        inv_itemCode: {
-          $regex: safeKeyword,
-          $options: 'i',
-        },
-      };
-
-      const [data, total] = await Promise.all([
-        this.productModel
-          .find(filter)
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-
-        this.productModel.countDocuments(filter).exec(),
-      ]);
-
-      return { data, total };
+      return await this.productModel.findOne({ inv_itemCode: itemCode }).exec();
     } catch (error: any) {
-      this.logger.error(`Error searching agency by name: ${error.message}`);
+      this.logger.error(`Error finding product by ID: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findByItemName(name: string): Promise<ProductDocument | null> {
+    try {
+      return await this.productModel
+        .findOne({
+          inv_itemName: {
+            $regex: `^${name}$`,
+            $options: 'i',
+          },
+        })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding product by item name: ${error.message}`,
+        'ProductRepository',
+      );
       throw error;
     }
   }

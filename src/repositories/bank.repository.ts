@@ -1,9 +1,10 @@
+import { QueryBankDto } from '@module/bank/dto/query-bank.req';
 import { CreateBankDto } from '../module/bank/dto/create-bank.req';
 import { LoggerService } from '@common/logs/logger.service';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Bank, BankDocument } from '@schemas/bank.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class BankRepository {
@@ -27,50 +28,38 @@ export class BankRepository {
     }
   }
 
-  async findAll(
-    skip: number = 0,
-    limit: number = 10,
-  ): Promise<{ data: BankDocument[]; total: number }> {
+  async findAllWithFilters(query: QueryBankDto): Promise<{
+    data: BankDocument[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     try {
-      const [data, total] = await Promise.all([
-        this.bankModel
-          .find()
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
-        this.bankModel.countDocuments().exec(),
-      ]);
-      return { data, total };
-    } catch (error: any) {
-      this.logger.error(`Error fetching banks: ${error.message}`);
-      throw error;
-    }
-  }
+      const { isActive, search } = query;
 
-  async findById(id: string): Promise<BankDocument | null> {
-    try {
-      return await this.bankModel.findById(id).exec();
-    } catch (error: any) {
-      this.logger.error(`Error finding bank by ID: ${error.message}`);
-      throw error;
-    }
-  }
+      const page = Number(query.page) || 1;
+      const limit = Number(query.limit) || 10;
+      const skip = (page - 1) * limit;
 
-  async searchByName(
-    keyword: string,
-    skip = 0,
-    limit = 10,
-  ): Promise<{ data: BankDocument[]; total: number }> {
-    try {
-      const safeKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const filter: Record<string, any> = {};
 
-      const filter = {
-        inv_buyerBankName: {
-          $regex: safeKeyword,
-          $options: 'i',
-        },
-      };
+      if (isActive !== undefined) {
+        filter.isActive = isActive;
+      }
+
+      if (search) {
+        const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        filter.$or = [
+          {
+            inv_buyerBankName: {
+              $regex: safeSearch,
+              $options: 'i',
+            },
+          },
+        ];
+      }
 
       const [data, total] = await Promise.all([
         this.bankModel
@@ -79,14 +68,46 @@ export class BankRepository {
           .limit(limit)
           .sort({ createdAt: -1 })
           .exec(),
+
         this.bankModel.countDocuments(filter).exec(),
       ]);
 
-      return { data, total };
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
     } catch (error: any) {
-      this.logger.error(`Error searching agency by name: ${error.message}`);
+      this.logger.error(`Error finding banks with filters: ${error.message}`);
       throw error;
     }
+  }
+
+  async findById(id: string): Promise<BankDocument | null> {
+    try {
+      return await this.bankModel
+        .findById(id)
+        .populate('inv_buyerBankName')
+        .exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding bank by ID: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findActiveById(id: string): Promise<BankDocument | null> {
+    if (!Types.ObjectId.isValid(id)) {
+      return null;
+    }
+
+    return await this.bankModel
+      .findOne({
+        _id: id,
+        isActive: true,
+      })
+      .exec();
   }
 
   async update(
@@ -94,9 +115,13 @@ export class BankRepository {
     updateData: Partial<CreateBankDto>,
   ): Promise<BankDocument | null> {
     try {
-      return await this.bankModel
+      const updateBank = await this.bankModel
         .findByIdAndUpdate(id, updateData, { new: true })
         .exec();
+      if (updateBank) {
+        this.logger.error('Bank updated successfully', 'BankRepository');
+      }
+      return updateBank;
     } catch (error: any) {
       this.logger.error(`Error updating bank: ${error.message}`);
       throw error;

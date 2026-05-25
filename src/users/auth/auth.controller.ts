@@ -14,6 +14,8 @@ import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { MessageResponse } from '@app-types/message.res';
 import { LoginRes } from '@users/auth/dto/login.res';
 import { ChangePasswordDto } from '@users/auth/dto/change-password.req';
+import { ERROR_RES } from '@common/constants/error.const';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -23,7 +25,7 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: 'register for admin account' })
   @ApiResponse({
-    status: 200,
+    status: ERROR_RES.SUCCESS.statusCode,
     description: 'Register successfully',
     type: MessageResponse,
   })
@@ -33,10 +35,16 @@ export class AuthController {
     return this.authService.register(registerAccountDto);
   }
 
+  @Throttle({
+    default: {
+      limit: 5,
+      ttl: 60000,
+    },
+  })
   @Post('login')
   @ApiOperation({ summary: 'login for admin account' })
   @ApiResponse({
-    status: 200,
+    status: ERROR_RES.SUCCESS.statusCode,
     description: 'Login successfully',
     type: LoginRes,
   })
@@ -49,7 +57,7 @@ export class AuthController {
   @Post('refresh-token')
   @ApiOperation({ summary: 'refresh token for admin account' })
   @ApiResponse({
-    status: 200,
+    status: ERROR_RES.SUCCESS.statusCode,
     description: 'Login successfully',
     type: LoginRes,
   })
@@ -64,7 +72,7 @@ export class AuthController {
   @ApiOperation({ summary: 'change password for admin account' })
   @ApiBearerAuth('authorization')
   @ApiResponse({
-    status: 200,
+    status: ERROR_RES.SUCCESS.statusCode,
     description: 'Password changed successfully',
     type: MessageResponse,
   })
