@@ -77,7 +77,8 @@ export class MInvoiceReceiptPostController {
       ttl: 60000,
     },
   })
-  @Post('with-redis')
+  @Post()
+  @ApiOperation({ summary: 'Export M-Invoice' })
   @ApiQuery({
     name: 'tax_code',
     required: true,

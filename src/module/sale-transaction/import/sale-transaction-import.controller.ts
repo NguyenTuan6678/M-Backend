@@ -8,7 +8,13 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { SaleTransactionImportService } from './sale-transaction-import.service';
 
@@ -23,6 +29,7 @@ export class SaleTransactionImportController {
 
   @Post('preview')
   @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Preview a sheet data before import' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -79,6 +86,7 @@ export class SaleTransactionImportController {
 
   @Post()
   @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Import the preview data sheet' })
   @ApiBody({
     schema: {
       type: 'object',
