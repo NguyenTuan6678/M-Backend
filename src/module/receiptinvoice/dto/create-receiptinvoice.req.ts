@@ -11,4 +11,9 @@ export class CreateReceiptInvoiceDto {
   @IsString()
   @IsNotEmpty()
   tax_code: string;
+
+  @ApiProperty({ example: 'Hoa Don May' })
+  @IsString()
+  @IsNotEmpty()
+  description: string;
 }

@@ -10,6 +10,9 @@ export class ReceiptInvoice {
 
   @Prop({ required: true })
   tax_code: string;
+
+  @Prop()
+  description: true;
 }
 
 export const ReceiptInvoiceSchema =

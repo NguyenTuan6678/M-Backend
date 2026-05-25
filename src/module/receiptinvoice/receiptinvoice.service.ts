@@ -25,7 +25,7 @@ export class ReceiptInvoiceService {
   ): Promise<ReceiptInvoiceResponseDto> {
     let response: MessageResponse | null = null;
     try {
-      const { inv_invoiceSeries, tax_code } = createReceiptDto;
+      const { inv_invoiceSeries, tax_code, description } = createReceiptDto;
       if (!inv_invoiceSeries) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
