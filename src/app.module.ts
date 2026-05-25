@@ -19,7 +19,6 @@ import { MInvoiceReceiptPostModule } from './api/m-invoice-receipt-post/m-invoic
 import { ReceiptInvoiceModule } from '@module/receiptinvoice/receiptinvoice.module';
 import { ViewMInvoiceReceiptModule } from './api/m-invoice-receipt-get-view/m-invoice-receipt-get-view.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-// import { BullModule } from '@nestjs/bullmq';
 import { HealthModule } from './health/health.module';
 import { ShutdownService } from './common/shutdown/shutdown.service';
 import { RequestLoggingInterceptor } from '@common/request-logging/request-logging.interceptor';
@@ -27,29 +26,10 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AlertModule } from '@common/alerts/alert.module';
 import { SaleTransactionImportController } from './module/sale-transaction/import/sale-transaction-import.controller';
 import { SaleTransactionImportService } from './module/sale-transaction/import/sale-transaction-import.service';
+import { InvoiceQueueModule } from './api/queues/invoice-queue.module';
 
-// const queueEnabled = process.env.QUEUE_ENABLED === 'true';
 @Module({
   imports: [
-    // ...(queueEnabled
-    //   ? [
-    //       BullModule.forRoot({
-    //         connection: {
-    //           host: process.env.REDIS_HOST || '127.0.0.1',
-    //           port: Number(process.env.REDIS_PORT) || 6379,
-    //           password: process.env.REDIS_PASSWORD || undefined,
-
-    //           retryStrategy: (times) => {
-    //             if (times > 3) {
-    //               return null;
-    //             }
-
-    //             return Math.min(times * 1000, 3000);
-    //           },
-    //         },
-    //       }),
-    //     ]
-    //   : []),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot({
       throttlers: [
@@ -90,6 +70,7 @@ import { SaleTransactionImportService } from './module/sale-transaction/import/s
     ViewMInvoiceReceiptModule,
     HealthModule,
     AlertModule,
+    InvoiceQueueModule,
   ],
   controllers: [AppController, SaleTransactionImportController],
   providers: [
