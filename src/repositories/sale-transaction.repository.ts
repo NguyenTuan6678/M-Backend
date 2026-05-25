@@ -299,6 +299,7 @@ export class SaleTransactionRepository {
             $set: {
               invoiceStatus: InvoiceStatus.CANCELLED,
               isActive: false,
+              isPaid: false,
             },
           },
           {
@@ -311,6 +312,52 @@ export class SaleTransactionRepository {
     } catch (error: any) {
       this.logger.error(
         `Error canceling sale transaction invoice: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async markPaidWithBank(
+    id: string,
+    bankId: string,
+  ): Promise<SalesTransactionDocument | null> {
+    try {
+      if (!Types.ObjectId.isValid(id)) {
+        this.logger.error(
+          `Invalid transaction ObjectId: ${id}`,
+          'SaleTransactionRepository',
+        );
+        return null;
+      }
+
+      if (!Types.ObjectId.isValid(bankId)) {
+        this.logger.error(
+          `Invalid bank ObjectId: ${bankId}`,
+          'SaleTransactionRepository',
+        );
+        return null;
+      }
+
+      return await this.saleTransactionModel
+        .findByIdAndUpdate(
+          id,
+          {
+            $set: {
+              bankId: new Types.ObjectId(bankId),
+              isPaid: true,
+            },
+          },
+          {
+            returnDocument: 'after',
+            runValidators: true,
+          },
+        )
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error marking sale transaction as paid: ${error.message}`,
         'SaleTransactionRepository',
       );
       throw error;
@@ -418,50 +465,50 @@ export class SaleTransactionRepository {
     }
   }
 
-  async updateBankOnly(
-    id: string,
-    bankId: string,
-  ): Promise<SalesTransactionDocument | null> {
-    try {
-      if (!Types.ObjectId.isValid(id)) {
-        this.logger.error(
-          `Invalid transaction ObjectId: ${id}`,
-          'SaleTransactionRepository',
-        );
-        return null;
-      }
+  // async updateBankOnly(
+  //   id: string,
+  //   bankId: string,
+  // ): Promise<SalesTransactionDocument | null> {
+  //   try {
+  //     if (!Types.ObjectId.isValid(id)) {
+  //       this.logger.error(
+  //         `Invalid transaction ObjectId: ${id}`,
+  //         'SaleTransactionRepository',
+  //       );
+  //       return null;
+  //     }
 
-      if (!Types.ObjectId.isValid(bankId)) {
-        this.logger.error(
-          `Invalid bank ObjectId: ${bankId}`,
-          'SaleTransactionRepository',
-        );
-        return null;
-      }
+  //     if (!Types.ObjectId.isValid(bankId)) {
+  //       this.logger.error(
+  //         `Invalid bank ObjectId: ${bankId}`,
+  //         'SaleTransactionRepository',
+  //       );
+  //       return null;
+  //     }
 
-      return await this.saleTransactionModel
-        .findByIdAndUpdate(
-          id,
-          {
-            $set: {
-              bankId: new Types.ObjectId(bankId),
-            },
-          },
-          {
-            returnDocument: 'after',
-            runValidators: true,
-          },
-        )
-        .populate(POPULATE_OPTIONS)
-        .exec();
-    } catch (error: any) {
-      this.logger.error(
-        `Error updating sale transaction bank: ${error.message}`,
-        'SaleTransactionRepository',
-      );
-      throw error;
-    }
-  }
+  //     return await this.saleTransactionModel
+  //       .findByIdAndUpdate(
+  //         id,
+  //         {
+  //           $set: {
+  //             bankId: new Types.ObjectId(bankId),
+  //           },
+  //         },
+  //         {
+  //           returnDocument: 'after',
+  //           runValidators: true,
+  //         },
+  //       )
+  //       .populate(POPULATE_OPTIONS)
+  //       .exec();
+  //   } catch (error: any) {
+  //     this.logger.error(
+  //       `Error updating sale transaction bank: ${error.message}`,
+  //       'SaleTransactionRepository',
+  //     );
+  //     throw error;
+  //   }
+  // }
 
   async delete(id: string): Promise<SalesTransactionDocument | null> {
     try {

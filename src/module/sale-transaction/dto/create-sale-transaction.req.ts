@@ -239,6 +239,15 @@ export class CreateSalesTransactionDto {
   @IsMongoId({ message: 'agencyId must be a valid MongoDB ObjectId' })
   agencyId: string;
 
+  @ApiPropertyOptional({
+    example: '',
+    description:
+      'Employee handling this transaction. If not provided, agency employee will be used.',
+  })
+  @IsOptional()
+  @IsMongoId({ message: 'employeeId must be a valid MongoDB ObjectId' })
+  employeeId?: string;
+
   @ApiProperty({
     type: [TransactionItemDto],
     description: 'List of transaction items',

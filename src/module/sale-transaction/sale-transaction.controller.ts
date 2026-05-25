@@ -120,7 +120,30 @@ export class SaleTransactionController {
     );
   }
 
-  @Patch(':id/bank')
+  @Patch(':id/mark-paid')
+  @ApiOperation({
+    summary: 'Mark sale transaction as paid',
+    description:
+      'Only issued invoices can be marked as paid. This endpoint updates bankId and sets isPaid=true.',
+  })
+  async markPaid(
+    @Param('id') id: string,
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    )
+    body: UpdateSaleTransactionBankDto,
+  ) {
+    return await this.saleTransactionService.markSaleTransactionPaid(
+      id,
+      body.bankId,
+    );
+  }
+
+  @Patch(':id/mark-paid-test')
   @ApiOperation({
     summary: 'Update bank after invoice issued',
     description: 'Only bankId can be updated after invoiceStatus is ISSUED.',
