@@ -220,11 +220,6 @@ export class SaleTransactionService {
         await this.saleTransactionRepository.createSaleTransaction({
           ...createSaleTransactionDto,
 
-          /**
-           * Override lại để đảm bảo:
-           * - employeeId là employee được chọn hoặc fallback từ agency
-           * - departmentId lấy từ employee đó
-           */
           employeeId: finalEmployeeId,
           departmentId: finalDepartmentId,
         });
