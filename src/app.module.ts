@@ -55,7 +55,6 @@ import { InvoiceQueueModule } from './api/queues/invoice-queue.module';
         retryDelay: 1000,
       }),
     }),
-
     UsersModule,
     SaleTransactionModule,
     AgencyModule,
