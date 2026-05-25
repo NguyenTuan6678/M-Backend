@@ -8,12 +8,14 @@ import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { QueryEmployeeDto } from './dto/query-employee.req';
+import { DepartmentRepository } from '@repositories/department.repository';
 
 @Injectable()
 export class EmployeeService {
   constructor(
     @InjectModel(Employee.name) private employeeModel: Model<EmployeeDocument>,
     private readonly employeeRepository: EmployeeRepository,
+    private readonly departmentRepository: DepartmentRepository,
   ) {}
 
   async createEmployee(
@@ -30,6 +32,22 @@ export class EmployeeService {
           message: 'Missing required fields: employeeName or departmentId',
         };
         return response;
+      }
+
+      if (createEmployeeDto.departmentId) {
+        const department = await this.departmentRepository.findActiveById(
+          createEmployeeDto.departmentId,
+        );
+
+        if (!department) {
+          return {
+            code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+            info: ERROR_INFO.FAIL,
+            message:
+              'Department not found or inactive. Cannot assign inactive department to employee.',
+            content: undefined,
+          };
+        }
       }
 
       const duplicatedEmployee = await this.employeeModel.findOne({
@@ -118,6 +136,25 @@ export class EmployeeService {
     updateData: Partial<CreateEmployeeDto>,
   ): Promise<EmployeeResponseDto> {
     try {
+      if (updateData.departmentId) {
+        const department = await this.departmentRepository.findActiveById(
+          updateData.departmentId,
+        );
+
+        if (!department) {
+          return {
+            code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+
+            info: ERROR_INFO.FAIL,
+
+            message:
+              'Department not found or inactive. Cannot assign inactive deparment to employee.',
+
+            content: undefined,
+          };
+        }
+      }
+
       const updatedEmployee = await this.employeeRepository.update(
         id,
         updateData,
