@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Workbook, Worksheet } from 'exceljs';
+import { Workbook } from 'exceljs';
 import { SaleTransactionService } from '../sale-transaction.service';
 import { AgencyRepository } from '@repositories/agency.repository';
 import { ProductRepository } from '@repositories/product.repository';
@@ -21,6 +21,41 @@ export class SaleTransactionImportService {
     private readonly agencyRepository: AgencyRepository,
     private readonly productRepository: ProductRepository,
   ) {}
+
+  private getCellStringByIndex(row: any, index: number): string {
+    const value = row.getCell(index).value;
+
+    if (value === null || value === undefined) return '';
+
+    if (typeof value === 'object' && 'text' in value) {
+      return String((value as any).text).trim();
+    }
+
+    if (typeof value === 'object' && 'result' in value) {
+      return String((value as any).result ?? '').trim();
+    }
+
+    if (typeof value === 'object' && 'hyperlink' in value) {
+      return String((value as any).text ?? '').trim();
+    }
+
+    return String(value).trim();
+  }
+
+  private getCellNumberByIndex(
+    row: any,
+    index: number,
+    defaultValue = 0,
+  ): number {
+    const raw = this.getCellStringByIndex(row, index);
+
+    if (raw === '') return defaultValue;
+
+    const normalized = raw.replace(/,/g, '');
+    const number = Number(normalized);
+
+    return Number.isNaN(number) ? defaultValue : number;
+  }
 
   async preview(fileBuffer: Buffer): Promise<ImportPreviewResult> {
     const workbook = await this.loadWorkbook(fileBuffer);
@@ -122,114 +157,56 @@ export class SaleTransactionImportService {
       throw new BadRequestException('Sheet SaleTransaction not found');
     }
 
-    const headerMap = this.buildHeaderMap(sheet);
     const rows: SaleTransactionExcelRow[] = [];
 
     sheet.eachRow((row, rowNumber) => {
       if (rowNumber === 1 || this.isEmptyRow(row)) return;
 
-      const rowKey = this.getCellString(row, headerMap, 'rowKey');
+      const rowKey = this.getCellStringByIndex(row, 2);
 
       if (!rowKey) return;
 
       rows.push({
         excelRowNumber: rowNumber,
+
+        // B
         rowKey,
 
-        inv_currencyCode: this.getCellString(
-          row,
-          headerMap,
-          'inv_currencyCode',
-        ),
-        inv_exchangeRate: this.getCellNumber(
-          row,
-          headerMap,
-          'inv_exchangeRate',
-          1,
-        ),
-        inv_invoiceSeries: this.getCellString(
-          row,
-          headerMap,
-          'inv_invoiceSeries',
-        ),
-        inv_invoiceIssuedDate: this.getCellString(
-          row,
-          headerMap,
-          'inv_invoiceIssuedDate',
-        ),
+        // C
+        agencyNumber: this.getCellStringByIndex(row, 3),
 
-        inv_buyerDisplayName: this.getCellString(
-          row,
-          headerMap,
-          'inv_buyerDisplayName',
-        ),
-        inv_buyerLegalName: this.getCellString(
-          row,
-          headerMap,
-          'inv_buyerLegalName',
-        ),
-        inv_buyerTaxCode: this.getCellString(
-          row,
-          headerMap,
-          'inv_buyerTaxCode',
-        ),
-        inv_buyerAddressLine: this.getCellString(
-          row,
-          headerMap,
-          'inv_buyerAddressLine',
-        ),
-        inv_buyerEmail: this.getCellString(row, headerMap, 'inv_buyerEmail'),
-        inv_buyerBankAccount: this.getCellString(
-          row,
-          headerMap,
-          'inv_buyerBankAccount',
-        ),
-        inv_buyerBankName: this.getCellString(
-          row,
-          headerMap,
-          'inv_buyerBankName',
-        ),
-        inv_paymentMethodName: this.getCellString(
-          row,
-          headerMap,
-          'inv_paymentMethodName',
-        ),
+        // D - G
+        inv_currencyCode: this.getCellStringByIndex(row, 4),
+        inv_exchangeRate: this.getCellNumberByIndex(row, 5, 1),
+        inv_invoiceSeries: this.getCellStringByIndex(row, 6),
+        inv_invoiceIssuedDate: this.getCellStringByIndex(row, 7),
 
-        inv_discountAmount: this.getCellNumber(
-          row,
-          headerMap,
-          'inv_discountAmount',
-          0,
-        ),
-        inv_TotalAmountWithoutVAT: this.getCellNumber(
-          row,
-          headerMap,
-          'inv_TotalAmountWithoutVAT',
-          0,
-        ),
-        inv_vatAmount: this.getCellNumber(row, headerMap, 'inv_vatAmount', 0),
-        inv_TotalAmount: this.getCellNumber(
-          row,
-          headerMap,
-          'inv_TotalAmount',
-          0,
-        ),
+        // H - O
+        inv_buyerDisplayName: this.getCellStringByIndex(row, 8),
+        inv_buyerLegalName: this.getCellStringByIndex(row, 9),
+        inv_buyerTaxCode: this.getCellStringByIndex(row, 10),
+        inv_buyerAddressLine: this.getCellStringByIndex(row, 11),
+        inv_buyerEmail: this.getCellStringByIndex(row, 12),
+        inv_buyerBankAccount: this.getCellStringByIndex(row, 13),
+        inv_buyerBankName: this.getCellStringByIndex(row, 14),
+        inv_paymentMethodName: this.getCellStringByIndex(row, 15),
 
-        cccdan: this.getCellString(row, headerMap, 'cccdan'),
-        so_hchieu: this.getCellString(row, headerMap, 'so_hchieu'),
-        mdvqhnsach_nmua: this.getCellString(row, headerMap, 'mdvqhnsach_nmua'),
-        ma_ch: this.getCellString(row, headerMap, 'ma_ch'),
-        ten_ch: this.getCellString(row, headerMap, 'ten_ch'),
+        // P - S
+        inv_discountAmount: this.getCellNumberByIndex(row, 16, 0),
+        inv_TotalAmountWithoutVAT: this.getCellNumberByIndex(row, 17, 0),
+        inv_vatAmount: this.getCellNumberByIndex(row, 18, 0),
+        inv_TotalAmount: this.getCellNumberByIndex(row, 19, 0),
 
-        inv_quantity: this.getCellNumber(row, headerMap, 'inv_quantity', 1),
-        inv_discountPercentage: this.getCellNumber(
-          row,
-          headerMap,
-          'inv_discountPercentage',
-          0,
-        ),
+        // T - X
+        cccdan: this.getCellStringByIndex(row, 20),
+        so_hchieu: this.getCellStringByIndex(row, 21),
+        mdvqhnsach_nmua: this.getCellStringByIndex(row, 22),
+        ma_ch: this.getCellStringByIndex(row, 23),
+        ten_ch: this.getCellStringByIndex(row, 24),
 
-        agencyNumber: this.getCellString(row, headerMap, 'agencyNumber'),
+        // Y - Z
+        inv_quantity: this.getCellNumberByIndex(row, 25, 1),
+        inv_discountPercentage: this.getCellNumberByIndex(row, 26, 0),
       });
     });
 
@@ -245,37 +222,34 @@ export class SaleTransactionImportService {
       throw new BadRequestException('Sheet SaleTransaction_Items not found');
     }
 
-    const headerMap = this.buildHeaderMap(sheet);
     const rows: SaleTransactionItemExcelRow[] = [];
 
     sheet.eachRow((row, rowNumber) => {
       if (rowNumber === 1 || this.isEmptyRow(row)) return;
 
-      const rowKey = this.getCellString(row, headerMap, 'rowKey');
+      const rowKey = this.getCellStringByIndex(row, 2);
 
       if (!rowKey) return;
 
       rows.push({
         excelRowNumber: rowNumber,
+
+        // B
         rowKey,
 
-        productCode: this.getCellString(row, headerMap, 'productCode'),
+        // C
+        productCode: this.getCellStringByIndex(row, 3),
 
-        revenue: this.getCellNumber(row, headerMap, 'revenue', 0),
-        capitalPrice: this.getCellNumber(row, headerMap, 'capitalPrice', 0),
-        totalSalary: this.getCellNumber(row, headerMap, 'totalSalary', 0),
-        accountingAccountCode: this.getCellNumber(
-          row,
-          headerMap,
-          'accountingAccountCode',
-          0,
-        ),
+        // D - G
+        revenue: this.getCellNumberByIndex(row, 4, 0),
+        capitalPrice: this.getCellNumberByIndex(row, 5, 0),
+        totalSalary: this.getCellNumberByIndex(row, 6, 0),
+        accountingAccountCode: this.getCellNumberByIndex(row, 7, 0),
       });
     });
 
     return rows;
   }
-
   private validateParsedRows(
     transactions: SaleTransactionExcelRow[],
     items: SaleTransactionItemExcelRow[],
@@ -438,7 +412,7 @@ export class SaleTransactionImportService {
     const result: ResolvedImportTransaction[] = [];
 
     for (const transaction of transactions) {
-      const agency = await this.agencyRepository.findByAgencyNumber(
+      const agency = await this.agencyRepository.findActiveByAgencyNumber(
         transaction.agencyNumber,
       );
 
@@ -538,65 +512,6 @@ export class SaleTransactionImportService {
         accountingAccountCode: item.accountingAccountCode,
       })),
     };
-  }
-
-  private buildHeaderMap(sheet: Worksheet): Map<string, number> {
-    const headerRow = sheet.getRow(1);
-    const map = new Map<string, number>();
-
-    headerRow.eachCell((cell, colNumber) => {
-      const key = String(cell.value ?? '').trim();
-
-      if (key) {
-        map.set(key, colNumber);
-      }
-    });
-
-    return map;
-  }
-
-  private getCellString(
-    row: any,
-    headerMap: Map<string, number>,
-    key: string,
-  ): string {
-    const index = headerMap.get(key);
-
-    if (!index) return '';
-
-    const value = row.getCell(index).value;
-
-    if (value === null || value === undefined) return '';
-
-    if (typeof value === 'object' && 'text' in value) {
-      return String((value as any).text).trim();
-    }
-
-    if (typeof value === 'object' && 'result' in value) {
-      return String((value as any).result ?? '').trim();
-    }
-
-    if (typeof value === 'object' && 'hyperlink' in value) {
-      return String((value as any).text ?? '').trim();
-    }
-
-    return String(value).trim();
-  }
-
-  private getCellNumber(
-    row: any,
-    headerMap: Map<string, number>,
-    key: string,
-    defaultValue = 0,
-  ): number {
-    const raw = this.getCellString(row, headerMap, key);
-
-    if (raw === '') return defaultValue;
-
-    const normalized = raw.replace(/,/g, '');
-    const number = Number(normalized);
-
-    return Number.isNaN(number) ? defaultValue : number;
   }
 
   private isEmptyRow(row: any): boolean {

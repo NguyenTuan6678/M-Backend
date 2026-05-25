@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateProductDto } from '../module/product/dto/create-product.req';
 import { Product, ProductDocument } from '@schemas/product.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { QueryProductDto } from '@module/product/dto/query-product.req';
 import { Counter, CounterDocument } from '@schemas/counter.schema';
 
@@ -149,6 +149,19 @@ export class ProductRepository {
     return this.productModel.find({
       _id: { $in: ids },
     });
+  }
+
+  async findActiveById(id: string): Promise<ProductDocument | null> {
+    if (!Types.ObjectId.isValid(id)) {
+      return null;
+    }
+
+    return await this.productModel
+      .findOne({
+        _id: id,
+        isActive: true,
+      })
+      .exec();
   }
 
   async findByItemCode(itemCode: string): Promise<ProductDocument | null> {

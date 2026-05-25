@@ -147,6 +147,27 @@ export class EmployeeRepository {
     }
   }
 
+  async findActiveById(id: string): Promise<EmployeeDocument | null> {
+    try {
+      if (!Types.ObjectId.isValid(id)) {
+        return null;
+      }
+
+      return await this.employeeModel
+        .findOne({
+          _id: id,
+          isActive: true,
+        })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding active employee by id: ${error.message}`,
+        'EmployeeRepository',
+      );
+      throw error;
+    }
+  }
+
   async findByEmail(email: string): Promise<EmployeeDocument | null> {
     try {
       return await this.employeeModel

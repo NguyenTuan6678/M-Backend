@@ -3,7 +3,7 @@ import { CreateDepartmentDto } from '../module/department/dto/create-department.
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Department, DepartmentDocument } from '@schemas/department.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Counter, CounterDocument } from '@schemas/counter.schema';
 import { QueryDepartmentDto } from '@module/department/dto/query-department.req';
 
@@ -119,6 +119,19 @@ export class DepartmentRepository {
       this.logger.error(`Error finding department by ID: ${error.message}`);
       throw error;
     }
+  }
+
+  async findActiveById(id: string): Promise<DepartmentDocument | null> {
+    if (!Types.ObjectId.isValid(id)) {
+      return null;
+    }
+
+    return await this.departmentModel
+      .findOne({
+        _id: id,
+        isActive: true,
+      })
+      .exec();
   }
 
   async update(

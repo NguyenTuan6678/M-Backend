@@ -142,6 +142,30 @@ export class AgencyRepository {
     }
   }
 
+  async findActiveById(id: string): Promise<AgencyDocument | null> {
+    if (!Types.ObjectId.isValid(id)) {
+      return null;
+    }
+
+    return await this.agencyModel
+      .findOne({
+        _id: id,
+        isActive: true,
+      })
+      .exec();
+  }
+
+  async findActiveByAgencyNumber(
+    agencyNumber: string,
+  ): Promise<AgencyDocument | null> {
+    return await this.agencyModel
+      .findOne({
+        agencyNumber,
+        isActive: true,
+      })
+      .exec();
+  }
+
   async findByEmail(email: string): Promise<AgencyDocument | null> {
     try {
       return await this.agencyModel
