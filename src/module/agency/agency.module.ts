@@ -8,6 +8,7 @@ import { LoggerService } from '@common/logs/logger.service';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { Employee, EmployeeSchema } from '@schemas/employee.schema';
 import { Counter, CounterSchema } from '@schemas/counter.schema';
+import { EmployeeModule } from '@module/employee/employee.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { Counter, CounterSchema } from '@schemas/counter.schema';
       { name: Employee.name, schema: EmployeeSchema },
       { name: Counter.name, schema: CounterSchema },
     ]),
+    EmployeeModule,
   ],
   controllers: [AgencyController],
   providers: [AgencyService, AgencyRepository, LoggerService, JwtAuthGuard],

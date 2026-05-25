@@ -20,6 +20,8 @@ import { Employee, EmployeeSchema } from '@schemas/employee.schema';
 import { Bank, BankSchema } from '@schemas/bank.schema';
 import { Product, ProductSchema } from '@schemas/product.schema';
 import { Counter, CounterSchema } from '@schemas/counter.schema';
+import { AlertModule } from '@common/alerts/alert.module';
+import { InvoiceMonitorService } from '@common/invoice-monitor/invoice-monitor.service';
 
 @Module({
   imports: [
@@ -37,10 +39,12 @@ import { Counter, CounterSchema } from '@schemas/counter.schema';
     EmployeeModule,
     BankModule,
     ProductModule,
+    AlertModule,
   ],
   providers: [
     SaleTransactionService,
     SaleTransactionRepository,
+    InvoiceMonitorService,
     LoggerService,
     JwtAuthGuard,
   ],

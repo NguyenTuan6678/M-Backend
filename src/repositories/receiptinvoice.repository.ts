@@ -37,28 +37,6 @@ export class ReceiptInvoiceRepository {
     }
   }
 
-  async findById(id: string): Promise<ReceiptInvoiceDocument | null> {
-    try {
-      return await this.receiptModel.findById(id).exec();
-    } catch (error: any) {
-      this.logger.error(`Error finding receiptinvoice by ID: ${error.message}`);
-      throw error;
-    }
-  }
-
-  async findByTaxCode(
-    tax_code: string,
-  ): Promise<ReceiptInvoiceDocument | null> {
-    try {
-      return await this.receiptModel.findOne({ tax_code }).exec();
-    } catch (error: any) {
-      this.logger.error(
-        `Error finding receiptinvoice by tax_code: ${error.message}`,
-      );
-      throw error;
-    }
-  }
-
   async findAllWithFilters(query: QueryReceiptInvoiceDto): Promise<{
     data: ReceiptInvoiceDocument[];
     total: number;
@@ -123,6 +101,28 @@ export class ReceiptInvoiceRepository {
     } catch (error: any) {
       this.logger.error(
         `Error finding receipt invoices with filters: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  async findById(id: string): Promise<ReceiptInvoiceDocument | null> {
+    try {
+      return await this.receiptModel.findById(id).exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding receiptinvoice by ID: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findByTaxCode(
+    tax_code: string,
+  ): Promise<ReceiptInvoiceDocument | null> {
+    try {
+      return await this.receiptModel.findOne({ tax_code }).exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding receiptinvoice by tax_code: ${error.message}`,
       );
       throw error;
     }

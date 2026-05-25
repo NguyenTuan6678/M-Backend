@@ -4,7 +4,7 @@ import { LoggerService } from '@common/logs/logger.service';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Bank, BankDocument } from '@schemas/bank.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class BankRepository {
@@ -24,18 +24,6 @@ export class BankRepository {
       return savedBank;
     } catch (error: any) {
       this.logger.error(`Error creating bank: ${error.message}`, undefined);
-      throw error;
-    }
-  }
-
-  async findById(id: string): Promise<BankDocument | null> {
-    try {
-      return await this.bankModel
-        .findById(id)
-        .populate('inv_buyerBankName')
-        .exec();
-    } catch (error: any) {
-      this.logger.error(`Error finding bank by ID: ${error.message}`);
       throw error;
     }
   }
@@ -97,6 +85,31 @@ export class BankRepository {
     }
   }
 
+  async findById(id: string): Promise<BankDocument | null> {
+    try {
+      return await this.bankModel
+        .findById(id)
+        .populate('inv_buyerBankName')
+        .exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding bank by ID: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findActiveById(id: string): Promise<BankDocument | null> {
+    if (!Types.ObjectId.isValid(id)) {
+      return null;
+    }
+
+    return await this.bankModel
+      .findOne({
+        _id: id,
+        isActive: true,
+      })
+      .exec();
+  }
+
   async update(
     id: string,
     updateData: Partial<CreateBankDto>,
@@ -106,7 +119,7 @@ export class BankRepository {
         .findByIdAndUpdate(id, updateData, { new: true })
         .exec();
       if (updateBank) {
-        this.logger.error('Bank updated succesfully', 'BankRepository');
+        this.logger.error('Bank updated successfully', 'BankRepository');
       }
       return updateBank;
     } catch (error: any) {

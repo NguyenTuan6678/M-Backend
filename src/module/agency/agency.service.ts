@@ -8,12 +8,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Agency, AgencyDocument } from '@schemas/agency.schema';
 import { Model } from 'mongoose';
 import { QueryAgencyDto } from './dto/query-agency.req';
+import { EmployeeRepository } from '@repositories/employee.repository';
 
 @Injectable()
 export class AgencyService {
   constructor(
     @InjectModel(Agency.name) private agencyModel: Model<AgencyDocument>,
     private readonly agencyRepository: AgencyRepository,
+    private readonly employeeRepository: EmployeeRepository,
   ) {}
 
   async createAgency(
@@ -22,6 +24,23 @@ export class AgencyService {
     let response: MessageResponse | null = null;
     try {
       const { agencyName, commissionPercent } = createAgencyDto;
+
+      const employee = await this.employeeRepository.findActiveById(
+        createAgencyDto.employeeId,
+      );
+
+      if (!employee) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+
+          info: ERROR_INFO.FAIL,
+
+          message:
+            'Employee not found or inactive. Cannot assign inactive employee to agency.',
+
+          content: undefined,
+        };
+      }
 
       if (!agencyName) {
         return {
@@ -58,6 +77,25 @@ export class AgencyService {
     }
   }
 
+  async searchAgencies(query: QueryAgencyDto) {
+    try {
+      const result = await this.agencyRepository.findAllWithFilters(query);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Agencies fetched successfully',
+        ...result,
+      };
+    } catch (error: any) {
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error searching agencies: ${error.message}`,
+      };
+    }
+  }
+
   async getAgencyById(id: string): Promise<AgencyResponseDto | null> {
     let response: AgencyResponseDto | null = null;
     try {
@@ -89,30 +127,30 @@ export class AgencyService {
     return response;
   }
 
-  async searchAgencies(query: QueryAgencyDto) {
-    try {
-      const result = await this.agencyRepository.findAllWithFilters(query);
-
-      return {
-        code: ERROR_RES.SUCCESS.statusCode,
-        info: ERROR_INFO.SUCCESS,
-        message: 'Agencies fetched successfully',
-        ...result,
-      };
-    } catch (error: any) {
-      return {
-        code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: ERROR_INFO.FAIL,
-        message: `Error searching agencies: ${error.message}`,
-      };
-    }
-  }
-
   async updateAgency(
     id: string,
     updateData: Partial<CreateAgencyDto>,
   ): Promise<AgencyResponseDto | null> {
     try {
+      if (updateData.employeeId) {
+        const employee = await this.employeeRepository.findActiveById(
+          updateData.employeeId,
+        );
+
+        if (!employee) {
+          return {
+            code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+
+            info: ERROR_INFO.FAIL,
+
+            message:
+              'Employee not found or inactive. Cannot assign inactive employee to agency.',
+
+            content: undefined,
+          };
+        }
+      }
+
       const updatedAgency = await this.agencyRepository.update(id, updateData);
 
       if (!updatedAgency) {

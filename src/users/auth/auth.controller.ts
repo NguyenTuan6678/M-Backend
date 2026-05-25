@@ -15,6 +15,7 @@ import { MessageResponse } from '@app-types/message.res';
 import { LoginRes } from '@users/auth/dto/login.res';
 import { ChangePasswordDto } from '@users/auth/dto/change-password.req';
 import { ERROR_RES } from '@common/constants/error.const';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -34,6 +35,12 @@ export class AuthController {
     return this.authService.register(registerAccountDto);
   }
 
+  @Throttle({
+    default: {
+      limit: 5,
+      ttl: 60000,
+    },
+  })
   @Post('login')
   @ApiOperation({ summary: 'login for admin account' })
   @ApiResponse({

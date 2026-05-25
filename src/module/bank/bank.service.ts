@@ -7,7 +7,6 @@ import { CreateBankDto } from './dto/create-bank.req';
 import { BankResponseDto } from './dto/bank.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
-import { GetAllBanks } from './dto/get-all-bank.res';
 import { QueryBankDto } from './dto/query-bank.req';
 
 @Injectable()
@@ -127,7 +126,7 @@ export class BankService {
       return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Bank updated succcessfully',
+        message: 'Bank updated successfully',
         content: updatedBank,
       };
     } catch (error: any) {

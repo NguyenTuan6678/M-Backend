@@ -95,22 +95,24 @@ export class MInvoiceReceiptPostService {
 
   private calculateItemFields(item: InvoiceItemDataDto) {
     const price = item.price;
-    const quantity = item.inv_quantity || 1;
-    const discount = item.inv_discountAmount;
-    const discountPercentage =
-      item.inv_discountPercentage ||
-      item.inv_discountAmount / (price * quantity) ||
-      0;
+    const quantity = item.inv_quantity ?? 1;
+    const discount = 0;
+
+    const discountPercentage = 0;
     const tax = item.ma_thue / 100;
 
     const totalPrice = price * quantity - discount;
     const totalAmountWithVat = totalPrice / (1 + tax);
     const vatAmount = totalPrice - totalAmountWithVat;
+
     const totalBeforeDiscount = totalAmountWithVat / (1 - discountPercentage);
     const unitPrice = totalBeforeDiscount / quantity;
 
     return {
       ...item,
+      inv_quantity: quantity,
+      inv_discountAmount: discount,
+      inv_discountPercentage: discountPercentage,
       inv_TotalAmountWithoutVat: totalAmountWithVat,
       inv_vatAmount: vatAmount,
       inv_TotalAmount: totalPrice,
@@ -129,6 +131,10 @@ export class MInvoiceReceiptPostService {
 
         const allItems = calculatedDetails.flatMap((detail) => detail.data);
 
+        const inv_quantity = allItems.reduce(
+          (sum, item) => sum + (item.inv_quantity ?? 0),
+          0,
+        );
         const inv_discountAmount = allItems.reduce(
           (sum, item) => sum + (item.inv_discountAmount ?? 0),
           0,
@@ -148,6 +154,7 @@ export class MInvoiceReceiptPostService {
 
         return {
           ...invoiceData,
+          inv_quantity,
           inv_discountAmount,
           inv_TotalAmountWithoutVat,
           inv_vatAmount,
@@ -221,8 +228,6 @@ export class MInvoiceReceiptPostService {
       editmode: editmode ?? 1,
       data: builtPayload.data,
     };
-
-    // console.log('payload', JSON.stringify(payload, null, 2));
 
     const url = `https://${tax_code}.${baseUrl}/api/InvoiceApi78/Save`;
 

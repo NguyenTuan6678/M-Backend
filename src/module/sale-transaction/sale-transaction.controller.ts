@@ -21,6 +21,7 @@ import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-s
 import { SaleTransactionResponseDTO } from '@module/sale-transaction/dto/sale-transaction.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import { Throttle } from '@nestjs/throttler';
 import { MessageResponse } from '@app-types/message.res';
 import { QuerySaleTransactionDto } from './dto/query-transaction.req';
 import { UpdateSaleTransactionBankDto } from './dto/update-transaction-bank.req';
@@ -68,6 +69,12 @@ export class SaleTransactionController {
     );
   }
 
+  @Throttle({
+    default: {
+      limit: 10,
+      ttl: 60000,
+    },
+  })
   @Get()
   @ApiOperation({
     summary: 'Get all sale transactions with optional filters & pagination',
@@ -113,7 +120,30 @@ export class SaleTransactionController {
     );
   }
 
-  @Patch(':id/bank')
+  @Patch(':id/mark-paid')
+  @ApiOperation({
+    summary: 'Mark sale transaction as paid',
+    description:
+      'Only issued invoices can be marked as paid. This endpoint updates bankId and sets isPaid=true.',
+  })
+  async markPaid(
+    @Param('id') id: string,
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    )
+    body: UpdateSaleTransactionBankDto,
+  ) {
+    return await this.saleTransactionService.markSaleTransactionPaid(
+      id,
+      body.bankId,
+    );
+  }
+
+  @Patch(':id/mark-paid-test')
   @ApiOperation({
     summary: 'Update bank after invoice issued',
     description: 'Only bankId can be updated after invoiceStatus is ISSUED.',
@@ -133,6 +163,15 @@ export class SaleTransactionController {
       id,
       body.bankId,
     );
+  }
+
+  @Patch(':id/cancel-invoice')
+  @ApiOperation({
+    summary: 'Cancel sale transaction invoice',
+    description: 'Mark invoiceStatus as CANCELLED and set isActive to false.',
+  })
+  async cancelSaleTransactionInvoice(@Param('id') id: string) {
+    return await this.saleTransactionService.cancelSaleTransactionInvoice(id);
   }
 
   @Delete(':id')

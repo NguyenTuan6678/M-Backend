@@ -11,8 +11,6 @@ export class InvoiceQueueService {
   ) {}
 
   async addIssueInvoiceJob(data: IssueInvoiceJob) {
-    console.log('[ADD INVOICE JOB] data:', data);
-
     const job = await this.invoiceQueue.add('issue-invoice', data, {
       attempts: 3,
       backoff: {
@@ -27,14 +25,7 @@ export class InvoiceQueueService {
         age: 60 * 60 * 24 * 7,
       },
 
-      // Tạm thời dùng Date.now để tránh duplicate jobId khi debug
       jobId: `issue-invoice:${data.saleTransactionId}:${Date.now()}`,
-    });
-
-    console.log('[ADD INVOICE JOB SUCCESS]', {
-      id: job.id,
-      name: job.name,
-      data: job.data,
     });
 
     return job;

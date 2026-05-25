@@ -38,7 +38,7 @@ export class AgencyRepository {
         upsert: true,
       },
     );
-    return `AG${String(counter.seq).padStart(4, '0')}`;
+    return `DL${String(counter.seq).padStart(4, '0')}`;
   }
 
   async create(createAgencyDto: CreateAgencyDto): Promise<AgencyDocument> {
@@ -61,22 +61,6 @@ export class AgencyRepository {
       return await newAgency.save();
     } catch (error: any) {
       this.logger.error(`Error creating agency: ${error.message}`);
-      throw error;
-    }
-  }
-
-  async findById(id: string): Promise<AgencyDocument | null> {
-    try {
-      if (!Types.ObjectId.isValid(id)) {
-        return null;
-      }
-
-      return await this.agencyModel
-        .findById(id)
-        .populate(POPULATE_OPTIONS)
-        .exec();
-    } catch (error: any) {
-      this.logger.error(`Error finding agency by ID: ${error.message}`);
       throw error;
     }
   }
@@ -137,6 +121,87 @@ export class AgencyRepository {
     } catch (error: any) {
       this.logger.error(
         `Error finding agencies with filters: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  async findById(id: string): Promise<AgencyDocument | null> {
+    try {
+      if (!Types.ObjectId.isValid(id)) {
+        return null;
+      }
+
+      return await this.agencyModel
+        .findById(id)
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding agency by ID: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findActiveById(id: string): Promise<AgencyDocument | null> {
+    if (!Types.ObjectId.isValid(id)) {
+      return null;
+    }
+
+    return await this.agencyModel
+      .findOne({
+        _id: id,
+        isActive: true,
+      })
+      .exec();
+  }
+
+  async findActiveByAgencyNumber(
+    agencyNumber: string,
+  ): Promise<AgencyDocument | null> {
+    return await this.agencyModel
+      .findOne({
+        agencyNumber,
+        isActive: true,
+      })
+      .exec();
+  }
+
+  async findByEmail(email: string): Promise<AgencyDocument | null> {
+    try {
+      return await this.agencyModel
+        .findOne({ agencyEmail: email })
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding agency by Email: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findByName(name: string): Promise<AgencyDocument | null> {
+    try {
+      return await this.agencyModel
+        .findOne({ agencyName: name })
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(`Error finding agency by name: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findByAgencyNumber(
+    agencyNumber: string,
+  ): Promise<AgencyDocument | null> {
+    try {
+      return await this.agencyModel
+        .findOne({ agencyNumber })
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding agency by agencyNumber: ${error.message}`,
+        'AgencyRepository',
       );
       throw error;
     }

@@ -31,15 +31,13 @@ export function mapTransactionToInvoice(
         inv_itemName: product.inv_itemName,
         inv_unitCode: product.inv_unitCode,
         inv_discountPercentage: transaction.inv_discountPercentage,
-        price: product.inv_unitPrice, // A
-        inv_quantity: product.inv_quantity, // B — ✅ lấy từ product
-        inv_discountAmount: product.inv_discountAmount, // C — ✅ lấy từ product
-        ma_thue: parseFloat(product.ma_thue), // D
+        price: product.inv_unitPrice,
+        inv_quantity: transaction.inv_quantity ?? 1,
+        inv_discountAmount: product.inv_discountAmount,
+        ma_thue: parseFloat(product.ma_thue),
       };
     },
   );
-
-  // console.log('raw item[0]:', JSON.stringify(transaction.items?.[0], null, 2));
 
   const invoiceDetail: InvoiceDetailDto = { data: invoiceItems };
 

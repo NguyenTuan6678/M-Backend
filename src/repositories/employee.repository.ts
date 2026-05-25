@@ -32,7 +32,7 @@ export class EmployeeRepository {
         upsert: true,
       },
     );
-    return `EN${String(counter.seq).padStart(4, '0')}`;
+    return `NV${String(counter.seq).padStart(4, '0')}`;
   }
 
   async create(
@@ -61,39 +61,6 @@ export class EmployeeRepository {
       return await newEmployee.save();
     } catch (error: any) {
       this.logger.error(`Error creating employee: ${error.message}`, undefined);
-      throw error;
-    }
-  }
-
-  async findAll(): Promise<EmployeeDocument[]> {
-    try {
-      return await this.employeeModel
-        .find()
-        .populate(POPULATE_OPTIONS)
-        .sort({ createdAt: -1 })
-        .exec();
-    } catch (error: any) {
-      this.logger.error(`Error fetching employees: ${error.message}`);
-      throw error;
-    }
-  }
-
-  async findById(id: string): Promise<EmployeeDocument | null> {
-    try {
-      if (!Types.ObjectId.isValid(id)) {
-        this.logger.error(`Invalid ObjectId: ${id}`, 'DepartmentRepository');
-        return null;
-      }
-
-      return await this.employeeModel
-        .findById(id)
-        .populate(POPULATE_OPTIONS)
-        .exec();
-    } catch (error: any) {
-      this.logger.error(
-        `Error finding sale transaction with employee: ${error.message}`,
-        'SaleTransactionRepository',
-      );
       throw error;
     }
   }
@@ -155,6 +122,62 @@ export class EmployeeRepository {
     } catch (error: any) {
       this.logger.error(
         `Error finding employees with filters: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  async findById(id: string): Promise<EmployeeDocument | null> {
+    try {
+      if (!Types.ObjectId.isValid(id)) {
+        this.logger.error(`Invalid ObjectId: ${id}`, 'DepartmentRepository');
+        return null;
+      }
+
+      return await this.employeeModel
+        .findById(id)
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transaction with employee: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async findActiveById(id: string): Promise<EmployeeDocument | null> {
+    try {
+      if (!Types.ObjectId.isValid(id)) {
+        return null;
+      }
+
+      return await this.employeeModel
+        .findOne({
+          _id: id,
+          isActive: true,
+        })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding active employee by id: ${error.message}`,
+        'EmployeeRepository',
+      );
+      throw error;
+    }
+  }
+
+  async findByEmail(email: string): Promise<EmployeeDocument | null> {
+    try {
+      return await this.employeeModel
+        .findOne({ employeeEmail: email })
+        .populate(POPULATE_OPTIONS)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transaction with employee: ${error.message}`,
+        'SaleTransactionRepository',
       );
       throw error;
     }

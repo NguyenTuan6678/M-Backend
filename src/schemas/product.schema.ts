@@ -5,10 +5,10 @@ export type ProductDocument = Product & Document;
 
 @Schema({ timestamps: true })
 export class Product {
-  @Prop({ required: true, unique: true })
+  @Prop({ unique: true })
   inv_itemCode: string;
 
-  @Prop()
+  @Prop({ required: true, unique: true })
   inv_itemName: string;
 
   @Prop()
