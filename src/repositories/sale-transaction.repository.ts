@@ -380,6 +380,28 @@ export class SaleTransactionRepository {
       .exec();
   }
 
+  async findExistingFailedInvoices(limit = 20) {
+    try {
+      return await this.saleTransactionModel
+        .find({
+          invoiceStatus: InvoiceStatus.FAILED,
+          isActive: true,
+        })
+        .select(
+          '_id orderNumber inv_buyerDisplayName inv_buyerTaxCode invoiceStatus updatedAt createdAt',
+        )
+        .sort({ updatedAt: -1 })
+        .limit(limit)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding existing failed invoices: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
   async countFailedInvoicesRecently(minutes: number): Promise<number> {
     const thresholdDate = new Date(Date.now() - minutes * 60 * 1000);
 

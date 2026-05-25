@@ -148,4 +148,39 @@ export class AlertService {
 
     await this.sendInvoiceAlert(message);
   }
+
+  async notifyExistingFailedInvoices(params: {
+    count: number;
+    invoices: Array<{
+      id: string;
+      orderNumber?: string;
+      buyerName?: string;
+      buyerTaxCode?: string;
+      updatedAt?: Date;
+      invoiceStatus?: string;
+    }>;
+  }): Promise<void> {
+    const lines = params.invoices
+      .slice(0, 20)
+      .map((invoice, index) => {
+        return [
+          `${index + 1}. Order: ${invoice.orderNumber ?? 'N/A'}`,
+          `Transaction ID: ${invoice.id}`,
+          `Buyer: ${invoice.buyerName ?? 'N/A'}`,
+          `TaxCode: ${invoice.buyerTaxCode ?? 'N/A'}`,
+          `Status: ${invoice.invoiceStatus ?? 'N/A'}`,
+          `UpdatedAt: ${invoice.updatedAt?.toISOString?.() ?? 'N/A'}`,
+        ].join('\n');
+      })
+      .join('\n\n');
+
+    const message = [
+      '🚨 [INVOICE ALERT] Existing FAILED invoices need review',
+      `Failed invoices count: ${params.count}`,
+      '',
+      lines,
+    ].join('\n');
+
+    await this.sendInvoiceAlert(message);
+  }
 }

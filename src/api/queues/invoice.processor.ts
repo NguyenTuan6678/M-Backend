@@ -3,6 +3,7 @@ import { Job } from 'bullmq';
 import { IssueInvoiceJob } from './invoice-job.type';
 import { MInvoiceReceiptPostService } from '../m-invoice-receipt-post/m-invoice-receipt-post.service';
 import { forwardRef, Inject } from '@nestjs/common';
+import { LoggerService } from '@common/logs/logger.service';
 
 @Processor('invoice', {
   concurrency: 3,
@@ -11,6 +12,7 @@ export class InvoiceProcessor extends WorkerHost {
   constructor(
     @Inject(forwardRef(() => MInvoiceReceiptPostService))
     private readonly mInvoiceReceiptPostService: MInvoiceReceiptPostService,
+    private readonly logger: LoggerService,
   ) {
     super();
   }
@@ -38,8 +40,12 @@ export class InvoiceProcessor extends WorkerHost {
       );
 
       return result;
-    } catch (error) {
-      console.error('[INVOICE JOB FAILED]', job.id, error);
+    } catch (error: any) {
+      this.logger.error(
+        `[INVOICE JOB FAILED] ${job.id} - ${error.message}`,
+        error.stack,
+      );
+
       throw error;
     }
   }
