@@ -12,7 +12,7 @@ export class ReceiptInvoice {
   tax_code: string;
 
   @Prop()
-  description: true;
+  description: string;
 }
 
 export const ReceiptInvoiceSchema =
