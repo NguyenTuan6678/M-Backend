@@ -28,6 +28,7 @@ export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
 
   @Post('create')
+  @ApiOperation({ summary: 'Create a new employee' })
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body(ValidationPipe) createEmployeeDto: CreateEmployeeDto,
