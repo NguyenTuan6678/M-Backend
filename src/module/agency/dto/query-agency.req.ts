@@ -14,6 +14,13 @@ export class QueryAgencyDto {
     description: 'Employee ID',
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === '' || value === null || value === undefined) {
+      return undefined;
+    }
+
+    return value;
+  })
   @IsMongoId()
   employeeId?: string;
 

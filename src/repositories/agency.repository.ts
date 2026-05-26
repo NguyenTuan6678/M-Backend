@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Agency, AgencyDocument } from '@schemas/agency.schema';
 import { Model, Types } from 'mongoose';
@@ -11,7 +11,7 @@ import { QueryAgencyDto } from '@module/agency/dto/query-agency.req';
 const POPULATE_OPTIONS = [
   {
     path: 'employeeId',
-    select: 'employeeName employeeEmail employeePhone departmentId',
+    select: 'employeeName employeeEmail employeePhone departmentId isActive',
     populate: {
       path: 'departmentId',
       select: 'departmentName departmentDescription',
@@ -51,7 +51,10 @@ export class AgencyRepository {
         ...createAgencyDto,
         agencyNumber,
         agencyEmail,
-        ...(employeeId && { employeeId: new Types.ObjectId(employeeId) }),
+        ...(createAgencyDto.employeeId &&
+          Types.ObjectId.isValid(createAgencyDto.employeeId) && {
+            employeeId: new Types.ObjectId(createAgencyDto.employeeId),
+          }),
       };
       const newAgency = new this.agencyModel(dataSubmit);
       this.logger.log(
@@ -82,6 +85,10 @@ export class AgencyRepository {
       const filter: Record<string, any> = {};
 
       if (employeeId) {
+        if (!Types.ObjectId.isValid(employeeId)) {
+          throw new BadRequestException('employeeId must be a valid ObjectId');
+        }
+
         filter.employeeId = new Types.ObjectId(employeeId);
       }
 
