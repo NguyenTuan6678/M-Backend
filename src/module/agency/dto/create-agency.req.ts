@@ -41,7 +41,6 @@ export class CreateAgencyDto {
   })
   @IsOptional()
   @IsString({ message: 'employeeId must be a string' })
-  @IsMongoId({ message: 'employeeId must be a valid MongoDB ObjectId' })
   employeeId: string;
 
   @ApiProperty({
