@@ -35,10 +35,31 @@ export class InvoiceProcessor extends WorkerHost {
         throw new Error('Missing saleTransactionId in invoice job data');
       }
 
-      /**
-       * Nếu job nằm chờ trong queue quá lâu thì không xử lý nữa.
-       * Ví dụ: FE bắn nhiều hóa đơn, job thứ sau nằm waiting > 10 phút.
-       */
+      const currentTransaction =
+        await this.saleTransactionRepository.findById(saleTransactionId);
+
+      if (!currentTransaction) {
+        throw new Error(`Sale transaction ${saleTransactionId} not found`);
+      }
+
+      if ((currentTransaction as any).invoiceStatus === InvoiceStatus.FAILED) {
+        throw new Error(
+          `Invoice job skipped because transaction is already FAILED: ${saleTransactionId}`,
+        );
+      }
+
+      if ((currentTransaction as any).inv_invoiceCreatedId) {
+        this.logger.log(
+          `[INVOICE JOB SKIPPED] Invoice already created for transaction=${saleTransactionId}`,
+        );
+
+        return {
+          ok: true,
+          message: 'Invoice already created',
+          saleTransactionId,
+        };
+      }
+
       const waitingMs = Date.now() - job.timestamp;
 
       if (waitingMs > timeoutMs) {

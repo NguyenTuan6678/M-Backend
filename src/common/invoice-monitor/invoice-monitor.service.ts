@@ -13,42 +13,15 @@ export class InvoiceMonitorService {
     private readonly alertService: AlertService,
   ) {}
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_30_SECONDS)
   async monitorInvoices() {
     this.logger.log('[INVOICE MONITOR] Start checking invoice health');
-
-    await this.checkStuckIssuingInvoices();
+    await this.checkAndFailStuckIssuingInvoices();
     await this.checkFailedInvoicesRecently();
     await this.checkExistingFailedInvoices();
     await this.checkInconsistentInvoices();
 
     this.logger.log('[INVOICE MONITOR] Finished checking invoice health');
-  }
-
-  private async checkStuckIssuingInvoices() {
-    const stuckMinutes = Number(process.env.INVOICE_STUCK_MINUTES ?? 10);
-
-    const stuckInvoices =
-      await this.saleTransactionRepository.findStuckIssuingInvoices(
-        stuckMinutes,
-      );
-
-    if (!stuckInvoices.length) {
-      this.logger.log('[INVOICE MONITOR] No stuck ISSUING invoices');
-      return;
-    }
-
-    await this.alertService.notifyStuckIssuingInvoices({
-      count: stuckInvoices.length,
-      stuckMinutes,
-      invoices: stuckInvoices.map((invoice: any) => ({
-        id: String(invoice._id),
-        orderNumber: invoice.orderNumber,
-        buyerName: invoice.inv_buyerDisplayName,
-        updatedAt: invoice.updatedAt,
-        invoiceStatus: invoice.invoiceStatus,
-      })),
-    });
   }
 
   private async checkFailedInvoicesRecently() {
@@ -144,5 +117,44 @@ export class InvoiceMonitorService {
     });
 
     this.lastExistingFailedAlertAt = new Date();
+  }
+
+  private async checkAndFailStuckIssuingInvoices() {
+    const timeoutMinutes = Number(
+      process.env.INVOICE_JOB_TIMEOUT_MINUTES ?? 10,
+    );
+
+    const result =
+      await this.saleTransactionRepository.markStuckIssuingInvoicesFailed(
+        timeoutMinutes,
+      );
+
+    if (result.updated === 0) {
+      this.logger.log(
+        `[INVOICE MONITOR] No stuck ISSUING invoices older than ${timeoutMinutes} minutes`,
+      );
+      return;
+    }
+
+    this.logger.warn(
+      `[INVOICE MONITOR] Marked ${result.updated}/${result.matched} stuck ISSUING invoices as FAILED`,
+    );
+
+    await this.alertService.sendInvoiceAlert(
+      [
+        '🚨 [INVOICE ALERT] Stuck ISSUING invoices marked as FAILED',
+        `Timeout: ${timeoutMinutes} minutes`,
+        `Updated: ${result.updated}/${result.matched}`,
+        '',
+        ...result.invoices.map((invoice, index) =>
+          [
+            `${index + 1}. Order: ${invoice.orderNumber ?? 'N/A'}`,
+            `ID: ${invoice.id}`,
+            `Buyer: ${invoice.inv_buyerDisplayName ?? 'N/A'}`,
+            `UpdatedAt: ${invoice.updatedAt?.toISOString?.() ?? 'N/A'}`,
+          ].join('\n'),
+        ),
+      ].join('\n'),
+    );
   }
 }
