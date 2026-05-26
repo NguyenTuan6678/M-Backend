@@ -31,6 +31,9 @@ export class InvoiceIssueService {
       };
     }
 
+    /**
+     * Nếu hóa đơn đã xuất rồi thì không enqueue lại.
+     */
     if ((transaction as any).inv_invoiceCreatedId) {
       return {
         code: ERROR_RES.SUCCESS.statusCode,
@@ -40,10 +43,20 @@ export class InvoiceIssueService {
       };
     }
 
+    /**
+     * Nếu đang ISSUING:
+     * - Nếu chưa quá timeout thì báo đang xử lý
+     * - Nếu quá timeout thì set FAILED để cho phép enqueue lại
+     */
     if ((transaction as any).invoiceStatus === InvoiceStatus.ISSUING) {
       const updatedAt = new Date((transaction as any).updatedAt).getTime();
       const now = Date.now();
-      const timeoutMs = 5 * 60 * 1000;
+
+      const timeoutMinutes = Number(
+        process.env.INVOICE_JOB_TIMEOUT_MINUTES ?? 10,
+      );
+
+      const timeoutMs = timeoutMinutes * 60 * 1000;
 
       if (now - updatedAt < timeoutMs) {
         return {
@@ -61,12 +74,38 @@ export class InvoiceIssueService {
     }
 
     try {
+      /**
+       * Validate data quan trọng trước khi enqueue.
+       */
+      if (!body.tax_code) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'tax_code is required',
+        };
+      }
+
+      if (!body.inv_invoiceSeries) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'inv_invoiceSeries is required',
+        };
+      }
+
+      /**
+       * Set ISSUING trước khi add job.
+       */
       await this.saleTransactionRepository.update(saleTransactionId, {
-        invoiceStatus: 'ISSUING' as any,
+        invoiceStatus: InvoiceStatus.ISSUING,
         isActive: true,
       });
 
-      const job = await this.invoiceQueueService.addIssueInvoiceJob({
+      /**
+       * addInvoiceJob hiện tại trả về object response,
+       * không phải BullMQ Job object.
+       */
+      const queuedResult = await this.invoiceQueueService.addInvoiceJob({
         saleTransactionId,
         tax_code: body.tax_code,
         inv_invoiceSeries: body.inv_invoiceSeries,
@@ -74,16 +113,10 @@ export class InvoiceIssueService {
         editmode: body.editmode,
       });
 
-      return {
-        code: ERROR_RES.ACCEPTED.statusCode,
-        info: ERROR_INFO.PROCESSING,
-        message: 'Invoice issue job has been queued',
-        jobId: job.id,
-        saleTransactionId,
-      };
+      return queuedResult;
     } catch (error: any) {
       await this.saleTransactionRepository.update(saleTransactionId, {
-        invoiceStatus: 'FAILED' as any,
+        invoiceStatus: InvoiceStatus.FAILED,
         isActive: true,
       });
 

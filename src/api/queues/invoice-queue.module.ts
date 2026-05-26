@@ -4,6 +4,7 @@ import { InvoiceQueueService } from './invoice-queue.service';
 import { InvoiceProcessor } from './invoice.processor';
 import { MInvoiceReceiptPostModule } from '../m-invoice-receipt-post/m-invoice-receipt-post.module';
 import { LoggerService } from '@common/logs/logger.service';
+import { SaleTransactionModule } from '@module/sale-transaction/sale-transaction.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { LoggerService } from '@common/logs/logger.service';
       },
     }),
     forwardRef(() => MInvoiceReceiptPostModule),
+    SaleTransactionModule,
   ],
   providers: [InvoiceQueueService, InvoiceProcessor, LoggerService],
   exports: [InvoiceQueueService],

@@ -1,33 +1,50 @@
 import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { IssueInvoiceJob } from './invoice-job.type';
 
 @Injectable()
 export class InvoiceQueueService {
   constructor(
     @InjectQueue('invoice')
-    private readonly invoiceQueue: Queue<IssueInvoiceJob>,
+    private readonly invoiceQueue: Queue,
   ) {}
 
-  async addIssueInvoiceJob(data: IssueInvoiceJob) {
+  async addInvoiceJob(data: {
+    saleTransactionId: string;
+    tax_code: string;
+    inv_invoiceSeries?: string;
+    inv_invoiceIssuedDate?: string;
+    editmode?: number;
+  }) {
+    const attempts = Number(process.env.INVOICE_JOB_ATTEMPTS ?? 3);
+
     const job = await this.invoiceQueue.add('issue-invoice', data, {
-      attempts: 3,
+      jobId: `issue-invoice:${data.saleTransactionId}:${Date.now()}`,
+
+      attempts,
+
       backoff: {
         type: 'exponential',
-        delay: 3000,
+        delay: 5000,
       },
+
       removeOnComplete: {
-        age: 60 * 60 * 24,
+        age: 60 * 60,
         count: 1000,
       },
-      removeOnFail: {
-        age: 60 * 60 * 24 * 7,
-      },
 
-      jobId: `issue-invoice:${data.saleTransactionId}:${Date.now()}`,
+      removeOnFail: {
+        age: 24 * 60 * 60,
+        count: 5000,
+      },
     });
 
-    return job;
+    return {
+      code: 202,
+      info: 'PROCESSING',
+      message: 'Invoice issue job has been queued',
+      jobId: job.id,
+      saleTransactionId: data.saleTransactionId,
+    };
   }
 }

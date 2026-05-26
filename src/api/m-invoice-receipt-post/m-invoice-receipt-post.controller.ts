@@ -16,7 +16,7 @@ import {
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { CreateInvoiceFromTransactionDto } from './dto/send-receipt.req';
 import { InvoiceIssueService } from '@utils/invoice-issue/invoice-issue.service';
-import { Throttle } from '@nestjs/throttler';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @ApiTags('M-Invoice Receipt Post')
 @Controller('m-invoice-receipt-post')
@@ -25,12 +25,7 @@ import { Throttle } from '@nestjs/throttler';
 export class MInvoiceReceiptPostController {
   constructor(private readonly invoiceIssueService: InvoiceIssueService) {}
 
-  @Throttle({
-    default: {
-      limit: 5,
-      ttl: 60000,
-    },
-  })
+  @SkipThrottle()
   @Post()
   @ApiOperation({ summary: 'Export M-Invoice' })
   @ApiQuery({

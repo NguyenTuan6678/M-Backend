@@ -402,6 +402,38 @@ export class SaleTransactionRepository {
     }
   }
 
+  async findInvoiceStatusesByIds(ids: string[]) {
+    try {
+      const validIds = ids.filter((id) => Types.ObjectId.isValid(id));
+
+      if (!validIds.length) {
+        return [];
+      }
+
+      return await this.saleTransactionModel
+        .find({
+          _id: {
+            $in: validIds.map((id) => new Types.ObjectId(id)),
+          },
+        })
+        .select(
+          '_id orderNumber invoiceStatus inv_invoiceCreatedId inv_invoiceSeries inv_invoiceIssuedDate isPaid bankId updatedAt createdAt',
+        )
+        .populate({
+          path: 'bankId',
+          select: 'inv_buyerBankName isActive',
+        })
+        .sort({ updatedAt: -1 })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding invoice statuses by ids: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
   async countFailedInvoicesRecently(minutes: number): Promise<number> {
     const thresholdDate = new Date(Date.now() - minutes * 60 * 1000);
 
