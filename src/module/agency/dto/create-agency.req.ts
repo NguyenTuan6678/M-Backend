@@ -39,7 +39,7 @@ export class CreateAgencyDto {
     example: '649a6f1e5f1234567890abcf',
     description: 'Employee ID',
   })
-  @IsNotEmpty({ message: 'employeeId is required' })
+  @IsOptional()
   @IsString({ message: 'employeeId must be a string' })
   @IsMongoId({ message: 'employeeId must be a valid MongoDB ObjectId' })
   employeeId: string;
