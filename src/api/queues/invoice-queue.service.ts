@@ -40,11 +40,15 @@ export class InvoiceQueueService {
     });
 
     return {
-      code: 202,
+      code: 201,
       info: 'PROCESSING',
       message: 'Invoice issue job has been queued',
       jobId: job.id,
       saleTransactionId: data.saleTransactionId,
+      invoiceStatus: 'ISSUING',
+      statusCheckUrl: `/sale-transaction/invoice-status?ids=${data.saleTransactionId}`,
+      successCondition:
+        'invoiceStatus=ISSUED and inv_invoiceCreatedId is not empty',
     };
   }
 }
