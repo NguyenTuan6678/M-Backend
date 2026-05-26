@@ -7,7 +7,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateAgencyDto {
@@ -39,8 +39,14 @@ export class CreateAgencyDto {
     example: '649a6f1e5f1234567890abcf',
     description: 'Employee ID',
   })
-  @IsNotEmpty({ message: 'employeeId is required' })
-  @IsString({ message: 'employeeId must be a string' })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === '' || value === null || value === undefined) {
+      return undefined;
+    }
+
+    return value;
+  })
   @IsMongoId({ message: 'employeeId must be a valid MongoDB ObjectId' })
   employeeId: string;
 

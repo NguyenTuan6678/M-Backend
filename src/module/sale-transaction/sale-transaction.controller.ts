@@ -20,16 +20,15 @@ import { SaleTransactionService } from '@module/sale-transaction/sale-transactio
 import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
 import { SaleTransactionResponseDTO } from '@module/sale-transaction/dto/sale-transaction.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
-import { CacheInterceptor } from '@nestjs/cache-manager';
-import { Throttle } from '@nestjs/throttler';
+import { SkipThrottle } from '@nestjs/throttler';
 import { MessageResponse } from '@app-types/message.res';
 import { QuerySaleTransactionDto } from './dto/query-transaction.req';
 import { UpdateSaleTransactionBankDto } from './dto/update-transaction-bank.req';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @ApiTags('Sale Transaction')
 @Controller('sale-transaction')
 @UseGuards(JwtAuthGuard)
-@UseInterceptors(CacheInterceptor)
 @ApiBearerAuth('authorization')
 export class SaleTransactionController {
   constructor(
@@ -69,12 +68,7 @@ export class SaleTransactionController {
     );
   }
 
-  @Throttle({
-    default: {
-      limit: 10,
-      ttl: 60000,
-    },
-  })
+  @UseInterceptors(CacheInterceptor)
   @Get()
   @ApiOperation({
     summary: 'Get all sale transactions with optional filters & pagination',
@@ -106,6 +100,17 @@ export class SaleTransactionController {
     @Param('id') id: string,
   ): Promise<SaleTransactionResponseDTO> {
     return await this.saleTransactionService.getSaleTransactionById(id);
+  }
+
+  @Get('invoice-status')
+  @SkipThrottle()
+  @ApiOperation({
+    summary: 'Get invoice statuses by transaction ids',
+    description:
+      'Used by frontend polling after invoice jobs are queued. Use this instead of calling GET /sale-transaction/:id many times.',
+  })
+  async getInvoiceStatuses(@Query('ids') ids: string) {
+    return await this.saleTransactionService.getInvoiceStatuses(ids);
   }
 
   @Put(':id')

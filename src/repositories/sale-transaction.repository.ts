@@ -364,6 +364,73 @@ export class SaleTransactionRepository {
     }
   }
 
+  async markStuckIssuingInvoicesFailed(minutes: number): Promise<{
+    matched: number;
+    updated: number;
+    invoices: Array<{
+      id: string;
+      orderNumber?: string;
+      inv_buyerDisplayName?: string;
+      updatedAt?: Date;
+    }>;
+  }> {
+    try {
+      const thresholdDate = new Date(Date.now() - minutes * 60 * 1000);
+
+      const stuckInvoices = await this.saleTransactionModel
+        .find({
+          invoiceStatus: InvoiceStatus.ISSUING,
+          updatedAt: { $lte: thresholdDate },
+        })
+        .select('_id orderNumber inv_buyerDisplayName updatedAt')
+        .sort({ updatedAt: 1 })
+        .limit(100)
+        .exec();
+
+      if (!stuckInvoices.length) {
+        return {
+          matched: 0,
+          updated: 0,
+          invoices: [],
+        };
+      }
+
+      const ids = stuckInvoices.map((invoice: any) => invoice._id);
+
+      const result = await this.saleTransactionModel
+        .updateMany(
+          {
+            _id: { $in: ids },
+            invoiceStatus: InvoiceStatus.ISSUING,
+          },
+          {
+            $set: {
+              invoiceStatus: InvoiceStatus.FAILED,
+              isActive: true,
+            },
+          },
+        )
+        .exec();
+
+      return {
+        matched: stuckInvoices.length,
+        updated: result.modifiedCount ?? 0,
+        invoices: stuckInvoices.map((invoice: any) => ({
+          id: String(invoice._id),
+          orderNumber: invoice.orderNumber,
+          inv_buyerDisplayName: invoice.inv_buyerDisplayName,
+          updatedAt: invoice.updatedAt,
+        })),
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `Error marking stuck ISSUING invoices as FAILED: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
   async findStuckIssuingInvoices(minutes: number) {
     const thresholdDate = new Date(Date.now() - minutes * 60 * 1000);
 
@@ -378,6 +445,60 @@ export class SaleTransactionRepository {
       .sort({ updatedAt: 1 })
       .limit(20)
       .exec();
+  }
+
+  async findExistingFailedInvoices(limit = 20) {
+    try {
+      return await this.saleTransactionModel
+        .find({
+          invoiceStatus: InvoiceStatus.FAILED,
+          isActive: true,
+        })
+        .select(
+          '_id orderNumber inv_buyerDisplayName inv_buyerTaxCode invoiceStatus updatedAt createdAt',
+        )
+        .sort({ updatedAt: -1 })
+        .limit(limit)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding existing failed invoices: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async findInvoiceStatusesByIds(ids: string[]) {
+    try {
+      const validIds = ids.filter((id) => Types.ObjectId.isValid(id));
+
+      if (!validIds.length) {
+        return [];
+      }
+
+      return await this.saleTransactionModel
+        .find({
+          _id: {
+            $in: validIds.map((id) => new Types.ObjectId(id)),
+          },
+        })
+        .select(
+          '_id orderNumber invoiceStatus inv_invoiceCreatedId inv_invoiceSeries inv_invoiceIssuedDate isPaid bankId updatedAt createdAt',
+        )
+        .populate({
+          path: 'bankId',
+          select: 'inv_buyerBankName isActive',
+        })
+        .sort({ updatedAt: -1 })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding invoice statuses by ids: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
   }
 
   async countFailedInvoicesRecently(minutes: number): Promise<number> {

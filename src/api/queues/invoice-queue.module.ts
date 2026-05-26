@@ -3,6 +3,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { InvoiceQueueService } from './invoice-queue.service';
 import { InvoiceProcessor } from './invoice.processor';
 import { MInvoiceReceiptPostModule } from '../m-invoice-receipt-post/m-invoice-receipt-post.module';
+import { LoggerService } from '@common/logs/logger.service';
+import { SaleTransactionModule } from '@module/sale-transaction/sale-transaction.module';
 
 @Module({
   imports: [
@@ -15,8 +17,9 @@ import { MInvoiceReceiptPostModule } from '../m-invoice-receipt-post/m-invoice-r
       },
     }),
     forwardRef(() => MInvoiceReceiptPostModule),
+    SaleTransactionModule,
   ],
-  providers: [InvoiceQueueService, InvoiceProcessor],
+  providers: [InvoiceQueueService, InvoiceProcessor, LoggerService],
   exports: [InvoiceQueueService],
 })
 export class InvoiceQueueModule {}

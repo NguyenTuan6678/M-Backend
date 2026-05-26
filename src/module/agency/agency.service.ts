@@ -25,23 +25,6 @@ export class AgencyService {
     try {
       const { agencyName, commissionPercent } = createAgencyDto;
 
-      const employee = await this.employeeRepository.findActiveById(
-        createAgencyDto.employeeId,
-      );
-
-      if (!employee) {
-        return {
-          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-
-          info: ERROR_INFO.FAIL,
-
-          message:
-            'Employee not found or inactive. Cannot assign inactive employee to agency.',
-
-          content: undefined,
-        };
-      }
-
       if (!agencyName) {
         return {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,

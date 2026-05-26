@@ -220,11 +220,6 @@ export class SaleTransactionService {
         await this.saleTransactionRepository.createSaleTransaction({
           ...createSaleTransactionDto,
 
-          /**
-           * Override lại để đảm bảo:
-           * - employeeId là employee được chọn hoặc fallback từ agency
-           * - departmentId lấy từ employee đó
-           */
           employeeId: finalEmployeeId,
           departmentId: finalDepartmentId,
         });
@@ -388,6 +383,56 @@ export class SaleTransactionService {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
         message: `Error marking sale transaction as paid: ${error.message}`,
+      };
+    }
+  }
+
+  async getInvoiceStatuses(
+    idsText: string,
+  ): Promise<SaleTransactionResponseDTO> {
+    try {
+      const ids = idsText
+        ?.split(',')
+        .map((id) => id.trim())
+        .filter(Boolean);
+
+      if (!ids?.length) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'ids query is required. Example: ?ids=id1,id2,id3',
+        };
+      }
+
+      const invalidIds = ids.filter((id) => !Types.ObjectId.isValid(id));
+
+      if (invalidIds.length > 0) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Invalid transaction ids: ${invalidIds.join(', ')}`,
+        };
+      }
+
+      const transactions =
+        await this.saleTransactionRepository.findInvoiceStatusesByIds(ids);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Invoice statuses fetched successfully',
+        content: transactions as any,
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `Error getting invoice statuses: ${error.message}`,
+        'SaleTransactionService',
+      );
+
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `Error getting invoice statuses: ${error.message}`,
       };
     }
   }

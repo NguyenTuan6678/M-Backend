@@ -5,13 +5,11 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
-    private reflector: Reflector,
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
