@@ -40,7 +40,7 @@ export class InvoiceQueueService {
     });
 
     return {
-      code: 201,
+      code: 202,
       info: 'PROCESSING',
       message: 'Invoice issue job has been queued',
       jobId: job.id,
