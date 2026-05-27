@@ -11,10 +11,12 @@ import {
   Post,
   Put,
   Query,
+  Res,
   UseGuards,
   UseInterceptors,
   ValidationPipe,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SaleTransactionService } from '@module/sale-transaction/sale-transaction.service';
 import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
@@ -25,6 +27,8 @@ import { MessageResponse } from '@app-types/message.res';
 import { QuerySaleTransactionDto } from './dto/query-transaction.req';
 import { UpdateSaleTransactionBankDto } from './dto/update-transaction-bank.req';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import { SaleTransactionReportService } from './report/sale-transaction-report.service';
+import { QuerySaleTransactionReportDto } from './dto/query-transaction-report.req';
 
 @ApiTags('Sale Transaction')
 @Controller('sale-transaction')
@@ -33,6 +37,7 @@ import { CacheInterceptor } from '@nestjs/cache-manager';
 export class SaleTransactionController {
   constructor(
     private readonly saleTransactionService: SaleTransactionService,
+    private readonly saleTransactionReportService: SaleTransactionReportService,
   ) {}
 
   @Post('create')
@@ -92,6 +97,43 @@ export class SaleTransactionController {
   @ApiOperation({ summary: 'Get sale transaction statistics' })
   async getSaleTransactionStats(): Promise<{ totalTransactions: number }> {
     return await this.saleTransactionService.getSaleTransactionStats();
+  }
+
+  @Get('report/export')
+  @ApiOperation({
+    summary: 'Export sale transaction report to Excel',
+  })
+  async exportSaleTransactionReport(
+    @Query(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        transformOptions: {
+          enableImplicitConversion: false,
+        },
+      }),
+    )
+    query: QuerySaleTransactionReportDto,
+    @Res() res: Response,
+  ) {
+    const buffer =
+      await this.saleTransactionReportService.exportSaleTransactionReport(
+        query,
+      );
+
+    const startDate = query.startDate || 'all';
+    const endDate = query.endDate || 'all';
+
+    const filename = `Transaction-report-${startDate}-to-${endDate}.xlsx`;
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    return res.send(buffer);
   }
 
   @Get(':id')
