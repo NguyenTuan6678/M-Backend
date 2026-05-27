@@ -93,7 +93,11 @@ export class SaleTransactionReportService {
       {
         metric: 'Trạng thái thanh toán',
         value:
-          query.isPaid === undefined ? 'All' : query.isPaid ? 'Paid' : 'Unpaid',
+          query.isPaid === undefined
+            ? 'TẤT CẢ'
+            : query.isPaid
+              ? 'ĐÃ THANH TOÁN'
+              : 'CHƯA THANH TOÁN',
       },
       {
         metric: 'Tổng giao dịch',
