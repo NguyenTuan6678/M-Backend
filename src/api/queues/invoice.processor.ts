@@ -44,13 +44,13 @@ export class InvoiceProcessor extends WorkerHost {
 
       if ((currentTransaction as any).invoiceStatus === InvoiceStatus.FAILED) {
         throw new Error(
-          `Invoice job skipped because transaction is already FAILED: ${saleTransactionId}`,
+          `Invoice job skipped because transaction is already FAILED: Id(${saleTransactionId})`,
         );
       }
 
       if ((currentTransaction as any).inv_invoiceCreatedId) {
         this.logger.log(
-          `[INVOICE JOB SKIPPED] Invoice already created for transaction=${saleTransactionId}`,
+          `[INVOICE JOB SKIPPED] Invoice already created for transaction = ${saleTransactionId}`,
         );
 
         return {
@@ -90,7 +90,7 @@ export class InvoiceProcessor extends WorkerHost {
       }
 
       this.logger.log(`[INVOICE JOB DONE] ${job.id}`);
-      this.logger.log(`[INVOICE JOB RESULT] ${JSON.stringify(result)}`);
+      // this.logger.log(`[INVOICE JOB RESULT] ${JSON.stringify(result)}`);
 
       return result;
     } catch (error: any) {
@@ -164,7 +164,7 @@ export class InvoiceProcessor extends WorkerHost {
     });
 
     this.logger.warn(
-      `[INVOICE JOB FAILED STATUS UPDATED] transaction=${saleTransactionId}, reason=${reason}`,
+      `[INVOICE JOB FAILED STATUS UPDATED] transaction = ${saleTransactionId}, reason = ${reason}`,
     );
   }
 }

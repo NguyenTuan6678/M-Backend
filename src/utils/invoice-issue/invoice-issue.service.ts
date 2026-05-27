@@ -31,9 +31,6 @@ export class InvoiceIssueService {
       };
     }
 
-    /**
-     * Nếu hóa đơn đã xuất rồi thì không enqueue lại.
-     */
     if ((transaction as any).inv_invoiceCreatedId) {
       return {
         code: ERROR_RES.SUCCESS.statusCode,
@@ -43,11 +40,6 @@ export class InvoiceIssueService {
       };
     }
 
-    /**
-     * Nếu đang ISSUING:
-     * - Nếu chưa quá timeout thì báo đang xử lý
-     * - Nếu quá timeout thì set FAILED để cho phép enqueue lại
-     */
     if ((transaction as any).invoiceStatus === InvoiceStatus.ISSUING) {
       const updatedAt = new Date((transaction as any).updatedAt).getTime();
       const now = Date.now();
@@ -74,9 +66,6 @@ export class InvoiceIssueService {
     }
 
     try {
-      /**
-       * Validate data quan trọng trước khi enqueue.
-       */
       if (!body.tax_code) {
         return {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
@@ -93,18 +82,11 @@ export class InvoiceIssueService {
         };
       }
 
-      /**
-       * Set ISSUING trước khi add job.
-       */
       await this.saleTransactionRepository.update(saleTransactionId, {
         invoiceStatus: InvoiceStatus.ISSUING,
         isActive: true,
       });
 
-      /**
-       * addInvoiceJob hiện tại trả về object response,
-       * không phải BullMQ Job object.
-       */
       const queuedResult = await this.invoiceQueueService.addInvoiceJob({
         saleTransactionId,
         tax_code: body.tax_code,
