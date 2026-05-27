@@ -7,6 +7,7 @@ import { LoggerService } from '@common/logs/logger.service';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { printServerBanner } from '@common/banner/server-banner';
 declare const module: any;
 
 async function bootstrap() {
@@ -70,6 +71,7 @@ async function bootstrap() {
   logger.log(`📍 MongoDB: ${process.env.MONGODB_URI}`, 'Bootstrap');
   logger.log(`📜 Swagger UI: http://localhost:${port}/api/docs`, 'Bootstrap');
 
+  printServerBanner(port);
   if (module.hot) {
     module.hot.accept();
     module.hot.dispose(() => app.close());

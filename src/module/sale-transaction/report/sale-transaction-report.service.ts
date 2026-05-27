@@ -46,7 +46,7 @@ export class SaleTransactionReportService {
     transactions: any[],
     query: QuerySaleTransactionReportDto,
   ) {
-    const sheet = workbook.addWorksheet('Summary');
+    const sheet = workbook.addWorksheet('Tổng hợp');
 
     const totalTransactions = transactions.length;
 
@@ -69,58 +69,58 @@ export class SaleTransactionReportService {
     );
 
     sheet.columns = [
-      { header: 'Metric', key: 'metric', width: 35 },
-      { header: 'Value', key: 'value', width: 30 },
+      { header: 'Số liệu', key: 'metric', width: 35 },
+      { header: 'Giá trị', key: 'value', width: 30 },
     ];
 
     sheet.addRows([
       {
-        metric: 'Report name',
-        value: 'Sale Transaction Report',
+        metric: 'Tên báo cáo',
+        value: 'Transaction Report',
       },
       {
-        metric: 'Start date',
+        metric: 'Ngày bắt đầu',
         value: query.startDate || 'All',
       },
       {
-        metric: 'End date',
+        metric: 'Ngày kết thúc',
         value: query.endDate || 'All',
       },
       {
-        metric: 'Invoice status',
-        value: query.invoiceStatus || 'ISSUED',
+        metric: 'Trạng thái hoá đơn',
+        value: query.invoiceStatus || '',
       },
       {
-        metric: 'Payment status',
+        metric: 'Trạng thái thanh toán',
         value:
           query.isPaid === undefined ? 'All' : query.isPaid ? 'Paid' : 'Unpaid',
       },
       {
-        metric: 'Total transactions',
+        metric: 'Tổng giao dịch',
         value: totalTransactions,
       },
       {
-        metric: 'Total paid',
+        metric: 'Tổng giao dịch thanh toán',
         value: totalPaid,
       },
       {
-        metric: 'Total unpaid',
+        metric: 'Tổng giao dịch chưa thanh toán',
         value: totalUnpaid,
       },
       {
-        metric: 'Total amount without VAT',
+        metric: 'Tổng tiền trước thuế',
         value: totalWithoutVat,
       },
       {
-        metric: 'Total VAT amount',
+        metric: 'Tổng tiền sau thuế',
         value: totalVat,
       },
       {
-        metric: 'Total amount',
+        metric: 'Tổng tiền',
         value: totalAmount,
       },
       {
-        metric: 'Exported at',
+        metric: 'Xuất báo cáo vào lúc',
         value: this.formatDateTime(new Date()),
       },
     ]);
@@ -131,11 +131,11 @@ export class SaleTransactionReportService {
   }
 
   private createTransactionSheet(workbook: Workbook, transactions: any[]) {
-    const sheet = workbook.addWorksheet('SaleTransactions');
+    const sheet = workbook.addWorksheet('Hoá đơn');
 
     sheet.columns = [
       { header: 'STT', key: 'stt', width: 8 },
-      { header: 'Order Number', key: 'orderNumber', width: 18 },
+      { header: 'Số đơn hàng', key: 'orderNumber', width: 18 },
       //   { header: 'Invoice Created ID', key: 'inv_invoiceCreatedId', width: 42 },
       //   { header: 'Invoice Series', key: 'inv_invoiceSeries', width: 18 },
       //   {
@@ -220,7 +220,7 @@ export class SaleTransactionReportService {
   }
 
   private createItemSheet(workbook: Workbook, transactions: any[]) {
-    const sheet = workbook.addWorksheet('Items');
+    const sheet = workbook.addWorksheet('Sản phẩm');
 
     sheet.columns = [
       { header: 'STT', key: 'stt', width: 8 },
