@@ -155,8 +155,8 @@ export class SaleTransactionReportService {
       },
       { header: 'Tiền sau thuế', key: 'inv_vatAmount', width: 18 },
       { header: 'Tổng tiển', key: 'inv_TotalAmount', width: 18 },
-      { header: 'Được tạo vào ngày', key: 'createdAt', width: 24 },
-      { header: 'Được cập nhật vào lúc', key: 'updatedAt', width: 24 },
+      //   { header: 'Được tạo vào ngày', key: 'createdAt', width: 24 },
+      //   { header: 'Được cập nhật vào lúc', key: 'updatedAt', width: 24 },
     ];
 
     transactions.forEach((transaction, index) => {
@@ -189,8 +189,8 @@ export class SaleTransactionReportService {
         ),
         inv_vatAmount: Number(transaction.inv_vatAmount || 0),
         inv_TotalAmount: Number(transaction.inv_TotalAmount || 0),
-        createdAt: this.formatDateTime(transaction.createdAt),
-        updatedAt: this.formatDateTime(transaction.updatedAt),
+        // createdAt: this.formatDateTime(transaction.createdAt),
+        // updatedAt: this.formatDateTime(transaction.updatedAt),
       });
     });
 
@@ -199,7 +199,7 @@ export class SaleTransactionReportService {
     sheet.views = [{ state: 'frozen', ySplit: 1 }];
     sheet.autoFilter = {
       from: 'A1',
-      to: 'W1',
+      to: 'R1',
     };
 
     sheet.getColumn('inv_TotalAmountWithoutVAT').numFmt = '#,##0';
