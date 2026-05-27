@@ -9,6 +9,18 @@ export class SaleTransactionReportService {
     private readonly saleTransactionRepository: SaleTransactionRepository,
   ) {}
 
+  private formatInvoiceStatus(status: string): string {
+    const statusMap: Record<string, string> = {
+      DRAFT: 'CHƯA XUẤT',
+      ISSUING: 'ĐANG XUẤT',
+      ISSUED: 'ĐÃ XUẤT',
+      FAILED: 'LỖI',
+      CANCELLED: 'HUỶ',
+    };
+
+    return statusMap[status] || status || '';
+  }
+
   async exportSaleTransactionReport(
     query: QuerySaleTransactionReportDto,
   ): Promise<Buffer> {
@@ -168,8 +180,8 @@ export class SaleTransactionReportService {
         // inv_invoiceIssuedDate: this.formatDateTime(
         //   transaction.inv_invoiceIssuedDate,
         // ),
-        invoiceStatus: transaction.invoiceStatus || '',
-        isPaid: transaction.isPaid ? 'TRUE' : 'FALSE',
+        invoiceStatus: this.formatInvoiceStatus(transaction.invoiceStatus),
+        isPaid: transaction.isPaid ? 'ĐÃ THU' : 'CHƯA THU',
         inv_buyerDisplayName: transaction.inv_buyerDisplayName || '',
         inv_buyerLegalName: transaction.inv_buyerLegalName || '',
         inv_buyerTaxCode: transaction.inv_buyerTaxCode || '',
@@ -241,8 +253,8 @@ export class SaleTransactionReportService {
         sheet.addRow({
           stt: index++,
           orderNumber: transaction.orderNumber || '',
-          invoiceStatus: transaction.invoiceStatus || '',
-          isPaid: transaction.isPaid ? 'TRUE' : 'FALSE',
+          invoiceStatus: this.formatInvoiceStatus(transaction.invoiceStatus),
+          isPaid: transaction.isPaid ? 'ĐÃ THU' : 'CHƯA THU',
           productCode: product?.inv_itemCode || '',
           productName: product?.inv_itemName || '',
           unitCode: product?.inv_unitCode || '',
