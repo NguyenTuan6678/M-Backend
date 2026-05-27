@@ -8,7 +8,6 @@ export class InvoiceQueueService {
   constructor(
     @InjectQueue('invoice')
     private readonly invoiceQueue: Queue,
-
     private readonly saleTransactionRepository: SaleTransactionRepository,
   ) {}
 
@@ -83,6 +82,11 @@ export class InvoiceQueueService {
     }
 
     const state = await job.getState();
+
+    const normalizedError = this.normalizeInvoiceJobError({
+      failedReason: job.failedReason,
+      stacktrace: job.stacktrace,
+    });
     const saleTransactionId =
       job.data?.saleTransactionId || parsedSaleTransactionId;
 
@@ -114,6 +118,21 @@ export class InvoiceQueueService {
         (transaction as any)?.inv_invoiceIssuedDate ?? null,
       orderNumber: (transaction as any)?.orderNumber ?? null,
 
+      invoiceErrorCode:
+        state === 'failed' || invoiceStatus === 'FAILED'
+          ? normalizedError.errorCode
+          : null,
+
+      invoiceErrorMessage:
+        state === 'failed' || invoiceStatus === 'FAILED'
+          ? normalizedError.errorMessage
+          : null,
+
+      rawFailedReason:
+        state === 'failed' || invoiceStatus === 'FAILED'
+          ? normalizedError.rawError
+          : null,
+
       isProcessing:
         state === 'waiting' ||
         state === 'delayed' ||
@@ -123,6 +142,57 @@ export class InvoiceQueueService {
       isSuccess: invoiceStatus === 'ISSUED' && !!invInvoiceCreatedId,
 
       isFailed: state === 'failed' || invoiceStatus === 'FAILED',
+    };
+  }
+
+  private normalizeInvoiceJobError(params: {
+    failedReason?: string | null;
+    stacktrace?: string[] | null;
+  }) {
+    const rawError =
+      params.failedReason ||
+      params.stacktrace?.find((line) =>
+        line.includes('Create invoice fail because date'),
+      ) ||
+      params.stacktrace?.[0] ||
+      '';
+
+    const lower = rawError.toLowerCase();
+
+    if (
+      lower.includes('date') &&
+      lower.includes('use with other invoice before')
+    ) {
+      return {
+        errorCode: 'INVALID_INVOICE_DATE',
+        errorMessage:
+          'Ngày xuất hóa đơn không hợp lệ hoặc đã được sử dụng với hóa đơn khác.',
+        rawError: rawError.split('\n')[0].replace('Error: ', ''),
+      };
+    }
+
+    if (lower.includes('timeout')) {
+      return {
+        errorCode: 'INVOICE_JOB_TIMEOUT',
+        errorMessage: 'Quá thời gian xử lý hóa đơn. Vui lòng thử lại sau.',
+        rawError: rawError.split('\n')[0].replace('Error: ', ''),
+      };
+    }
+
+    if (lower.includes('already failed')) {
+      return {
+        errorCode: 'TRANSACTION_ALREADY_FAILED',
+        errorMessage: 'Hóa đơn đã ở trạng thái lỗi trước đó.',
+        rawError: rawError.split('\n')[0].replace('Error: ', ''),
+      };
+    }
+
+    return {
+      errorCode: 'UNKNOWN_INVOICE_ERROR',
+      errorMessage:
+        rawError.split('\n')[0].replace('Error: ', '') ||
+        'Xuất hóa đơn thất bại.',
+      rawError: rawError.split('\n')[0].replace('Error: ', ''),
     };
   }
 
