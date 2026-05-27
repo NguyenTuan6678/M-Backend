@@ -11,6 +11,7 @@ import { Counter, CounterDocument } from '@schemas/counter.schema';
 import { UpdateSalesTransactionDto } from '@module/sale-transaction/dto/update-sale-transaction-repository.res';
 import { QuerySaleTransactionDto } from '@module/sale-transaction/dto/query-transaction.req';
 import { InvoiceStatus } from '@utils/transaction-status';
+import { QuerySaleTransactionReportDto } from '@module/sale-transaction/dto/query-transaction-report.req';
 
 type SaleTransactionUpdatePayload = Partial<UpdateSalesTransactionDto> & {
   isActive?: boolean;
@@ -495,6 +496,81 @@ export class SaleTransactionRepository {
     } catch (error: any) {
       this.logger.error(
         `Error finding invoice statuses by ids: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async findForReport(query: QuerySaleTransactionReportDto) {
+    try {
+      const {
+        startDate,
+        endDate,
+        invoiceStatus,
+        isPaid,
+        agencyId,
+        employeeId,
+        departmentId,
+        bankId,
+      } = query;
+
+      const filter: Record<string, any> = {};
+
+      /**
+       * Default report: lấy hóa đơn đã xuất.
+       * Nếu FE truyền invoiceStatus thì dùng status đó.
+       */
+      filter.invoiceStatus = invoiceStatus || InvoiceStatus.ISSUED;
+
+      if (isPaid !== undefined) {
+        filter.isPaid = isPaid;
+      }
+
+      if (agencyId) {
+        filter.agencyId = new Types.ObjectId(agencyId);
+      }
+
+      if (employeeId) {
+        filter.employeeId = new Types.ObjectId(employeeId);
+      }
+
+      if (departmentId) {
+        filter.departmentId = new Types.ObjectId(departmentId);
+      }
+
+      if (bankId) {
+        filter.bankId = new Types.ObjectId(bankId);
+      }
+
+      /**
+       * Hiện schema inv_invoiceIssuedDate đang là string.
+       * Nếu dữ liệu đang lưu dạng ISO: 2026-05-25 hoặc 2026-05-25T00:00:00
+       * thì so sánh string theo YYYY-MM-DD vẫn ổn.
+       */
+      if (startDate || endDate) {
+        filter.inv_invoiceIssuedDate = {};
+
+        if (startDate) {
+          filter.inv_invoiceIssuedDate.$gte = startDate;
+        }
+
+        if (endDate) {
+          filter.inv_invoiceIssuedDate.$lte = `${endDate}T23:59:59.999`;
+        }
+      }
+
+      return await this.saleTransactionModel
+        .find(filter)
+        .populate(POPULATE_OPTIONS)
+        .sort({
+          inv_invoiceIssuedDate: 1,
+          createdAt: 1,
+        })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transactions for report: ${error.message}`,
         'SaleTransactionRepository',
       );
       throw error;

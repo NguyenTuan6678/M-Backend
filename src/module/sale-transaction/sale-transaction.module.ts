@@ -22,6 +22,7 @@ import { Product, ProductSchema } from '@schemas/product.schema';
 import { Counter, CounterSchema } from '@schemas/counter.schema';
 import { AlertModule } from '@common/alerts/alert.module';
 import { InvoiceMonitorService } from '@common/invoice-monitor/invoice-monitor.service';
+import { SaleTransactionReportService } from './report/sale-transaction-report.service';
 
 @Module({
   imports: [
@@ -44,11 +45,17 @@ import { InvoiceMonitorService } from '@common/invoice-monitor/invoice-monitor.s
   providers: [
     SaleTransactionService,
     SaleTransactionRepository,
+    SaleTransactionReportService,
     InvoiceMonitorService,
     LoggerService,
     JwtAuthGuard,
   ],
   controllers: [SaleTransactionController],
-  exports: [SaleTransactionService, SaleTransactionRepository, MongooseModule],
+  exports: [
+    SaleTransactionService,
+    SaleTransactionRepository,
+    SaleTransactionReportService,
+    MongooseModule,
+  ],
 })
 export class SaleTransactionModule {}
