@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Post,
   Query,
   UseGuards,
@@ -17,13 +18,17 @@ import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { CreateInvoiceFromTransactionDto } from './dto/send-receipt.req';
 import { InvoiceIssueService } from '@utils/invoice-issue/invoice-issue.service';
 import { SkipThrottle } from '@nestjs/throttler';
+import { InvoiceQueueService } from '../queues/invoice-queue.service';
 
 @ApiTags('M-Invoice Receipt Post')
 @Controller('m-invoice-receipt-post')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('authorization')
 export class MInvoiceReceiptPostController {
-  constructor(private readonly invoiceIssueService: InvoiceIssueService) {}
+  constructor(
+    private readonly invoiceIssueService: InvoiceIssueService,
+    private readonly invoiceQueueService: InvoiceQueueService,
+  ) {}
 
   @SkipThrottle()
   @Post()
@@ -63,5 +68,16 @@ export class MInvoiceReceiptPostController {
         editmode: body.editmode,
       },
     );
+  }
+
+  @Get('job-status')
+  @SkipThrottle()
+  @ApiOperation({
+    summary: 'Get invoice issue job status by jobId',
+    description:
+      'Check BullMQ job state and SaleTransaction invoice status by jobId.',
+  })
+  async getInvoiceJobStatus(@Query('jobId') jobId: string) {
+    return await this.invoiceQueueService.getInvoiceJobStatus(jobId);
   }
 }

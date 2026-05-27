@@ -93,7 +93,11 @@ export class SaleTransactionReportService {
       {
         metric: 'Trạng thái thanh toán',
         value:
-          query.isPaid === undefined ? 'All' : query.isPaid ? 'Paid' : 'Unpaid',
+          query.isPaid === undefined
+            ? 'TẤT CẢ'
+            : query.isPaid
+              ? 'ĐÃ THANH TOÁN'
+              : 'CHƯA THANH TOÁN',
       },
       {
         metric: 'Tổng giao dịch',
@@ -112,7 +116,7 @@ export class SaleTransactionReportService {
         value: totalWithoutVat,
       },
       {
-        metric: 'Tổng tiền sau thuế',
+        metric: 'Tổng tiền thuế',
         value: totalVat,
       },
       {
@@ -165,7 +169,7 @@ export class SaleTransactionReportService {
         key: 'inv_TotalAmountWithoutVAT',
         width: 22,
       },
-      { header: 'Tiền sau thuế', key: 'inv_vatAmount', width: 18 },
+      { header: 'Tiền thuế', key: 'inv_vatAmount', width: 18 },
       { header: 'Tổng tiển', key: 'inv_TotalAmount', width: 18 },
       //   { header: 'Được tạo vào ngày', key: 'createdAt', width: 24 },
       //   { header: 'Được cập nhật vào lúc', key: 'updatedAt', width: 24 },
