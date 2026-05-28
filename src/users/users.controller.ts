@@ -19,10 +19,11 @@ import { UsersResponseDTO } from '@users/dto/users.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessageResponse } from '@app-types/message.res';
-import { QueryUserDto } from './dto/query-user.req';
+import { QueryUserDto } from './dto/query-users.req';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from '@common/decorators/role.decorator';
 import { Role } from '@utils/role.enum';
+import { UpdateUserDto } from './dto/update-users.req';
 
 @ApiTags('Users')
 @Controller('users')
@@ -72,11 +73,12 @@ export class UsersController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update user by ID' })
-  async update(
+  async updateUser(
     @Param('id') id: string,
-    @Body(ValidationPipe) updateUserDto: Partial<CreateUsersDTO>,
-  ): Promise<UsersResponseDTO> {
-    return await this.usersService.updateUser(id, updateUserDto);
+    @Body() body: UpdateUserDto,
+    @Req() req: any,
+  ) {
+    return await this.usersService.updateUser(id, body, req.user);
   }
 
   @Delete(':id')
