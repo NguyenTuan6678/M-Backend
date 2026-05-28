@@ -3,7 +3,7 @@ import { IsNotEmpty, IsString } from 'class-validator';
 
 export class RefreshTokenDto {
   @ApiProperty({
-    name: 'refresh_token',
+    name: 'refreshToken',
     description: 'refresh token',
     type: String,
   })
