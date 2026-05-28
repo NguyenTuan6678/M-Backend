@@ -10,10 +10,9 @@ import {
   Post,
   Query,
   UseGuards,
-  ValidationPipe,
 } from '@nestjs/common';
-import { ProductService } from './product.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.req';
 import { ProductResponseDto } from './dto/product.res';
 import { MessageResponse } from '@app-types/message.res';
@@ -31,13 +30,7 @@ export class ProductController {
   @ApiOperation({ summary: 'Create a new bank' })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    )
+    @Body()
     createProductDto: CreateProductDto,
   ): Promise<ProductResponseDto> {
     return await this.productService.createProduct(createProductDto);
@@ -52,7 +45,7 @@ export class ProductController {
       'Phân trang qua page và limit.',
   })
   async getAllProducts(
-    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    @Query()
     query: QueryProductDto,
   ) {
     return await this.productService.searchProducts(query);
@@ -68,14 +61,8 @@ export class ProductController {
   @ApiOperation({ summary: 'Updated bank by ID' })
   async update(
     @Param('id') id: string,
-    @Body(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    )
-    updateProductDto: Partial<CreateProductDto>,
+    @Body()
+    updateProductDto: CreateProductDto,
   ): Promise<ProductResponseDto | null> {
     return await this.productService.updateProduct(id, updateProductDto);
   }

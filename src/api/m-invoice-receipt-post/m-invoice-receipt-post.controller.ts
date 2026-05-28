@@ -6,7 +6,6 @@ import {
   Post,
   Query,
   UseGuards,
-  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -41,13 +40,7 @@ export class MInvoiceReceiptPostController {
   })
   async createInvoiceWithRedis(
     @Query('tax_code') tax_code: string,
-    @Body(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    )
+    @Body()
     body: CreateInvoiceFromTransactionDto,
   ) {
     if (!tax_code) {

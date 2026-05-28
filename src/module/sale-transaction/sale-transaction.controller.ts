@@ -9,24 +9,23 @@ import {
   Param,
   Patch,
   Post,
-  Put,
   Query,
   Res,
   UseGuards,
   UseInterceptors,
   ValidationPipe,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CacheInterceptor } from '@nestjs/cache-manager';
+import { SkipThrottle } from '@nestjs/throttler';
+import { Response } from 'express';
 import { SaleTransactionService } from '@module/sale-transaction/sale-transaction.service';
 import { CreateSalesTransactionDto } from '@module/sale-transaction/dto/create-sale-transaction.req';
 import { SaleTransactionResponseDTO } from '@module/sale-transaction/dto/sale-transaction.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
-import { SkipThrottle } from '@nestjs/throttler';
 import { MessageResponse } from '@app-types/message.res';
 import { QuerySaleTransactionDto } from './dto/query-transaction.req';
 import { UpdateSaleTransactionBankDto } from './dto/update-transaction-bank.req';
-import { CacheInterceptor } from '@nestjs/cache-manager';
 import { SaleTransactionReportService } from './report/sale-transaction-report.service';
 import { QuerySaleTransactionReportDto } from './dto/query-transaction-report.req';
 
@@ -79,15 +78,7 @@ export class SaleTransactionController {
     summary: 'Get all sale transactions with optional filters & pagination',
   })
   async getAllSaleTransactions(
-    @Query(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        transformOptions: {
-          enableImplicitConversion: false,
-        },
-      }),
-    )
+    @Query()
     query: QuerySaleTransactionDto,
   ) {
     return await this.saleTransactionService.searchSaleTransactions(query);
@@ -104,15 +95,7 @@ export class SaleTransactionController {
     summary: 'Export sale transaction report to Excel',
   })
   async exportSaleTransactionReport(
-    @Query(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        transformOptions: {
-          enableImplicitConversion: false,
-        },
-      }),
-    )
+    @Query()
     query: QuerySaleTransactionReportDto,
     @Res() res: Response,
   ) {
@@ -155,11 +138,12 @@ export class SaleTransactionController {
     return await this.saleTransactionService.getInvoiceStatuses(ids);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update a sale transaction' })
   async updateSaleTransaction(
     @Param('id') id: string,
-    @Body(ValidationPipe) updateData: Partial<CreateSalesTransactionDto>,
+    @Body()
+    updateData: CreateSalesTransactionDto,
   ): Promise<SaleTransactionResponseDTO> {
     return await this.saleTransactionService.updateSaleTransaction(
       id,
@@ -175,13 +159,7 @@ export class SaleTransactionController {
   })
   async markPaid(
     @Param('id') id: string,
-    @Body(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    )
+    @Body()
     body: UpdateSaleTransactionBankDto,
   ) {
     return await this.saleTransactionService.markSaleTransactionPaid(
@@ -197,13 +175,7 @@ export class SaleTransactionController {
   })
   async updateBankAfterInvoice(
     @Param('id') id: string,
-    @Body(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    )
+    @Body()
     body: UpdateSaleTransactionBankDto,
   ) {
     return await this.saleTransactionService.updateTransactionBankAfterInvoice(

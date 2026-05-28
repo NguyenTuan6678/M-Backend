@@ -10,12 +10,11 @@ import {
   Post,
   Query,
   UseGuards,
-  ValidationPipe,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { DepartmentService } from './department.service';
 import { CreateDepartmentDto } from './dto/create-department.req';
 import { DepartmentResponseDto } from './dto/department.res';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { QueryDepartmentDto } from './dto/query-department.req';
@@ -31,7 +30,8 @@ export class DepartmentController {
   @ApiOperation({ summary: 'Create a new bank' })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body(ValidationPipe) createDepartmentDto: CreateDepartmentDto,
+    @Body()
+    createDepartmentDto: CreateDepartmentDto,
   ): Promise<DepartmentResponseDto> {
     return await this.departmentService.createDepartment(createDepartmentDto);
   }
@@ -45,7 +45,7 @@ export class DepartmentController {
       'Phân trang qua page và limit.',
   })
   async getAllDepartments(
-    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    @Query()
     query: QueryDepartmentDto,
   ) {
     return await this.departmentService.searchDepartments(query);
@@ -63,14 +63,8 @@ export class DepartmentController {
   @ApiOperation({ summary: 'Updated bank by ID' })
   async update(
     @Param('id') id: string,
-    @Body(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    )
-    updateBankDto: Partial<CreateDepartmentDto>,
+    @Body()
+    updateBankDto: CreateDepartmentDto,
   ): Promise<DepartmentResponseDto> {
     return await this.departmentService.updateDepartment(id, updateBankDto);
   }

@@ -10,7 +10,6 @@ import {
   Post,
   Query,
   UseGuards,
-  ValidationPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ReceiptInvoiceService } from './receiptinvoice.service';
@@ -31,7 +30,8 @@ export class ReceiptInvoiceController {
   @ApiOperation({ summary: 'Create a new receiptinvoice' })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body(ValidationPipe) createReceiptDto: CreateReceiptInvoiceDto,
+    @Body()
+    createReceiptDto: CreateReceiptInvoiceDto,
   ): Promise<ReceiptInvoiceResponseDto> {
     return await this.receiptService.createReceipt(createReceiptDto);
   }
@@ -45,7 +45,7 @@ export class ReceiptInvoiceController {
       'Phân trang qua page và limit.',
   })
   async getAllReceiptInvoices(
-    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    @Query()
     query: QueryReceiptInvoiceDto,
   ) {
     return await this.receiptService.searchReceiptInvoices(query);
@@ -63,7 +63,8 @@ export class ReceiptInvoiceController {
   @ApiOperation({ summary: 'Updated receiptinvoice by ID' })
   async update(
     @Param('id') id: string,
-    @Body(ValidationPipe) updateEmployeeDto: Partial<CreateReceiptInvoiceDto>,
+    @Body()
+    updateEmployeeDto: CreateReceiptInvoiceDto,
   ): Promise<ReceiptInvoiceResponseDto> {
     return await this.receiptService.updateReceipt(id, updateEmployeeDto);
   }

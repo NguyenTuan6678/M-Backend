@@ -1,6 +1,3 @@
-import { EmployeeService } from './employee.service';
-import { CreateEmployeeDto } from './dto/create.employee.req';
-import { EmployeeResponseDto } from './dto/employee.res';
 import {
   Body,
   Controller,
@@ -13,12 +10,14 @@ import {
   Post,
   Query,
   UseGuards,
-  ValidationPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { QueryEmployeeDto } from './dto/query-employee.req';
+import { EmployeeService } from './employee.service';
+import { CreateEmployeeDto } from './dto/create.employee.req';
+import { EmployeeResponseDto } from './dto/employee.res';
 
 @ApiTags('Employee')
 @Controller('employees')
@@ -31,7 +30,8 @@ export class EmployeeController {
   @ApiOperation({ summary: 'Create a new employee' })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body(ValidationPipe) createEmployeeDto: CreateEmployeeDto,
+    @Body()
+    createEmployeeDto: CreateEmployeeDto,
   ): Promise<EmployeeResponseDto> {
     return await this.employeeService.createEmployee(createEmployeeDto);
   }
@@ -45,7 +45,7 @@ export class EmployeeController {
       'Phân trang qua page và limit.',
   })
   async getAllEmployees(
-    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    @Query()
     query: QueryEmployeeDto,
   ) {
     return await this.employeeService.searchEmployees(query);
@@ -61,7 +61,7 @@ export class EmployeeController {
   @ApiOperation({ summary: 'Updated employee by ID' })
   async update(
     @Param('id') id: string,
-    @Body(ValidationPipe) updateEmployeeDto: Partial<CreateEmployeeDto>,
+    @Body() updateEmployeeDto: CreateEmployeeDto,
   ): Promise<EmployeeResponseDto> {
     return await this.employeeService.updateEmployee(id, updateEmployeeDto);
   }
