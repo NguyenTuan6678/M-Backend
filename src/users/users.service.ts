@@ -152,8 +152,46 @@ export class UsersService {
     }
   }
 
-  async deleteUser(id: string): Promise<MessageResponse> {
+  async deleteUser(
+    id: string,
+    currentUser: { id: string; username: string; role: Role },
+  ): Promise<MessageResponse> {
+    if (currentUser.role !== Role.ADMIN) {
+      return {
+        code: ERROR_RES.FORBIDDEN_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: 'Only ADMIN can delete user accounts',
+      };
+    }
+
+    if (currentUser.id === id) {
+      return {
+        code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: 'You cannot delete your own account',
+      };
+    }
+
+    const user = await this.userRepository.findById(id);
+
+    if (!user) {
+      return {
+        code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `User with ID ${id} not found`,
+      };
+    }
+
+    if ((user as any).role === Role.ADMIN) {
+      return {
+        code: ERROR_RES.FORBIDDEN_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: 'Admin account cannot be deleted',
+      };
+    }
+
     const deletedUser = await this.userRepository.delete(id);
+
     if (!deletedUser) {
       return {
         code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
@@ -161,6 +199,7 @@ export class UsersService {
         message: `User with ID ${id} not found`,
       };
     }
+
     return {
       code: ERROR_RES.SUCCESS.statusCode,
       info: ERROR_INFO.SUCCESS,
