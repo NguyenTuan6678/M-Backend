@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { User } from '../../schemas/users.schema';
 import { RegisterAccountDto } from '@users/auth/dto/register.req';
 import { MessageResponse } from '@app-types/message.res';
@@ -207,6 +207,14 @@ export class AuthService {
           message: 'Old password and new password is required',
         };
         return response;
+      }
+
+      if (!Types.ObjectId.isValid(userId)) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Invalid user id',
+        };
       }
 
       const user = await this.userModal.findById(userId).select('+password');
