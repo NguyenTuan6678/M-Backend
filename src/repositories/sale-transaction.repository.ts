@@ -19,6 +19,7 @@ type SaleTransactionUpdatePayload = Partial<UpdateSalesTransactionDto> & {
   inv_invoiceCreatedId?: string;
   inv_invoiceSeries?: string;
   key_api?: string;
+  invoiceNumber?: number;
   inv_invoiceIssuedDate?: string;
   so_benh_an?: string;
   activationDate?: string;
