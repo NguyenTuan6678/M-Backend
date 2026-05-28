@@ -82,7 +82,7 @@ export class AuthController {
     @Body() changePasswordDto: ChangePasswordDto,
     @Req() request: Request,
   ) {
-    const userId = (request as any).user;
+    const userId = (request as any).user.id;
     return this.authService.changePassword(changePasswordDto, userId);
   }
 }
