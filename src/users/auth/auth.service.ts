@@ -199,8 +199,8 @@ export class AuthService {
   ): Promise<MessageResponse | null> {
     let response: MessageResponse | null = null;
     try {
-      const { new_password, old_password } = changePasswordDto;
-      if (!new_password && !old_password) {
+      const { newPassword, oldPassword } = changePasswordDto;
+      if (!newPassword && !oldPassword) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
@@ -220,7 +220,7 @@ export class AuthService {
         return response;
       }
 
-      const isMatch = await comparePassword(old_password, user.password);
+      const isMatch = await comparePassword(oldPassword, user.password);
 
       if (!isMatch) {
         response = {
@@ -231,7 +231,7 @@ export class AuthService {
         return response;
       }
 
-      user.password = new_password;
+      user.password = newPassword;
 
       await user.save();
 
