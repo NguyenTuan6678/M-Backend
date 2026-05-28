@@ -72,9 +72,7 @@ export class SaleTransactionRepository {
   constructor(
     @InjectModel(SalesTransaction.name)
     private saleTransactionModel: Model<SalesTransactionDocument>,
-
     private readonly logger: LoggerService,
-
     @InjectModel(Counter.name)
     private readonly counterModel: Model<CounterDocument>,
   ) {}
@@ -281,6 +279,126 @@ export class SaleTransactionRepository {
     }
   }
 
+  async findExistingFailedInvoices(limit = 20) {
+    try {
+      return await this.saleTransactionModel
+        .find({
+          invoiceStatus: InvoiceStatus.FAILED,
+          isActive: true,
+        })
+        .select(
+          '_id orderNumber inv_buyerDisplayName inv_buyerTaxCode invoiceStatus updatedAt createdAt',
+        )
+        .sort({ updatedAt: -1 })
+        .limit(limit)
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding existing failed invoices: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async findInvoiceStatusesByIds(ids: string[]) {
+    try {
+      const validIds = ids.filter((id) => Types.ObjectId.isValid(id));
+
+      if (!validIds.length) {
+        return [];
+      }
+
+      return await this.saleTransactionModel
+        .find({
+          _id: {
+            $in: validIds.map((id) => new Types.ObjectId(id)),
+          },
+        })
+        .select(
+          '_id orderNumber invoiceStatus inv_invoiceCreatedId inv_invoiceSeries inv_invoiceIssuedDate isPaid bankId updatedAt createdAt',
+        )
+        .populate({
+          path: 'bankId',
+          select: 'inv_buyerBankName isActive',
+        })
+        .sort({ updatedAt: -1 })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding invoice statuses by ids: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async findForReport(query: QuerySaleTransactionReportDto) {
+    try {
+      const {
+        startDate,
+        endDate,
+        invoiceStatus,
+        isPaid,
+        agencyId,
+        employeeId,
+        departmentId,
+        bankId,
+      } = query;
+
+      const filter: Record<string, any> = {};
+
+      filter.invoiceStatus = invoiceStatus || InvoiceStatus.ISSUED;
+
+      if (isPaid !== undefined) {
+        filter.isPaid = isPaid;
+      }
+
+      if (agencyId) {
+        filter.agencyId = new Types.ObjectId(agencyId);
+      }
+
+      if (employeeId) {
+        filter.employeeId = new Types.ObjectId(employeeId);
+      }
+
+      if (departmentId) {
+        filter.departmentId = new Types.ObjectId(departmentId);
+      }
+
+      if (bankId) {
+        filter.bankId = new Types.ObjectId(bankId);
+      }
+
+      if (startDate || endDate) {
+        filter.inv_invoiceIssuedDate = {};
+
+        if (startDate) {
+          filter.inv_invoiceIssuedDate.$gte = startDate;
+        }
+
+        if (endDate) {
+          filter.inv_invoiceIssuedDate.$lte = `${endDate}T23:59:59.999`;
+        }
+      }
+
+      return await this.saleTransactionModel
+        .find(filter)
+        .populate(POPULATE_OPTIONS)
+        .sort({
+          inv_invoiceIssuedDate: 1,
+          createdAt: 1,
+        })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding sale transactions for report: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
   async markInvoiceCanceled(
     id: string,
   ): Promise<SalesTransactionDocument | null> {
@@ -432,151 +550,6 @@ export class SaleTransactionRepository {
     }
   }
 
-  async findStuckIssuingInvoices(minutes: number) {
-    const thresholdDate = new Date(Date.now() - minutes * 60 * 1000);
-
-    return await this.saleTransactionModel
-      .find({
-        invoiceStatus: InvoiceStatus.ISSUING,
-        updatedAt: { $lte: thresholdDate },
-      })
-      .select(
-        '_id orderNumber inv_buyerDisplayName invoiceStatus updatedAt createdAt',
-      )
-      .sort({ updatedAt: 1 })
-      .limit(20)
-      .exec();
-  }
-
-  async findExistingFailedInvoices(limit = 20) {
-    try {
-      return await this.saleTransactionModel
-        .find({
-          invoiceStatus: InvoiceStatus.FAILED,
-          isActive: true,
-        })
-        .select(
-          '_id orderNumber inv_buyerDisplayName inv_buyerTaxCode invoiceStatus updatedAt createdAt',
-        )
-        .sort({ updatedAt: -1 })
-        .limit(limit)
-        .exec();
-    } catch (error: any) {
-      this.logger.error(
-        `Error finding existing failed invoices: ${error.message}`,
-        'SaleTransactionRepository',
-      );
-      throw error;
-    }
-  }
-
-  async findInvoiceStatusesByIds(ids: string[]) {
-    try {
-      const validIds = ids.filter((id) => Types.ObjectId.isValid(id));
-
-      if (!validIds.length) {
-        return [];
-      }
-
-      return await this.saleTransactionModel
-        .find({
-          _id: {
-            $in: validIds.map((id) => new Types.ObjectId(id)),
-          },
-        })
-        .select(
-          '_id orderNumber invoiceStatus inv_invoiceCreatedId inv_invoiceSeries inv_invoiceIssuedDate isPaid bankId updatedAt createdAt',
-        )
-        .populate({
-          path: 'bankId',
-          select: 'inv_buyerBankName isActive',
-        })
-        .sort({ updatedAt: -1 })
-        .exec();
-    } catch (error: any) {
-      this.logger.error(
-        `Error finding invoice statuses by ids: ${error.message}`,
-        'SaleTransactionRepository',
-      );
-      throw error;
-    }
-  }
-
-  async findForReport(query: QuerySaleTransactionReportDto) {
-    try {
-      const {
-        startDate,
-        endDate,
-        invoiceStatus,
-        isPaid,
-        agencyId,
-        employeeId,
-        departmentId,
-        bankId,
-      } = query;
-
-      const filter: Record<string, any> = {};
-
-      /**
-       * Default report: lấy hóa đơn đã xuất.
-       * Nếu FE truyền invoiceStatus thì dùng status đó.
-       */
-      filter.invoiceStatus = invoiceStatus || InvoiceStatus.ISSUED;
-
-      if (isPaid !== undefined) {
-        filter.isPaid = isPaid;
-      }
-
-      if (agencyId) {
-        filter.agencyId = new Types.ObjectId(agencyId);
-      }
-
-      if (employeeId) {
-        filter.employeeId = new Types.ObjectId(employeeId);
-      }
-
-      if (departmentId) {
-        filter.departmentId = new Types.ObjectId(departmentId);
-      }
-
-      if (bankId) {
-        filter.bankId = new Types.ObjectId(bankId);
-      }
-
-      /**
-       * Hiện schema inv_invoiceIssuedDate đang là string.
-       * Nếu dữ liệu đang lưu dạng ISO: 2026-05-25 hoặc 2026-05-25T00:00:00
-       * thì so sánh string theo YYYY-MM-DD vẫn ổn.
-       */
-      if (startDate || endDate) {
-        filter.inv_invoiceIssuedDate = {};
-
-        if (startDate) {
-          filter.inv_invoiceIssuedDate.$gte = startDate;
-        }
-
-        if (endDate) {
-          filter.inv_invoiceIssuedDate.$lte = `${endDate}T23:59:59.999`;
-        }
-      }
-
-      return await this.saleTransactionModel
-        .find(filter)
-        .populate(POPULATE_OPTIONS)
-        .sort({
-          inv_invoiceIssuedDate: 1,
-          createdAt: 1,
-        })
-        .exec();
-    } catch (error: any) {
-      this.logger.error(
-        `Error finding sale transactions for report: ${error.message}`,
-        'SaleTransactionRepository',
-      );
-      throw error;
-    }
-  }
-
   async countFailedInvoicesRecently(minutes: number): Promise<number> {
     const thresholdDate = new Date(Date.now() - minutes * 60 * 1000);
 
@@ -661,51 +634,6 @@ export class SaleTransactionRepository {
       throw error;
     }
   }
-
-  // async updateBankOnly(
-  //   id: string,
-  //   bankId: string,
-  // ): Promise<SalesTransactionDocument | null> {
-  //   try {
-  //     if (!Types.ObjectId.isValid(id)) {
-  //       this.logger.error(
-  //         `Invalid transaction ObjectId: ${id}`,
-  //         'SaleTransactionRepository',
-  //       );
-  //       return null;
-  //     }
-
-  //     if (!Types.ObjectId.isValid(bankId)) {
-  //       this.logger.error(
-  //         `Invalid bank ObjectId: ${bankId}`,
-  //         'SaleTransactionRepository',
-  //       );
-  //       return null;
-  //     }
-
-  //     return await this.saleTransactionModel
-  //       .findByIdAndUpdate(
-  //         id,
-  //         {
-  //           $set: {
-  //             bankId: new Types.ObjectId(bankId),
-  //           },
-  //         },
-  //         {
-  //           returnDocument: 'after',
-  //           runValidators: true,
-  //         },
-  //       )
-  //       .populate(POPULATE_OPTIONS)
-  //       .exec();
-  //   } catch (error: any) {
-  //     this.logger.error(
-  //       `Error updating sale transaction bank: ${error.message}`,
-  //       'SaleTransactionRepository',
-  //     );
-  //     throw error;
-  //   }
-  // }
 
   async delete(id: string): Promise<SalesTransactionDocument | null> {
     try {

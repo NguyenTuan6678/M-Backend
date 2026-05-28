@@ -31,7 +31,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
     let status: number = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message: string = 'Lỗi server nội bộ';
+    let message: string = 'Internal server error';
     let errors: unknown = null;
     if (exception instanceof BadRequestException) {
       status = HttpStatus.BAD_REQUEST;
@@ -39,7 +39,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       if (typeof exceptionResponse === 'object') {
         const { message: msg, error } =
           exceptionResponse as HttpExceptionResponse;
-        message = Array.isArray(msg) ? msg[0] : msg || 'Dữ liệu không hợp lệ';
+        message = Array.isArray(msg) ? msg[0] : msg || 'Invalid data';
         errors = error;
       } else if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
@@ -50,14 +50,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
       if (typeof exceptionResponse === 'object') {
         const { message: msg, error } =
           exceptionResponse as HttpExceptionResponse;
-        message = Array.isArray(msg) ? msg[0] : msg || 'Lỗi yêu cầu';
+        message = Array.isArray(msg) ? msg[0] : msg || 'Invalid request';
         errors = error;
       } else if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
       }
     } else {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
-      message = 'Lỗi server nội bộ';
+      message = 'Internal server error';
       const stack = exception instanceof Error ? exception.stack : undefined;
       this.logger.error(`Uncaught Exception: ${String(exception)}`, stack);
     }

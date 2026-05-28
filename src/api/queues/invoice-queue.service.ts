@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
+import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 
 @Injectable()
 export class InvoiceQueueService {
@@ -38,8 +39,8 @@ export class InvoiceQueueService {
     });
 
     return {
-      code: 202,
-      info: 'PROCESSING',
+      code: ERROR_RES.ACCEPTED.statusCode,
+      info: ERROR_INFO.PROCESSING,
       message: 'Invoice issue job has been queued',
       jobId: job.id,
       saleTransactionId: data.saleTransactionId,
@@ -64,8 +65,8 @@ export class InvoiceQueueService {
         : null;
 
       return {
-        code: 200,
-        info: 'SUCCESS',
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
         message:
           'Job not found in queue. It may have been removed, but transaction status is returned if available.',
         jobId,
@@ -99,8 +100,8 @@ export class InvoiceQueueService {
       (transaction as any)?.inv_invoiceCreatedId ?? null;
 
     return {
-      code: 200,
-      info: 'SUCCESS',
+      code: ERROR_RES.SUCCESS.statusCode,
+      info: ERROR_INFO.SUCCESS,
       message: 'Invoice job status fetched successfully',
 
       jobId: job.id,
