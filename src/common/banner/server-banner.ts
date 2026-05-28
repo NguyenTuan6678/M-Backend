@@ -15,7 +15,7 @@ export function printServerBanner(port: number | string) {
 │                                                            │
 ├────────────────────────────────────────────────────────────┤
 │  🚀 Server   : http://localhost:${port}                     
-│  📚 Swagger  : http://localhost:${port}/api                 
+│  📚 Swagger  : http://localhost:${port}/api/docs                 
 │  🌱 Env      : ${env}                                       
 │  🧵 Queue    : BullMQ Invoice Queue                         
 │  🍓 Redis    : ${redisHost}:${redisPort}                    

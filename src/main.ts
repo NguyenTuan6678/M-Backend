@@ -67,9 +67,9 @@ async function bootstrap() {
   const port = process.env.PORT || 4000;
   await app.listen(port);
 
-  logger.log(`🚀 Server running on port ${port}`, 'Bootstrap');
-  logger.log(`📍 MongoDB: ${process.env.MONGODB_URI}`, 'Bootstrap');
-  logger.log(`📜 Swagger UI: http://localhost:${port}/api/docs`, 'Bootstrap');
+  // logger.log(`🚀 Server running on port ${port}`, 'Bootstrap');
+  // logger.log(`📍 MongoDB: ${process.env.MONGODB_URI}`, 'Bootstrap');
+  // logger.log(`📜 Swagger UI: http://localhost:${port}/api/docs`, 'Bootstrap');
 
   printServerBanner(port);
   if (module.hot) {
