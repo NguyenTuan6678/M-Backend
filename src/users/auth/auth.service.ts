@@ -67,16 +67,15 @@ export class AuthService {
   async register(
     registerAccountDTO: RegisterAccountDto,
   ): Promise<MessageResponse | null> {
-    let response: MessageResponse | null = null;
     try {
-      const { username, password, role } = registerAccountDTO;
+      const { username, password } = registerAccountDTO;
+
       if (!username || !password) {
-        response = {
+        return {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
           message: 'Invalid input',
         };
-        return response;
       }
 
       const isExistingAdmin = await this.userModal.countDocuments({
@@ -84,50 +83,45 @@ export class AuthService {
       });
 
       this.logger.log(`Existing admin count: ${isExistingAdmin}`);
+
       if (isExistingAdmin > 0) {
-        response = {
+        return {
           code: ERROR_RES.CONFLICT_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
           message: 'Admin account existed!',
         };
-        return response;
       }
 
-      const admin = await this.userModal.findOne({ role: Role.ADMIN });
+      const duplicateUsername = await this.userModal.findOne({ username });
 
-      if (admin) {
-        response = {
+      if (duplicateUsername) {
+        return {
           code: ERROR_RES.CONFLICT_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
-          message: 'Account Existed!',
+          message: 'Username already exists',
         };
-        return response;
       }
-
-      const adminRole = role ?? Role.ADMIN;
 
       const newAdmin = new this.userModal({
         username,
         password,
-        role: adminRole,
+        role: Role.ADMIN,
       });
 
       await newAdmin.save();
 
-      response = {
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Register successfully',
+        message: 'Register admin successfully',
       };
     } catch (error: any) {
-      response = {
+      return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
         message: `There is a problem while registering account: ${error.message}`,
       };
     }
-
-    return response;
   }
 
   async login(loginDto: LoginReqType): Promise<LoginRes | null> {

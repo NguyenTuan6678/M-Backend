@@ -21,48 +21,39 @@ export class UsersService {
     createUserDto: CreateUsersDTO,
     currentUser: { id: string; username: string; role: Role },
   ): Promise<UsersResponseDTO> {
-    let response: MessageResponse | null = null;
     try {
       if (currentUser.role !== Role.ADMIN) {
-        response = {
+        return {
           code: ERROR_RES.FORBIDDEN_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
           message: 'Only ADMIN can create user accounts',
         };
-        return response;
       }
 
-      const { username, password, role } = createUserDto;
+      const { username, password } = createUserDto;
+
       if (!username || !password) {
-        response = {
+        return {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
           message: 'Missing required fields: username or password',
         };
-        return response;
-      }
-
-      const userRole = role ?? Role.USER;
-      if (userRole === Role.ADMIN) {
-        response = {
-          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: ERROR_INFO.FAIL,
-          message: 'You cannot create admin user',
-        };
-        return response;
       }
 
       const duplicateUser = await this.userModel.findOne({ username });
+
       if (duplicateUser) {
-        response = {
+        return {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
           message: 'Username already exists',
         };
-        return response;
       }
 
-      const newUser = await this.userRepository.create(createUserDto);
+      const newUser = await this.userRepository.create({
+        ...createUserDto,
+        role: Role.USER,
+      });
 
       return {
         code: ERROR_RES.SUCCESS.statusCode,
@@ -71,13 +62,12 @@ export class UsersService {
         content: newUser,
       };
     } catch (error: any) {
-      response = {
+      return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: 'An error occurred while creating the user',
+        message: `An error occurred while creating the user: ${error.message}`,
       };
     }
-    return response;
   }
 
   async searchUsers(query: QueryUserDto) {
@@ -162,8 +152,46 @@ export class UsersService {
     }
   }
 
-  async deleteUser(id: string): Promise<MessageResponse> {
+  async deleteUser(
+    id: string,
+    currentUser: { id: string; username: string; role: Role },
+  ): Promise<MessageResponse> {
+    if (currentUser.role !== Role.ADMIN) {
+      return {
+        code: ERROR_RES.FORBIDDEN_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: 'Only ADMIN can delete user accounts',
+      };
+    }
+
+    if (currentUser.id === id) {
+      return {
+        code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: 'You cannot delete your own account',
+      };
+    }
+
+    const user = await this.userRepository.findById(id);
+
+    if (!user) {
+      return {
+        code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `User with ID ${id} not found`,
+      };
+    }
+
+    if ((user as any).role === Role.ADMIN) {
+      return {
+        code: ERROR_RES.FORBIDDEN_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: 'Admin account cannot be deleted',
+      };
+    }
+
     const deletedUser = await this.userRepository.delete(id);
+
     if (!deletedUser) {
       return {
         code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
@@ -171,6 +199,7 @@ export class UsersService {
         message: `User with ID ${id} not found`,
       };
     }
+
     return {
       code: ERROR_RES.SUCCESS.statusCode,
       info: ERROR_INFO.SUCCESS,

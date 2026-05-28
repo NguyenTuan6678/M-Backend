@@ -20,10 +20,14 @@ import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessageResponse } from '@app-types/message.res';
 import { QueryUserDto } from './dto/query-user.req';
+import { RolesGuard } from './guards/roles.guard';
+import { Roles } from '@common/decorators/role.decorator';
+import { Role } from '@utils/role.enum';
 
 @ApiTags('Users')
 @Controller('users')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN)
 @ApiBearerAuth('authorization')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -78,7 +82,10 @@ export class UsersController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete user by ID' })
   @HttpCode(HttpStatus.OK)
-  async remove(@Param('id') id: string): Promise<MessageResponse> {
-    return await this.usersService.deleteUser(id);
+  async remove(
+    @Param('id') id: string,
+    @Req() req: any,
+  ): Promise<MessageResponse> {
+    return await this.usersService.deleteUser(id, req.user);
   }
 }

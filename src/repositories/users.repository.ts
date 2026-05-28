@@ -5,6 +5,11 @@ import { User, UserDocument } from '@schemas/users.schema';
 import { CreateUsersDTO } from '@users/dto/create-users.req';
 import { LoggerService } from '@common/logs/logger.service';
 import { QueryUserDto } from '@users/dto/query-user.req';
+import { Role } from '@utils/role.enum';
+
+type CreateUserPayload = CreateUsersDTO & {
+  role: Role;
+};
 
 @Injectable()
 export class UsersRepository {
@@ -13,7 +18,7 @@ export class UsersRepository {
     private logger: LoggerService,
   ) {}
 
-  async create(createUserDto: CreateUsersDTO): Promise<UserDocument> {
+  async create(createUserDto: CreateUserPayload): Promise<UserDocument> {
     try {
       const newUser = new this.userModel(createUserDto);
       const savedUser = await newUser.save();
