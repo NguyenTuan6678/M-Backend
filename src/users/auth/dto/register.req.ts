@@ -12,9 +12,4 @@ export class RegisterAccountDto {
   @IsString()
   @IsNotEmpty()
   password: string;
-
-  @ApiProperty({ example: 'ADMIN', description: 'role', type: String })
-  @IsNotEmpty()
-  @IsEnum(Role)
-  role: Role;
 }

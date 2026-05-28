@@ -12,14 +12,4 @@ export class CreateUsersDTO {
   @IsString()
   @IsNotEmpty()
   password: string;
-
-  // @ApiProperty({
-  //   enum: Role,
-  //   example: Role.USER,
-  //   description: 'role',
-  //   required: false,
-  // })
-  @IsOptional()
-  @IsEnum(Role)
-  role?: Role;
 }
