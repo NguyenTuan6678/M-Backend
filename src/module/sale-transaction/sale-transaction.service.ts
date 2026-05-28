@@ -50,9 +50,6 @@ export class SaleTransactionService {
     let department: any = null;
     let products: Product[] = [];
 
-    /**
-     * 1. Validate Agency
-     */
     if (!agencyId || !Types.ObjectId.isValid(agencyId)) {
       missing.push('Agency');
     } else {
@@ -65,15 +62,6 @@ export class SaleTransactionService {
       }
     }
 
-    /**
-     * 2. Choose employee
-     *
-     * Nếu client gửi employeeId:
-     * → dùng employeeId đó
-     *
-     * Nếu client không gửi:
-     * → fallback agency.employeeId
-     */
     const agencyEmployeeId = this.extractObjectId((agency as any)?.employeeId);
 
     const selectedEmployeeId =
@@ -93,9 +81,6 @@ export class SaleTransactionService {
       }
     }
 
-    /**
-     * 3. Validate Department from selected employee
-     */
     const departmentId = this.extractObjectId((employee as any)?.departmentId);
 
     if (!departmentId) {
@@ -110,9 +95,6 @@ export class SaleTransactionService {
       }
     }
 
-    /**
-     * 4. Validate Products
-     */
     const productIds = items
       ?.map((i) => i.productId)
       .filter((id): id is string => !!id);

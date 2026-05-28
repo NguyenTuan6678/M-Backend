@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-// import { InjectModel } from '@nestjs/mongoose';
-// import { Model } from 'mongoose';
 import { ProductRepository } from '@repositories/product.repository';
 import { ProductDocument } from '@schemas/product.schema';
 import { CreateProductDto } from './dto/create-product.req';
@@ -11,10 +9,7 @@ import { QueryProductDto } from './dto/query-product.req';
 
 @Injectable()
 export class ProductService {
-  constructor(
-    // @InjectModel(Product.name) private productModel: Model<ProductDocument>,
-    private readonly productRepository: ProductRepository,
-  ) {}
+  constructor(private readonly productRepository: ProductRepository) {}
 
   async createProduct(
     createProductDto: CreateProductDto,
