@@ -10,10 +10,9 @@ import {
   Post,
   Query,
   UseGuards,
-  ValidationPipe,
 } from '@nestjs/common';
-import { AgencyService } from './agency.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AgencyService } from './agency.service';
 import { AgencyResponseDto } from './dto/agency.res';
 import { CreateAgencyDto } from './dto/create-agency.req';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
@@ -31,13 +30,7 @@ export class AgencyController {
   @ApiOperation({ summary: 'Create a new agency' })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    )
+    @Body()
     createAgencyDto: CreateAgencyDto,
   ): Promise<AgencyResponseDto | null> {
     return this.agencyService.createAgency(createAgencyDto);
@@ -48,7 +41,7 @@ export class AgencyController {
     summary: 'Get all agencies with optional filters & pagination',
   })
   async getAllAgencies(
-    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    @Query()
     query: QueryAgencyDto,
   ) {
     return await this.agencyService.searchAgencies(query);
@@ -64,14 +57,8 @@ export class AgencyController {
   @ApiOperation({ summary: 'Update agency by ID' })
   async update(
     @Param('id') id: string,
-    @Body(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    )
-    updateAgencyDto: Partial<CreateAgencyDto>,
+    @Body()
+    updateAgencyDto: CreateAgencyDto,
   ): Promise<AgencyResponseDto | null> {
     return this.agencyService.updateAgency(id, updateAgencyDto);
   }

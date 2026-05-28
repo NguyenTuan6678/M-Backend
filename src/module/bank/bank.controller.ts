@@ -10,10 +10,9 @@ import {
   Post,
   Query,
   UseGuards,
-  ValidationPipe,
 } from '@nestjs/common';
-import { BankService } from './bank.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { BankService } from './bank.service';
 import { CreateBankDto } from './dto/create-bank.req';
 import { BankResponseDto } from './dto/bank.res';
 import { MessageResponse } from '@app-types/message.res';
@@ -31,13 +30,7 @@ export class BankController {
   @ApiOperation({ summary: 'Create a new bank' })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    )
+    @Body()
     createBankDto: CreateBankDto,
   ): Promise<BankResponseDto | null> {
     return this.bankService.createBank(createBankDto);
@@ -52,7 +45,7 @@ export class BankController {
       'Phân trang qua page và limit.',
   })
   async getAllBanks(
-    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    @Query()
     query: QueryBankDto,
   ) {
     return await this.bankService.searchBanks(query);
@@ -68,14 +61,8 @@ export class BankController {
   @ApiOperation({ summary: 'Updated bank by ID' })
   async update(
     @Param('id') id: string,
-    @Body(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    )
-    updateBankDto: Partial<CreateBankDto>,
+    @Body()
+    updateBankDto: CreateBankDto,
   ): Promise<BankResponseDto | null> {
     return this.bankService.updateBank(id, updateBankDto);
   }

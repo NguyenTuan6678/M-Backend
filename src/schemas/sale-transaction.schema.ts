@@ -112,6 +112,12 @@ export class SalesTransaction {
   @Prop()
   inv_discountPercentage: number;
 
+  @Prop({ type: Number, default: null })
+  invoiceNumber?: number;
+
+  @Prop({ type: Number, default: null })
+  amountCollected?: number;
+
   @Prop({ type: Types.ObjectId, ref: Agency.name, required: true })
   agencyId: Types.ObjectId;
 

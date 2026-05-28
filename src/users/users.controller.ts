@@ -9,15 +9,14 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  ValidationPipe,
   UseGuards,
   Req,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UsersService } from '@users/users.service';
 import { CreateUsersDTO } from '@users/dto/create-users.req';
 import { UsersResponseDTO } from '@users/dto/users.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessageResponse } from '@app-types/message.res';
 import { QueryUserDto } from './dto/query-users.req';
 import { RolesGuard } from './guards/roles.guard';
@@ -38,7 +37,7 @@ export class UsersController {
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Req() request: any,
-    @Body(ValidationPipe) createUserDto: CreateUsersDTO,
+    @Body() createUserDto: CreateUsersDTO,
   ): Promise<UsersResponseDTO> {
     return await this.usersService.createUser(createUserDto, request.user);
   }
@@ -59,7 +58,7 @@ export class UsersController {
       'Phân trang qua page và limit.',
   })
   async getAllUsers(
-    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    @Query()
     query: QueryUserDto,
   ) {
     return await this.usersService.searchUsers(query);
