@@ -4,11 +4,12 @@ import { CreateUsersDTO } from '@users/dto/create-users.req';
 import { UsersResponseDTO } from '@users/dto/users.res';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '@schemas/users.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { ERROR_RES, ERROR_INFO } from '@common/constants/error.const';
 import { MessageResponse } from '@app-types/message.res';
 import { Role } from '@utils/role.enum';
-import { QueryUserDto } from './dto/query-user.req';
+import { QueryUserDto } from './dto/query-users.req';
+import { UpdateUserDto } from './dto/update-users.req';
 
 @Injectable()
 export class UsersService {
@@ -122,25 +123,123 @@ export class UsersService {
 
   async updateUser(
     id: string,
-    updateData: Partial<CreateUsersDTO>,
+    updateData: UpdateUserDto,
+    currentUser: { id: string; username: string; role: Role },
   ): Promise<UsersResponseDTO> {
     try {
-      const updatedUser = await this.userRepository.update(id, updateData);
+      if (currentUser.role !== Role.ADMIN) {
+        return {
+          code: ERROR_RES.FORBIDDEN_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Only ADMIN can update user accounts',
+          content: undefined,
+        };
+      }
 
-      if (!updatedUser) {
+      if (!Types.ObjectId.isValid(id)) {
+        return {
+          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Invalid user id',
+          content: undefined,
+        };
+      }
+
+      const user = await this.userModel.findById(id).select('+password');
+
+      if (!user) {
         return {
           code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
-          message: `Agency with ID ${id} not found`,
-          content: updatedUser || undefined,
+          message: `User with ID ${id} not found`,
+          content: undefined,
         };
       }
+
+      /**
+       * Nếu update username thì check trùng username.
+       */
+      if (updateData.username && updateData.username !== user.username) {
+        const duplicateUser = await this.userModel.findOne({
+          username: updateData.username,
+          _id: { $ne: user._id },
+        });
+
+        if (duplicateUser) {
+          return {
+            code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+            info: ERROR_INFO.FAIL,
+            message: 'Username already exists',
+            content: undefined,
+          };
+        }
+
+        user.username = updateData.username;
+      }
+
+      /**
+       * Rule role:
+       * - Không cho đổi USER thành ADMIN nếu hệ thống đã có ADMIN.
+       * - Không cho đổi ADMIN cuối cùng thành USER.
+       */
+      if (updateData.role !== undefined) {
+        const currentTargetRole = user.role;
+        const nextRole = updateData.role;
+
+        if (nextRole === Role.ADMIN && currentTargetRole !== Role.ADMIN) {
+          const existingAdmin = await this.userModel.findOne({
+            role: Role.ADMIN,
+          });
+
+          if (existingAdmin) {
+            return {
+              code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+              info: ERROR_INFO.FAIL,
+              message:
+                'Cannot promote user to ADMIN because admin account already exists',
+              content: undefined,
+            };
+          }
+        }
+
+        if (currentTargetRole === Role.ADMIN && nextRole !== Role.ADMIN) {
+          const adminCount = await this.userModel.countDocuments({
+            role: Role.ADMIN,
+          });
+
+          if (adminCount <= 1) {
+            return {
+              code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+              info: ERROR_INFO.FAIL,
+              message: 'Cannot change role of the last ADMIN account',
+              content: undefined,
+            };
+          }
+        }
+
+        user.role = nextRole;
+      }
+
+      /**
+       * Reset password.
+       * Vì dùng user.save(), pre-save hook sẽ tự hash password.
+       */
+      if (updateData.password) {
+        user.password = updateData.password;
+      }
+
+      await user.save();
+
+      const updatedUser = await this.userModel
+        .findById(id)
+        .select('-password')
+        .exec();
 
       return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Agency updated successfully',
-        content: updatedUser,
+        message: 'User updated successfully',
+        content: updatedUser || undefined,
       };
     } catch (error: any) {
       return {
