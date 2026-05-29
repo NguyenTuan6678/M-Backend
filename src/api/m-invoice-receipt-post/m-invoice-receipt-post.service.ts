@@ -265,6 +265,7 @@ export class MInvoiceReceiptPostService {
         id: resId,
         inv_invoiceIssuedDate: resIssuedDate,
         inv_invoiceNumber,
+        inv_TotalAmount,
       } = responseData.data;
 
       const orderNumber = (transaction as any).orderNumber;
@@ -279,6 +280,7 @@ export class MInvoiceReceiptPostService {
         inv_invoiceIssuedDate: resIssuedDate,
         inv_invoiceCreatedId: resId,
         invoiceNumber: inv_invoiceNumber || undefined,
+        amountCollected: inv_TotalAmount || null,
         so_benh_an: orderNumber,
         activationDate,
         invoiceStatus: InvoiceStatus.ISSUED,
