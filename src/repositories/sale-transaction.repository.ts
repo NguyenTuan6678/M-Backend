@@ -442,6 +442,7 @@ export class SaleTransactionRepository {
   async markPaidWithBank(
     id: string,
     bankId: string,
+    amountCollected?: number,
   ): Promise<SalesTransactionDocument | null> {
     try {
       if (!Types.ObjectId.isValid(id)) {
@@ -467,6 +468,7 @@ export class SaleTransactionRepository {
             $set: {
               bankId: new Types.ObjectId(bankId),
               isPaid: true,
+              ...(amountCollected !== undefined && { amountCollected }),
             },
           },
           {

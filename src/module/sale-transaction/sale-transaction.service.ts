@@ -288,6 +288,7 @@ export class SaleTransactionService {
   async markSaleTransactionPaid(
     transactionId: string,
     bankId: string,
+    amountCollected?: number,
   ): Promise<SaleTransactionResponseDTO> {
     try {
       const transaction =
@@ -340,6 +341,7 @@ export class SaleTransactionService {
         await this.saleTransactionRepository.markPaidWithBank(
           transactionId,
           bankId,
+          amountCollected,
         );
 
       if (!updatedTransaction) {

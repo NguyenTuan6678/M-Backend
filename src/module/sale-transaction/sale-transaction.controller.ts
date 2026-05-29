@@ -166,6 +166,7 @@ export class SaleTransactionController {
     return await this.saleTransactionService.markSaleTransactionPaid(
       id,
       body.bankId,
+      body.amountCollected,
     );
   }
 
