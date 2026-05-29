@@ -28,6 +28,7 @@ import { QuerySaleTransactionDto } from './dto/query-transaction.req';
 import { UpdateSaleTransactionBankDto } from './dto/update-transaction-bank.req';
 import { SaleTransactionReportService } from './report/sale-transaction-report.service';
 import { QuerySaleTransactionReportDto } from './dto/query-transaction-report.req';
+import { UpdateTransactionDto } from './dto/update-sale-transaction.req';
 
 @ApiTags('Sale Transaction')
 @Controller('sale-transaction')
@@ -143,7 +144,7 @@ export class SaleTransactionController {
   async updateSaleTransaction(
     @Param('id') id: string,
     @Body()
-    updateData: CreateSalesTransactionDto,
+    updateData: UpdateTransactionDto,
   ): Promise<SaleTransactionResponseDTO> {
     return await this.saleTransactionService.updateSaleTransaction(
       id,
@@ -168,21 +169,21 @@ export class SaleTransactionController {
     );
   }
 
-  @Patch(':id/mark-paid-test')
-  @ApiOperation({
-    summary: 'Update bank after invoice issued',
-    description: 'Only bankId can be updated after invoiceStatus is ISSUED.',
-  })
-  async updateBankAfterInvoice(
-    @Param('id') id: string,
-    @Body()
-    body: UpdateSaleTransactionBankDto,
-  ) {
-    return await this.saleTransactionService.updateTransactionBankAfterInvoice(
-      id,
-      body.bankId,
-    );
-  }
+  // @Patch(':id/mark-paid-test')
+  // @ApiOperation({
+  //   summary: 'Update bank after invoice issued',
+  //   description: 'Only bankId can be updated after invoiceStatus is ISSUED.',
+  // })
+  // async updateBankAfterInvoice(
+  //   @Param('id') id: string,
+  //   @Body()
+  //   body: UpdateSaleTransactionBankDto,
+  // ) {
+  //   return await this.saleTransactionService.updateTransactionBankAfterInvoice(
+  //     id,
+  //     body.bankId,
+  //   );
+  // }
 
   @Patch(':id/cancel-invoice')
   @ApiOperation({
