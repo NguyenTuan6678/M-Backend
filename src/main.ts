@@ -1,18 +1,21 @@
 import 'dotenv/config';
+import helmet from 'helmet';
+import { join } from 'path';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from '@common/filters/all-exceptions.filter';
 import { LoggerService } from '@common/logs/logger.service';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { join } from 'path';
-import { NestExpressApplication } from '@nestjs/platform-express';
 import { printServerBanner } from '@common/banner/server-banner';
 declare const module: any;
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const logger = new LoggerService();
+
+  app.use(helmet());
 
   app.useStaticAssets(join(process.cwd(), 'files'), {
     prefix: '/files',
