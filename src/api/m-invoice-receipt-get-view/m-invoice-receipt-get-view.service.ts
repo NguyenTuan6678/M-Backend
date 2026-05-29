@@ -65,7 +65,6 @@ export class ViewMInvoiceReceiptService {
           code === 'ECONNABORTED' ||
           code === 'ECONNRESET' ||
           status === 408 ||
-          status === 429 ||
           status === 500 ||
           status === 502 ||
           status === 503 ||
@@ -110,25 +109,52 @@ export class ViewMInvoiceReceiptService {
       );
     }
 
-    const url = `https://${tax_code}.${baseUrl}/api/InvoiceApi78/PrintInvoice?id=${
-      inv_invoiceCreatedId
-    }`;
+    /**
+     * Nếu đã tải PDF trước đó rồi thì trả luôn file local.
+     */
+    if ((transaction as any).invoiceFilePath) {
+      return {
+        filePath: (transaction as any).invoiceFilePath,
+        cached: true,
+      };
+    }
 
-    const response = await this.callExternalApiWithRetry(() =>
-      firstValueFrom(
-        this.httpService.get(url, {
-          timeout: 15000,
-          responseType: 'arraybuffer',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-          },
-        }),
-      ),
+    const url = `https://${tax_code}.${baseUrl}/api/InvoiceApi78/PrintInvoice`;
+
+    const response = await this.callExternalApiWithRetry(
+      () =>
+        firstValueFrom(
+          this.httpService.get(url, {
+            timeout: 30000,
+            responseType: 'arraybuffer',
+            params: {
+              id: inv_invoiceCreatedId,
+            },
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: 'application/pdf,application/octet-stream,*/*',
+            },
+          }),
+        ),
+      1,
+      1000,
     );
+
+    console.log('[VIEW INVOICE RESPONSE]', {
+      status: response.status,
+      contentType: response.headers?.['content-type'],
+      size: response.data?.byteLength || response.data?.length,
+    });
 
     const filePath = await this.uploadInvoiceService.saveInvoice(response.data);
 
-    return { filePath };
+    await this.saleTransactionRepository.update((transaction as any)._id, {
+      invoiceFilePath: filePath,
+    } as any);
+
+    return {
+      filePath,
+      cached: false,
+    };
   }
 }
