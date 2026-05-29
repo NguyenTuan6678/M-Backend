@@ -467,8 +467,10 @@ export class SaleTransactionRepository {
           {
             $set: {
               bankId: new Types.ObjectId(bankId),
+              ...(amountCollected !== undefined && {
+                amountCollected,
+              }),
               isPaid: true,
-              ...(amountCollected !== undefined && { amountCollected }),
             },
           },
           {

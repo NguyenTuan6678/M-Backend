@@ -280,7 +280,6 @@ export class MInvoiceReceiptPostService {
         inv_invoiceIssuedDate: resIssuedDate,
         inv_invoiceCreatedId: resId,
         invoiceNumber: inv_invoiceNumber || undefined,
-        amountCollected: inv_TotalAmount || null,
         so_benh_an: orderNumber,
         activationDate,
         invoiceStatus: InvoiceStatus.ISSUED,

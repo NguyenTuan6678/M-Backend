@@ -269,11 +269,21 @@ export class SaleTransactionService {
         };
       }
 
+      const plainTransaction =
+        typeof (transaction as any).toObject === 'function'
+          ? (transaction as any).toObject()
+          : transaction;
+
       response = {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Sale transaction fetched successfully',
-        content: transaction,
+        content: {
+          ...plainTransaction,
+          suggestedAmountCollected: Number(
+            plainTransaction.inv_TotalAmount || 0,
+          ),
+        },
       };
     } catch (error: any) {
       response = {
