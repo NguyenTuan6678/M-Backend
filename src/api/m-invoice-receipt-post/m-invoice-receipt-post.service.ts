@@ -66,7 +66,6 @@ export class MInvoiceReceiptPostService {
           code === 'ECONNABORTED' ||
           code === 'ECONNRESET' ||
           status === 408 ||
-          status === 429 ||
           status === 500 ||
           status === 502 ||
           status === 503 ||
