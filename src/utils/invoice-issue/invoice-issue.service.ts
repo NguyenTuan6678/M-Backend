@@ -3,12 +3,16 @@ import { SaleTransactionRepository } from '@repositories/sale-transaction.reposi
 import { InvoiceQueueService } from '../../api/queues/invoice-queue.service';
 import { InvoiceStatus } from '@utils/transaction-status';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
+import { AuditLogService } from '@common/audit/audit-log.service';
+import { Role } from '@utils/role.enum';
+import { AuditAction } from '@common/audit/audit-action.enum';
 
 @Injectable()
 export class InvoiceIssueService {
   constructor(
     private readonly saleTransactionRepository: SaleTransactionRepository,
     private readonly invoiceQueueService: InvoiceQueueService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async enqueueIssueInvoice(
@@ -18,6 +22,11 @@ export class InvoiceIssueService {
       inv_invoiceSeries: string;
       inv_invoiceIssuedDate?: string;
       editmode?: number;
+    },
+    audit?: {
+      actor?: { id: string; username: string; role: Role };
+      ip?: string;
+      userAgent?: string;
     },
   ) {
     const transaction =
@@ -93,6 +102,23 @@ export class InvoiceIssueService {
         inv_invoiceSeries: body.inv_invoiceSeries,
         inv_invoiceIssuedDate: body.inv_invoiceIssuedDate,
         editmode: body.editmode,
+
+        actor: audit?.actor,
+      });
+
+      await this.auditLogService.log({
+        actor: audit?.actor,
+        action: AuditAction.ISSUE_INVOICE_QUEUED,
+        resource: 'SaleTransaction',
+        resourceId: saleTransactionId,
+        metadata: {
+          jobId: queuedResult.jobId,
+          tax_code: body.tax_code,
+          inv_invoiceSeries: body.inv_invoiceSeries,
+          inv_invoiceIssuedDate: body.inv_invoiceIssuedDate,
+        },
+        ip: audit?.ip,
+        userAgent: audit?.userAgent,
       });
 
       return queuedResult;

@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Res,
   UseGuards,
   UseInterceptors,
@@ -162,11 +163,13 @@ export class SaleTransactionController {
     @Param('id') id: string,
     @Body()
     body: UpdateSaleTransactionBankDto,
+    @Req() req: any,
   ) {
-    return await this.saleTransactionService.markSaleTransactionPaid(
+    return await this.saleTransactionService.updateTransactionBankAfterInvoice(
       id,
       body.bankId,
       body.amountCollected,
+      req.user,
     );
   }
 

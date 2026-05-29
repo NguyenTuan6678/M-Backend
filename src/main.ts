@@ -7,7 +7,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from '@common/filters/all-exceptions.filter';
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { printServerBanner } from '@common/banner/server-banner';
 declare const module: any;
 

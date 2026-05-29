@@ -11,6 +11,7 @@ import { SaleTransactionModule } from '@module/sale-transaction/sale-transaction
 import { ReceiptInvoiceModule } from '@module/receiptinvoice/receiptinvoice.module';
 import { InvoiceIssueModule } from '@utils/invoice-issue/invoice-issue.module';
 import { InvoiceQueueModule } from '../queues/invoice-queue.module';
+import { AuditLogModule } from '@common/audit/audit-log.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { InvoiceQueueModule } from '../queues/invoice-queue.module';
     SaleTransactionModule,
     ReceiptInvoiceModule,
     InvoiceQueueModule,
+    AuditLogModule,
     forwardRef(() => InvoiceIssueModule),
   ],
   providers: [MInvoiceReceiptPostService],

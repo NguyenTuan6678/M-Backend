@@ -18,6 +18,11 @@ export class InvoiceQueueService {
     inv_invoiceSeries?: string;
     inv_invoiceIssuedDate?: string;
     editmode?: number;
+    actor?: {
+      id?: string;
+      username?: string;
+      role?: string;
+    };
   }) {
     const attempts = Number(process.env.INVOICE_JOB_ATTEMPTS ?? 3);
 

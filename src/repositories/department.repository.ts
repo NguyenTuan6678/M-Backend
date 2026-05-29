@@ -1,4 +1,4 @@
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { CreateDepartmentDto } from '../module/department/dto/create-department.req';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';

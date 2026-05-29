@@ -7,7 +7,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { LoggerService } from '../logs/logger.service';
+import { LoggerService } from '../loggers/logger.service';
 
 interface HttpExceptionResponse {
   message?: string | string[];

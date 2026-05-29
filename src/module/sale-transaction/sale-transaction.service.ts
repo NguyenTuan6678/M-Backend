@@ -1,4 +1,4 @@
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
@@ -15,6 +15,9 @@ import { MessageResponse } from '@app-types/message.res';
 import { QuerySaleTransactionDto } from './dto/query-transaction.req';
 import { InvoiceStatus } from '@utils/transaction-status';
 import { DepartmentRepository } from '@repositories/department.repository';
+import { AuditLogService } from '@common/audit/audit-log.service';
+import { Role } from '@utils/role.enum';
+import { AuditAction } from '@common/audit/audit-action.enum';
 
 interface ValidatedEntities {
   missing: string[];
@@ -35,6 +38,7 @@ export class SaleTransactionService {
     private readonly departmentRepository: DepartmentRepository,
     private readonly productRepository: ProductRepository,
     private readonly logger: LoggerService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   private async validateRelatedEntities(
@@ -256,7 +260,6 @@ export class SaleTransactionService {
   async getSaleTransactionById(
     id: string,
   ): Promise<SaleTransactionResponseDTO> {
-    let response: SaleTransactionResponseDTO | null = null;
     try {
       const transaction =
         await this.saleTransactionRepository.findByIdWithPopulate(id);
@@ -269,118 +272,63 @@ export class SaleTransactionService {
         };
       }
 
-      const plainTransaction =
-        typeof (transaction as any).toObject === 'function'
-          ? (transaction as any).toObject()
-          : transaction;
-
-      response = {
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Sale transaction fetched successfully',
-        content: {
-          ...plainTransaction,
-          suggestedAmountCollected: Number(
-            plainTransaction.inv_TotalAmount || 0,
-          ),
-        },
+        content: transaction,
       };
     } catch (error: any) {
-      response = {
+      return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
         message: `An error occurred while getting transaction by id: ${error.message}`,
       };
     }
-    return response;
   }
 
   async markSaleTransactionPaid(
     transactionId: string,
     bankId: string,
     amountCollected?: number,
-  ): Promise<SaleTransactionResponseDTO> {
-    try {
-      const transaction =
-        await this.saleTransactionRepository.findById(transactionId);
+  ) {
+    const transaction =
+      await this.saleTransactionRepository.findById(transactionId);
 
-      if (!transaction) {
-        return {
-          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
-          info: ERROR_INFO.FAIL,
-          message: `Sale transaction with ID ${transactionId} not found`,
-        };
-      }
+    if (!transaction) {
+      throw new Error(`Sale transaction with ID ${transactionId} not found`);
+    }
 
-      if ((transaction as any).isActive === false) {
-        return {
-          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: ERROR_INFO.FAIL,
-          message: 'Inactive transaction cannot be marked as paid',
-        };
-      }
+    if (
+      (transaction as any).invoiceStatus !== InvoiceStatus.ISSUED ||
+      !(transaction as any).inv_invoiceCreatedId
+    ) {
+      throw new Error('Only issued invoices can be marked as paid');
+    }
 
-      if ((transaction as any).invoiceStatus !== InvoiceStatus.ISSUED) {
-        return {
-          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: ERROR_INFO.FAIL,
-          message: 'Only issued invoices can be marked as paid',
-        };
-      }
+    const bank = await this.bankRepository.findById(bankId);
 
-      if (!(transaction as any).inv_invoiceCreatedId) {
-        return {
-          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: ERROR_INFO.FAIL,
-          message: 'Cannot mark as paid because invoice has not been created',
-        };
-      }
+    if (!bank) {
+      throw new Error('Bank not found');
+    }
 
-      const bank = await this.bankRepository.findActiveById(bankId);
+    if ((bank as any).isActive === false) {
+      throw new Error('Bank is inactive');
+    }
 
-      if (!bank) {
-        return {
-          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: ERROR_INFO.FAIL,
-          message:
-            'Bank not found or inactive. Cannot assign inactive bank to transaction',
-        };
-      }
-
-      const updatedTransaction =
-        await this.saleTransactionRepository.markPaidWithBank(
-          transactionId,
-          bankId,
-          amountCollected,
-        );
-
-      if (!updatedTransaction) {
-        return {
-          code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
-          info: ERROR_INFO.FAIL,
-          message: 'Failed to mark sale transaction as paid',
-        };
-      }
-
-      return {
-        code: ERROR_RES.SUCCESS.statusCode,
-        info: ERROR_INFO.SUCCESS,
-        message: 'Sale transaction marked as paid successfully',
-        content: updatedTransaction,
-      };
-    } catch (error: any) {
-      this.logger.error(
-        `Error marking sale transaction as paid: ${error.message}`,
+    const updatedTransaction =
+      await this.saleTransactionRepository.markPaidWithBank(
+        transactionId,
+        bankId,
+        amountCollected,
       );
 
-      return {
-        code: ERROR_RES.INTERNAL_ERROR.statusCode,
-        info: ERROR_INFO.FAIL,
-        message: `Error marking sale transaction as paid: ${error.message}`,
-      };
+    if (!updatedTransaction) {
+      throw new Error('Mark transaction paid failed');
     }
-  }
 
+    return updatedTransaction;
+  }
   async getInvoiceStatuses(
     idsText: string,
   ): Promise<SaleTransactionResponseDTO> {
@@ -470,9 +418,54 @@ export class SaleTransactionService {
   async updateTransactionBankAfterInvoice(
     transactionId: string,
     bankId: string,
+    amountCollected: number | undefined,
+    currentUser: { id: string; username: string; role: Role },
   ): Promise<SaleTransactionResponseDTO> {
     try {
-      return await this.markSaleTransactionPaid(transactionId, bankId);
+      const beforeTransaction =
+        await this.saleTransactionRepository.findById(transactionId);
+
+      if (!beforeTransaction) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Sale transaction with ID ${transactionId} not found`,
+        };
+      }
+
+      const updatedTransaction = await this.markSaleTransactionPaid(
+        transactionId,
+        bankId,
+        amountCollected,
+      );
+
+      await this.auditLogService.log({
+        actor: currentUser,
+        action: AuditAction.MARK_TRANSACTION_PAID,
+        resource: 'SaleTransaction',
+        resourceId: transactionId,
+        before: {
+          bankId: (beforeTransaction as any).bankId,
+          isPaid: (beforeTransaction as any).isPaid,
+          amountCollected: (beforeTransaction as any).amountCollected,
+        },
+        after: {
+          bankId,
+          isPaid: true,
+          amountCollected,
+        },
+        metadata: {
+          orderNumber: (beforeTransaction as any).orderNumber,
+          inv_invoiceCreatedId: (beforeTransaction as any).inv_invoiceCreatedId,
+        },
+      });
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Transaction marked as paid successfully',
+        content: updatedTransaction,
+      };
     } catch (error: any) {
       this.logger.error(
         `Error updating transaction bank after invoice: ${error.message}`,
@@ -485,7 +478,6 @@ export class SaleTransactionService {
       };
     }
   }
-
   async cancelSaleTransactionInvoice(
     id: string,
   ): Promise<SaleTransactionResponseDTO> {

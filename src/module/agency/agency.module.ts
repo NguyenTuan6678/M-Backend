@@ -4,7 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose/dist/mongoose.module';
 import { AgencyController } from './agency.controller';
 import { AgencyService } from './agency.service';
 import { AgencyRepository } from '@repositories/agency.repository';
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { Employee, EmployeeSchema } from '@schemas/employee.schema';
 import { Counter, CounterSchema } from '@schemas/counter.schema';

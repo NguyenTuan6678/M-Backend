@@ -12,7 +12,7 @@ import { LoginReqType } from '@users/auth/dto/login.req';
 import { LoginRes } from '@users/auth/dto/login.res';
 import { comparePassword } from '@utils/validate-password';
 import { RefreshTokenDto } from '@users/auth/dto/refresh-token.req';
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { Role } from '@utils/role.enum';
 
 @Injectable()

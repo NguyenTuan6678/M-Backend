@@ -1,6 +1,6 @@
 import { QueryBankDto } from '@module/bank/dto/query-bank.req';
 import { CreateBankDto } from '../module/bank/dto/create-bank.req';
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Bank, BankDocument } from '@schemas/bank.schema';
