@@ -534,15 +534,40 @@ export class SaleTransactionService {
     };
   }
 
-  async getSaleTransactionStats(): Promise<{ totalTransactions: number }> {
+  async getSaleTransactionStats(): Promise<{
+    code: number;
+    info: string;
+    message: string;
+    content?: {
+      totalTransactions: number;
+      totalIssuedInvoices: number;
+    };
+  }> {
     try {
-      const total = await this.saleTransactionRepository.countAll();
-      return { totalTransactions: total };
+      const [totalTransactions, totalIssuedInvoices] = await Promise.all([
+        this.saleTransactionRepository.countAll(),
+        this.saleTransactionRepository.countIssuedInvoices(),
+      ]);
+
+      return {
+        code: ERROR_RES.SUCCESS.statusCode,
+        info: ERROR_INFO.SUCCESS,
+        message: 'Sale transaction statistics fetched successfully',
+        content: {
+          totalTransactions,
+          totalIssuedInvoices,
+        },
+      };
     } catch (error: any) {
       this.logger.error(
         `Error in SaleTransactionService.getSaleTransactionStats: ${error.message}`,
       );
-      throw error;
+
+      return {
+        code: ERROR_RES.INTERNAL_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: `There is a problem while getting sale transaction statistics: ${error.message}`,
+      };
     }
   }
 

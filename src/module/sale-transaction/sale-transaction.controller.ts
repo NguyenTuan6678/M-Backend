@@ -10,7 +10,6 @@ import {
   Patch,
   Post,
   Query,
-  Req,
   Res,
   UseGuards,
   UseInterceptors,
@@ -87,8 +86,12 @@ export class SaleTransactionController {
   }
 
   @Get('stats')
-  @ApiOperation({ summary: 'Get sale transaction statistics' })
-  async getSaleTransactionStats(): Promise<{ totalTransactions: number }> {
+  @SkipThrottle()
+  @ApiOperation({
+    summary: 'Get sale transaction statistics',
+    description: 'Count all sale transactions and issued invoices in database.',
+  })
+  async getSaleTransactionStats() {
     return await this.saleTransactionService.getSaleTransactionStats();
   }
 
@@ -121,14 +124,6 @@ export class SaleTransactionController {
     return res.send(buffer);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get sale transaction by ID' })
-  async getSaleTransactionById(
-    @Param('id') id: string,
-  ): Promise<SaleTransactionResponseDTO> {
-    return await this.saleTransactionService.getSaleTransactionById(id);
-  }
-
   @Get('invoice-status')
   @SkipThrottle()
   @ApiOperation({
@@ -136,8 +131,16 @@ export class SaleTransactionController {
     description:
       'Used by frontend polling after invoice jobs are queued. Use this instead of calling GET /sale-transaction/:id many times.',
   })
-  async getInvoiceStatuses(@Query('ids') ids: string) {
-    return await this.saleTransactionService.getInvoiceStatuses(ids);
+  async getInvoiceStatuses(@Query('id') id: string) {
+    return await this.saleTransactionService.getInvoiceStatuses(id);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get sale transaction by ID' })
+  async getSaleTransactionById(
+    @Param('id') id: string,
+  ): Promise<SaleTransactionResponseDTO> {
+    return await this.saleTransactionService.getSaleTransactionById(id);
   }
 
   @Patch(':id')
@@ -163,31 +166,13 @@ export class SaleTransactionController {
     @Param('id') id: string,
     @Body()
     body: UpdateSaleTransactionBankDto,
-    @Req() req: any,
   ) {
-    return await this.saleTransactionService.updateTransactionBankAfterInvoice(
+    return await this.saleTransactionService.markSaleTransactionPaid(
       id,
       body.bankId,
       body.amountCollected,
-      req.user,
     );
   }
-
-  // @Patch(':id/mark-paid-test')
-  // @ApiOperation({
-  //   summary: 'Update bank after invoice issued',
-  //   description: 'Only bankId can be updated after invoiceStatus is ISSUED.',
-  // })
-  // async updateBankAfterInvoice(
-  //   @Param('id') id: string,
-  //   @Body()
-  //   body: UpdateSaleTransactionBankDto,
-  // ) {
-  //   return await this.saleTransactionService.updateTransactionBankAfterInvoice(
-  //     id,
-  //     body.bankId,
-  //   );
-  // }
 
   @Patch(':id/cancel-invoice')
   @ApiOperation({

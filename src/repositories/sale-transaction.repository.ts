@@ -664,4 +664,20 @@ export class SaleTransactionRepository {
       throw error;
     }
   }
+
+  async countIssuedInvoices(): Promise<number> {
+    try {
+      return await this.saleTransactionModel
+        .countDocuments({
+          invoiceStatus: InvoiceStatus.ISSUED,
+        })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error counting issued invoices: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
 }
