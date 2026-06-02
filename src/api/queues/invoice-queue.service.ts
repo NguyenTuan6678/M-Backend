@@ -157,8 +157,11 @@ export class InvoiceQueueService {
   }) {
     const rawError =
       params.failedReason ||
-      params.stacktrace?.find((line) =>
-        line.includes('Create invoice fail because date'),
+      params.stacktrace?.find(
+        (line) =>
+          line.includes(
+            'Tạo hoá đơn thất bại bởi vì ngày xuất hóa đơn không hợp lệ',
+          ) || line.includes('Create invoice fail because date'),
       ) ||
       params.stacktrace?.[0] ||
       '';
@@ -188,7 +191,7 @@ export class InvoiceQueueService {
     if (lower.includes('already failed')) {
       return {
         errorCode: 'TRANSACTION_ALREADY_FAILED',
-        errorMessage: 'Hóa đơn đã ở trạng thái lỗi trước đó.',
+        errorMessage: 'Hóa đơn đã xuất lỗi trước đó, Vui lòng thử lại sau.',
         rawError: rawError.split('\n')[0].replace('Error: ', ''),
       };
     }

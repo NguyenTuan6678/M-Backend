@@ -15,7 +15,43 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const logger = new LoggerService();
 
-  app.use(helmet());
+  if (process.env.NODE_ENV === 'production') {
+    app.use(
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", 'data:'],
+            objectSrc: ["'none'"],
+            frameAncestors: ["'self'", process.env.FRONTEND_URL || "'self'"],
+          },
+        },
+        crossOriginResourcePolicy: {
+          policy: 'cross-origin',
+        },
+        strictTransportSecurity: {
+          maxAge: 31536000,
+          includeSubDomains: true,
+        },
+        xFrameOptions: false,
+      }),
+    );
+  } else {
+    app.use(
+      helmet({
+        contentSecurityPolicy: false,
+        crossOriginEmbedderPolicy: false,
+        crossOriginOpenerPolicy: false,
+        crossOriginResourcePolicy: {
+          policy: 'cross-origin',
+        },
+        strictTransportSecurity: false,
+        xFrameOptions: false,
+      }),
+    );
+  }
 
   app.useStaticAssets(join(process.cwd(), 'files'), {
     prefix: '/files',
@@ -39,10 +75,9 @@ async function bootstrap() {
   app.useGlobalFilters(allExceptionsFilter);
 
   app.enableCors({
-    origin:
-      process.env.NODE_ENV === 'development'
-        ? process.env.CORS_ORIGIN || '*'
-        : 'your-domain.com',
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    preflightContinue: false,
     credentials: true,
   });
 

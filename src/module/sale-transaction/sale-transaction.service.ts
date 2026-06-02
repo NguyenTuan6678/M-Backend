@@ -299,12 +299,12 @@ export class SaleTransactionService {
       throw new Error(`Sale transaction with ID ${transactionId} not found`);
     }
 
-    if (
-      (transaction as any).invoiceStatus !== InvoiceStatus.ISSUED ||
-      !(transaction as any).inv_invoiceCreatedId
-    ) {
-      throw new Error('Only issued invoices can be marked as paid');
-    }
+    // if (
+    //   (transaction as any).invoiceStatus !== InvoiceStatus.ISSUED ||
+    //   !(transaction as any).inv_invoiceCreatedId
+    // ) {
+    //   throw new Error('Only issued invoices can be marked as paid');
+    // }
 
     const bank = await this.bankRepository.findById(bankId);
 
@@ -448,36 +448,40 @@ export class SaleTransactionService {
           bankId: (beforeTransaction as any).bankId,
           isPaid: (beforeTransaction as any).isPaid,
           amountCollected: (beforeTransaction as any).amountCollected,
+          invoiceStatus: (beforeTransaction as any).invoiceStatus,
         },
         after: {
           bankId,
           isPaid: true,
           amountCollected,
+          invoiceStatus: (beforeTransaction as any).invoiceStatus,
         },
         metadata: {
           orderNumber: (beforeTransaction as any).orderNumber,
           inv_invoiceCreatedId: (beforeTransaction as any).inv_invoiceCreatedId,
+          note: 'Payment information updated without changing invoice data',
         },
       });
 
       return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Transaction marked as paid successfully',
+        message: 'Transaction payment information updated successfully',
         content: updatedTransaction,
       };
     } catch (error: any) {
       this.logger.error(
-        `Error updating transaction bank after invoice: ${error.message}`,
+        `Error updating transaction payment information: ${error.message}`,
       );
 
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: `Error updating transaction bank: ${error.message}`,
+        message: `Error updating transaction payment information: ${error.message}`,
       };
     }
   }
+
   async cancelSaleTransactionInvoice(
     id: string,
   ): Promise<SaleTransactionResponseDTO> {

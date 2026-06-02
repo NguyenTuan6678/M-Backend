@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Res,
   UseGuards,
   UseInterceptors,
@@ -158,19 +159,20 @@ export class SaleTransactionController {
 
   @Patch(':id/mark-paid')
   @ApiOperation({
-    summary: 'Mark sale transaction as paid',
+    summary: 'Update sale transaction payment information',
     description:
-      'Only issued invoices can be marked as paid. This endpoint updates bankId and sets isPaid=true.',
+      'Update bankId, amountCollected and set isPaid=true. This endpoint does not modify invoice data.',
   })
   async markPaid(
     @Param('id') id: string,
-    @Body()
-    body: UpdateSaleTransactionBankDto,
+    @Body() body: UpdateSaleTransactionBankDto,
+    @Req() req: any,
   ) {
-    return await this.saleTransactionService.markSaleTransactionPaid(
+    return await this.saleTransactionService.updateTransactionBankAfterInvoice(
       id,
       body.bankId,
       body.amountCollected,
+      req.user,
     );
   }
 

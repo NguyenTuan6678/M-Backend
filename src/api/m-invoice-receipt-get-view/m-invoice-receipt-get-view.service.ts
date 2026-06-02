@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import { join } from 'path';
 import configuration from '@config/configuration';
 import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
@@ -22,6 +24,31 @@ export class ViewMInvoiceReceiptService {
     private readonly saleTransactionRepository: SaleTransactionRepository,
     private readonly uploadInvoiceService: UploadInvoiceService,
   ) {}
+
+  private buildFileUrl(filePath: string): string {
+    const baseUrl =
+      process.env.API_BASE_URL ||
+      `http://localhost:${process.env.PORT || 4000}`;
+
+    return `${baseUrl}${filePath}`;
+  }
+
+  private getAbsoluteFilePath(filePath: string): string {
+    const normalizedPath = filePath.startsWith('/')
+      ? filePath.slice(1)
+      : filePath;
+
+    return join(process.cwd(), normalizedPath);
+  }
+
+  private fileExists(filePath: string): boolean {
+    try {
+      const absolutePath = this.getAbsoluteFilePath(filePath);
+      return fs.existsSync(absolutePath);
+    } catch {
+      return false;
+    }
+  }
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -109,14 +136,20 @@ export class ViewMInvoiceReceiptService {
       );
     }
 
-    /**
-     * Nếu đã tải PDF trước đó rồi thì trả luôn file local.
-     */
-    if ((transaction as any).invoiceFilePath) {
+    const cachedFilePath = (transaction as any).invoiceFilePath;
+
+    if (cachedFilePath && this.fileExists(cachedFilePath)) {
       return {
-        filePath: (transaction as any).invoiceFilePath,
+        filePath: cachedFilePath,
+        fileUrl: this.buildFileUrl(cachedFilePath),
         cached: true,
       };
+    }
+
+    if (cachedFilePath && !this.fileExists(cachedFilePath)) {
+      await this.saleTransactionRepository.update((transaction as any)._id, {
+        invoiceFilePath: '',
+      } as any);
     }
 
     const url = `https://${tax_code}.${baseUrl}/api/InvoiceApi78/PrintInvoice`;
@@ -154,6 +187,7 @@ export class ViewMInvoiceReceiptService {
 
     return {
       filePath,
+      fileUrl: this.buildFileUrl(filePath),
       cached: false,
     };
   }

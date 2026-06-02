@@ -195,6 +195,14 @@ export class UpdateTransactionDto {
 
   @ApiPropertyOptional({
     example: '',
+    description: 'Item product name',
+  })
+  @IsOptional()
+  @IsString({ message: 'inv_itemProduct must be a string' })
+  inv_itemProduct?: string;
+
+  @ApiPropertyOptional({
+    example: '',
     description: 'Agency ID',
   })
   @IsOptional({ message: 'agencyId is required' })
