@@ -5,6 +5,7 @@ import {
   Get,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -29,8 +30,8 @@ export class MInvoiceReceiptPostController {
     private readonly invoiceQueueService: InvoiceQueueService,
   ) {}
 
-  @SkipThrottle()
   @Post()
+  @SkipThrottle()
   @ApiOperation({ summary: 'Export M-Invoice' })
   @ApiQuery({
     name: 'tax_code',
@@ -40,8 +41,8 @@ export class MInvoiceReceiptPostController {
   })
   async createInvoiceWithRedis(
     @Query('tax_code') tax_code: string,
-    @Body()
-    body: CreateInvoiceFromTransactionDto,
+    @Body() body: CreateInvoiceFromTransactionDto,
+    @Req() req: any,
   ) {
     if (!tax_code) {
       throw new BadRequestException('tax_code is required');
@@ -59,6 +60,11 @@ export class MInvoiceReceiptPostController {
         inv_invoiceSeries: body.inv_invoiceSeries,
         inv_invoiceIssuedDate: body.inv_invoiceIssuedDate,
         editmode: body.editmode,
+      },
+      {
+        actor: req.user,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
       },
     );
   }

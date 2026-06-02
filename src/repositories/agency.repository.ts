@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Agency, AgencyDocument } from '@schemas/agency.schema';
 import { Model, Types } from 'mongoose';
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { CreateAgencyDto } from '@module/agency/dto/create-agency.req';
 import { UpdateAgencyDto } from '@module/agency/dto/update-agency.req';
 import { Counter, CounterDocument } from '@schemas/counter.schema';

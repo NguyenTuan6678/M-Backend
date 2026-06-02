@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from '@schemas/users.schema';
 import { CreateUsersDTO } from '@users/dto/create-users.req';
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { QueryUserDto } from '@users/dto/query-users.req';
 import { Role } from '@utils/role.enum';
 

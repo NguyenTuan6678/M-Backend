@@ -18,12 +18,21 @@ export type UserDocument = HydratedDocument<User> & IUserMethods;
 export class User {
   @Prop({ required: true, trim: true, type: String })
   username: string;
-  @Prop({ required: true, type: String })
+
+  @Prop({ required: true, type: String, select: false })
   password: string;
+
   @Prop({ default: true, type: Boolean })
   isActive: boolean;
+
   @Prop({ type: String, enum: Role, required: true })
   role: Role;
+
+  @Prop({ type: String, default: null, select: false })
+  refreshTokenHash?: string | null;
+
+  @Prop({ type: Number, default: 0 })
+  tokenVersion: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

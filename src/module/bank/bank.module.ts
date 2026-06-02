@@ -4,7 +4,7 @@ import { Bank, BankSchema } from '@schemas/bank.schema';
 import { BankController } from './bank.controller';
 import { BankService } from './bank.service';
 import { BankRepository } from '@repositories/bank.repository';
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 
 @Module({

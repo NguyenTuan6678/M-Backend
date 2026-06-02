@@ -6,7 +6,7 @@ import {
   SalesTransaction,
   SalesTransactionSchema,
 } from '@schemas/sale-transaction.schema';
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
 import { AgencyModule } from '../agency/agency.module';
@@ -23,6 +23,7 @@ import { Counter, CounterSchema } from '@schemas/counter.schema';
 import { AlertModule } from '@common/alerts/alert.module';
 import { InvoiceMonitorService } from '@common/invoice-monitor/invoice-monitor.service';
 import { SaleTransactionReportService } from './report/sale-transaction-report.service';
+import { AuditLogModule } from '@common/audit/audit-log.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { SaleTransactionReportService } from './report/sale-transaction-report.s
     BankModule,
     ProductModule,
     AlertModule,
+    AuditLogModule,
   ],
   providers: [
     SaleTransactionService,

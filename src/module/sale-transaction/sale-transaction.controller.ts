@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Res,
   UseGuards,
   UseInterceptors,
@@ -28,6 +29,7 @@ import { QuerySaleTransactionDto } from './dto/query-transaction.req';
 import { UpdateSaleTransactionBankDto } from './dto/update-transaction-bank.req';
 import { SaleTransactionReportService } from './report/sale-transaction-report.service';
 import { QuerySaleTransactionReportDto } from './dto/query-transaction-report.req';
+import { UpdateTransactionDto } from './dto/update-sale-transaction.req';
 
 @ApiTags('Sale Transaction')
 @Controller('sale-transaction')
@@ -85,8 +87,12 @@ export class SaleTransactionController {
   }
 
   @Get('stats')
-  @ApiOperation({ summary: 'Get sale transaction statistics' })
-  async getSaleTransactionStats(): Promise<{ totalTransactions: number }> {
+  @SkipThrottle()
+  @ApiOperation({
+    summary: 'Get sale transaction statistics',
+    description: 'Count all sale transactions and issued invoices in database.',
+  })
+  async getSaleTransactionStats() {
     return await this.saleTransactionService.getSaleTransactionStats();
   }
 
@@ -119,6 +125,17 @@ export class SaleTransactionController {
     return res.send(buffer);
   }
 
+  @Get('invoice-status')
+  @SkipThrottle()
+  @ApiOperation({
+    summary: 'Get invoice statuses by transaction ids',
+    description:
+      'Used by frontend polling after invoice jobs are queued. Use this instead of calling GET /sale-transaction/:id many times.',
+  })
+  async getInvoiceStatuses(@Query('id') id: string) {
+    return await this.saleTransactionService.getInvoiceStatuses(id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get sale transaction by ID' })
   async getSaleTransactionById(
@@ -127,23 +144,12 @@ export class SaleTransactionController {
     return await this.saleTransactionService.getSaleTransactionById(id);
   }
 
-  @Get('invoice-status')
-  @SkipThrottle()
-  @ApiOperation({
-    summary: 'Get invoice statuses by transaction ids',
-    description:
-      'Used by frontend polling after invoice jobs are queued. Use this instead of calling GET /sale-transaction/:id many times.',
-  })
-  async getInvoiceStatuses(@Query('ids') ids: string) {
-    return await this.saleTransactionService.getInvoiceStatuses(ids);
-  }
-
   @Patch(':id')
   @ApiOperation({ summary: 'Update a sale transaction' })
   async updateSaleTransaction(
     @Param('id') id: string,
     @Body()
-    updateData: CreateSalesTransactionDto,
+    updateData: UpdateTransactionDto,
   ): Promise<SaleTransactionResponseDTO> {
     return await this.saleTransactionService.updateSaleTransaction(
       id,
@@ -153,34 +159,20 @@ export class SaleTransactionController {
 
   @Patch(':id/mark-paid')
   @ApiOperation({
-    summary: 'Mark sale transaction as paid',
+    summary: 'Update sale transaction payment information',
     description:
-      'Only issued invoices can be marked as paid. This endpoint updates bankId and sets isPaid=true.',
+      'Update bankId, amountCollected and set isPaid=true. This endpoint does not modify invoice data.',
   })
   async markPaid(
     @Param('id') id: string,
-    @Body()
-    body: UpdateSaleTransactionBankDto,
-  ) {
-    return await this.saleTransactionService.markSaleTransactionPaid(
-      id,
-      body.bankId,
-    );
-  }
-
-  @Patch(':id/mark-paid-test')
-  @ApiOperation({
-    summary: 'Update bank after invoice issued',
-    description: 'Only bankId can be updated after invoiceStatus is ISSUED.',
-  })
-  async updateBankAfterInvoice(
-    @Param('id') id: string,
-    @Body()
-    body: UpdateSaleTransactionBankDto,
+    @Body() body: UpdateSaleTransactionBankDto,
+    @Req() req: any,
   ) {
     return await this.saleTransactionService.updateTransactionBankAfterInvoice(
       id,
       body.bankId,
+      body.amountCollected,
+      req.user,
     );
   }
 

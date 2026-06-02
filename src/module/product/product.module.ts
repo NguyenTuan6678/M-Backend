@@ -4,7 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ProductController } from './product.controller';
 import { ProductService } from './product.service';
 import { ProductRepository } from '@repositories/product.repository';
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { Counter, CounterSchema } from '@schemas/counter.schema';
 

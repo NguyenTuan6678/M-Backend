@@ -1,4 +1,4 @@
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
@@ -20,6 +20,7 @@ type SaleTransactionUpdatePayload = Partial<UpdateSalesTransactionDto> & {
   inv_invoiceSeries?: string;
   key_api?: string;
   invoiceNumber?: number;
+  amountCollected?: number;
   inv_invoiceIssuedDate?: string;
   so_benh_an?: string;
   activationDate?: string;
@@ -441,6 +442,7 @@ export class SaleTransactionRepository {
   async markPaidWithBank(
     id: string,
     bankId: string,
+    amountCollected?: number,
   ): Promise<SalesTransactionDocument | null> {
     try {
       if (!Types.ObjectId.isValid(id)) {
@@ -465,6 +467,9 @@ export class SaleTransactionRepository {
           {
             $set: {
               bankId: new Types.ObjectId(bankId),
+              ...(amountCollected !== undefined && {
+                amountCollected,
+              }),
               isPaid: true,
             },
           },
@@ -654,6 +659,22 @@ export class SaleTransactionRepository {
     } catch (error: any) {
       this.logger.error(
         `Error counting sale transactions: ${error.message}`,
+        'SaleTransactionRepository',
+      );
+      throw error;
+    }
+  }
+
+  async countIssuedInvoices(): Promise<number> {
+    try {
+      return await this.saleTransactionModel
+        .countDocuments({
+          invoiceStatus: InvoiceStatus.ISSUED,
+        })
+        .exec();
+    } catch (error: any) {
+      this.logger.error(
+        `Error counting issued invoices: ${error.message}`,
         'SaleTransactionRepository',
       );
       throw error;

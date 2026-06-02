@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcrypt';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -12,7 +13,7 @@ import { LoginReqType } from '@users/auth/dto/login.req';
 import { LoginRes } from '@users/auth/dto/login.res';
 import { comparePassword } from '@utils/validate-password';
 import { RefreshTokenDto } from '@users/auth/dto/refresh-token.req';
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { Role } from '@utils/role.enum';
 
 @Injectable()
@@ -165,15 +166,19 @@ export class AuthService {
       }
 
       const token = await this.generateToken(admin);
+
+      admin.refreshTokenHash = await this.hashRefreshToken(token.refreshToken);
+      await admin.save();
+
       response = {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Login successfully',
         content: {
           accessToken: token.accessToken,
-          expiresToken: token.accessTokenExpiresIn,
+          expiresToken: Date.now() + 15 * 60 * 1000,
           refreshToken: token.refreshToken,
-          expRefreshToken: token.refreshTokenExpiresIn,
+          expRefreshToken: Date.now() + 2 * 24 * 60 * 60 * 1000,
         },
       };
     } catch (error: any) {
@@ -194,7 +199,7 @@ export class AuthService {
     let response: MessageResponse | null = null;
     try {
       const { newPassword, oldPassword } = changePasswordDto;
-      if (!newPassword && !oldPassword) {
+      if (!newPassword || !oldPassword) {
         response = {
           code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
@@ -233,7 +238,13 @@ export class AuthService {
         return response;
       }
 
+      // user.password = newPassword;
+
+      // await user.save();
+
       user.password = newPassword;
+      (user as any).refreshTokenHash = null;
+      (user as any).tokenVersion = ((user as any).tokenVersion ?? 0) + 1;
 
       await user.save();
 
@@ -252,30 +263,141 @@ export class AuthService {
     return response;
   }
 
+  // async refreshToken(
+  //   refreshTokenDto: RefreshTokenDto,
+  // ): Promise<LoginRes | null> {
+  //   let response: LoginRes | null = null;
+  //   try {
+  //     const { refreshToken } = refreshTokenDto;
+  //     const payload = this.jwtService.verify(refreshToken, {
+  //       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+  //     });
+
+  //     const admin = await this.userModal.findById(payload.id);
+
+  //     if (!admin) {
+  //       response = {
+  //         code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+  //         info: ERROR_INFO.FAIL,
+  //         message: 'User not found',
+  //         content: null,
+  //       };
+  //       return response;
+  //     }
+
+  //     const token = await this.generateToken(admin);
+  //     response = {
+  //       code: ERROR_RES.SUCCESS.statusCode,
+  //       info: ERROR_INFO.SUCCESS,
+  //       message: 'Token refreshed successfully',
+  //       content: {
+  //         accessToken: token.accessToken,
+  //         expiresToken: token.accessTokenExpiresIn,
+  //         refreshToken: token.refreshToken,
+  //         expRefreshToken: token.refreshTokenExpiresIn,
+  //       },
+  //     };
+  //   } catch (error: any) {
+  //     response = {
+  //       code: ERROR_RES.INVALID_CREDENTIALS_ERROR.statusCode,
+  //       info: ERROR_INFO.FAIL,
+  //       message: `There is a reToken problem: ${error.message}`,
+  //       content: null,
+  //     };
+  //   }
+  //   return response;
+  // }
+
   async refreshToken(
     refreshTokenDto: RefreshTokenDto,
   ): Promise<LoginRes | null> {
-    let response: LoginRes | null = null;
     try {
       const { refreshToken } = refreshTokenDto;
-      const payload = this.jwtService.verify(refreshToken, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      });
 
-      const admin = await this.userModal.findById(payload.id);
-
-      if (!admin) {
-        response = {
-          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+      if (!refreshToken || refreshToken.split('.').length !== 3) {
+        return {
+          code: ERROR_RES.INVALID_CREDENTIALS_ERROR.statusCode,
           info: ERROR_INFO.FAIL,
-          message: 'User not found',
+          message: 'Refresh token is invalid format',
           content: null,
         };
-        return response;
       }
 
-      const token = await this.generateToken(admin);
-      response = {
+      let payload: any;
+
+      try {
+        payload = await this.jwtService.verifyAsync(refreshToken, {
+          secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+        });
+      } catch (error: any) {
+        return {
+          code: ERROR_RES.INVALID_CREDENTIALS_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `Refresh token is invalid: ${error.message}`,
+          content: null,
+        };
+      }
+
+      const user = await this.userModal
+        .findById(payload.id)
+        .select('+refreshTokenHash')
+        .exec();
+
+      if (!user || !(user as any).isActive) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'User not found or inactive',
+          content: null,
+        };
+      }
+
+      if (!(user as any).refreshTokenHash) {
+        return {
+          code: ERROR_RES.INVALID_CREDENTIALS_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Refresh token has been revoked',
+          content: null,
+        };
+      }
+
+      if (((user as any).tokenVersion ?? 0) !== (payload.tokenVersion ?? 0)) {
+        return {
+          code: ERROR_RES.INVALID_CREDENTIALS_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Refresh token version is no longer valid',
+          content: null,
+        };
+      }
+
+      const isRefreshTokenMatch = await this.compareRefreshToken(
+        refreshToken,
+        (user as any).refreshTokenHash,
+      );
+
+      if (!isRefreshTokenMatch) {
+        (user as any).refreshTokenHash = null;
+        (user as any).tokenVersion = ((user as any).tokenVersion ?? 0) + 1;
+
+        await user.save();
+
+        return {
+          code: ERROR_RES.INVALID_CREDENTIALS_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: 'Refresh token reuse detected. Please login again.',
+          content: null,
+        };
+      }
+
+      const token = await this.generateToken(user);
+
+      (user as any).refreshTokenHash = await this.hashRefreshToken(
+        token.refreshToken,
+      );
+
+      await user.save();
+
+      return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Token refreshed successfully',
@@ -287,13 +409,23 @@ export class AuthService {
         },
       };
     } catch (error: any) {
-      response = {
+      return {
         code: ERROR_RES.INVALID_CREDENTIALS_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
         message: `There is a reToken problem: ${error.message}`,
         content: null,
       };
     }
-    return response;
+  }
+
+  private async hashRefreshToken(refreshToken: string): Promise<string> {
+    return await bcrypt.hash(refreshToken, 10);
+  }
+
+  private async compareRefreshToken(
+    refreshToken: string,
+    refreshTokenHash: string,
+  ): Promise<boolean> {
+    return await bcrypt.compare(refreshToken, refreshTokenHash);
   }
 }

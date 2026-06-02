@@ -4,7 +4,7 @@ import { Department, DepartmentSchema } from '@schemas/department.schema';
 import { DepartmentController } from './department.controller';
 import { DepartmentService } from './department.service';
 import { DepartmentRepository } from '@repositories/department.repository';
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { Counter, CounterSchema } from '@schemas/counter.schema';
 

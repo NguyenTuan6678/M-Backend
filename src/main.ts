@@ -1,18 +1,57 @@
 import 'dotenv/config';
+import helmet from 'helmet';
+import { join } from 'path';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from '@common/filters/all-exceptions.filter';
-import { LoggerService } from '@common/logs/logger.service';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { join } from 'path';
-import { NestExpressApplication } from '@nestjs/platform-express';
+import { LoggerService } from '@common/loggers/logger.service';
 import { printServerBanner } from '@common/banner/server-banner';
 declare const module: any;
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const logger = new LoggerService();
+
+  if (process.env.NODE_ENV === 'production') {
+    app.use(
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", 'data:'],
+            objectSrc: ["'none'"],
+            frameAncestors: ["'self'", process.env.FRONTEND_URL || "'self'"],
+          },
+        },
+        crossOriginResourcePolicy: {
+          policy: 'cross-origin',
+        },
+        strictTransportSecurity: {
+          maxAge: 31536000,
+          includeSubDomains: true,
+        },
+        xFrameOptions: false,
+      }),
+    );
+  } else {
+    app.use(
+      helmet({
+        contentSecurityPolicy: false,
+        crossOriginEmbedderPolicy: false,
+        crossOriginOpenerPolicy: false,
+        crossOriginResourcePolicy: {
+          policy: 'cross-origin',
+        },
+        strictTransportSecurity: false,
+        xFrameOptions: false,
+      }),
+    );
+  }
 
   app.useStaticAssets(join(process.cwd(), 'files'), {
     prefix: '/files',
@@ -36,10 +75,9 @@ async function bootstrap() {
   app.useGlobalFilters(allExceptionsFilter);
 
   app.enableCors({
-    origin:
-      process.env.NODE_ENV === 'development'
-        ? process.env.CORS_ORIGIN || '*'
-        : 'your-domain.com',
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    preflightContinue: false,
     credentials: true,
   });
 

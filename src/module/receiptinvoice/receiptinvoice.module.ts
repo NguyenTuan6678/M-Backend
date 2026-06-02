@@ -6,7 +6,7 @@ import {
 import { ReceiptInvoiceController } from './receiptinvoice.controller';
 import { ReceiptInvoiceService } from './receiptinvoice.service';
 import { ReceiptInvoiceRepository } from '@repositories/receiptinvoice.repository';
-import { LoggerService } from '@common/logs/logger.service';
+import { LoggerService } from '@common/loggers/logger.service';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { Module } from '@nestjs/common';
 

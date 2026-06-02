@@ -7,6 +7,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Min,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -247,6 +248,15 @@ export class CreateSalesTransactionDto {
   @IsOptional()
   @IsMongoId({ message: 'employeeId must be a valid MongoDB ObjectId' })
   employeeId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Amount collected from customer',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  amountCollected?: number;
 
   @ApiProperty({
     type: [TransactionItemDto],

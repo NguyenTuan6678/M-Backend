@@ -143,6 +143,9 @@ export class SalesTransaction {
   })
   items: TransactionItem[];
 
+  @Prop()
+  inv_itemProduct: string;
+
   @Prop({
     type: String,
     enum: InvoiceStatus,
@@ -152,6 +155,9 @@ export class SalesTransaction {
 
   @Prop({ default: false })
   isPaid: boolean;
+
+  @Prop({ type: String, default: '' })
+  invoiceFilePath: string;
 
   @Prop({ default: true })
   isActive: boolean;

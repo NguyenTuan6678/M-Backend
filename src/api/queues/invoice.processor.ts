@@ -4,6 +4,8 @@ import { Job } from 'bullmq';
 import { MInvoiceReceiptPostService } from '../m-invoice-receipt-post/m-invoice-receipt-post.service';
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
 import { InvoiceStatus } from '@utils/transaction-status';
+import { AuditLogService } from '@common/audit/audit-log.service';
+import { AuditAction } from '@common/audit/audit-action.enum';
 
 const INVOICE_WORKER_CONCURRENCY = Number(
   process.env.INVOICE_WORKER_CONCURRENCY ?? 5,
@@ -19,6 +21,7 @@ export class InvoiceProcessor extends WorkerHost {
   constructor(
     private readonly mInvoiceReceiptPostService: MInvoiceReceiptPostService,
     private readonly saleTransactionRepository: SaleTransactionRepository,
+    private readonly auditLogService: AuditLogService,
   ) {
     super();
   }
@@ -92,12 +95,37 @@ export class InvoiceProcessor extends WorkerHost {
       this.logger.log(`[INVOICE JOB DONE] ${job.id}`);
       // this.logger.log(`[INVOICE JOB RESULT] ${JSON.stringify(result)}`);
 
+      await this.auditLogService.log({
+        actor: job.data.actor,
+        action: AuditAction.ISSUE_INVOICE_SUCCESS,
+        resource: 'SaleTransaction',
+        resourceId: saleTransactionId,
+        metadata: {
+          jobId: job.id,
+          invoiceNumber: result?.data?.inv_invoiceNumber || result?.data?.shdon,
+          inv_invoiceCreatedId: result?.data?.id,
+          message: result?.message,
+        },
+      });
+
       return result;
     } catch (error: any) {
       await this.markTransactionFailed(
         saleTransactionId,
         error?.message || 'Invoice job failed',
       );
+
+      await this.auditLogService.log({
+        actor: job.data?.actor,
+        action: AuditAction.ISSUE_INVOICE_FAILED,
+        resource: 'SaleTransaction',
+        resourceId: saleTransactionId,
+        metadata: {
+          jobId: job.id,
+          tax_code: job.data?.tax_code,
+          error: error?.message || 'Invoice job failed',
+        },
+      });
 
       this.logger.error(
         `[INVOICE JOB FAILED] ${job.id} - ${error.message}`,

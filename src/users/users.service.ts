@@ -10,12 +10,15 @@ import { MessageResponse } from '@app-types/message.res';
 import { Role } from '@utils/role.enum';
 import { QueryUserDto } from './dto/query-users.req';
 import { UpdateUserDto } from './dto/update-users.req';
+import { AuditLogService } from '@common/audit/audit-log.service';
+import { AuditAction } from '@common/audit/audit-action.enum';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     private readonly userRepository: UsersRepository,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async createUser(
@@ -156,6 +159,12 @@ export class UsersService {
         };
       }
 
+      const oldUser = {
+        username: user.username,
+        role: user.role,
+        isActive: user.isActive,
+      };
+
       /**
        * Nếu update username thì check trùng username.
        */
@@ -235,11 +244,41 @@ export class UsersService {
         .select('-password')
         .exec();
 
+      if (!updatedUser) {
+        return {
+          code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
+          info: ERROR_INFO.FAIL,
+          message: `User with ID ${id} not found after update`,
+          content: undefined,
+        };
+      }
+
+      await this.auditLogService.log({
+        actor: currentUser,
+        action: AuditAction.UPDATE_USER,
+        resource: 'User',
+        resourceId: id,
+        before: {
+          username: oldUser.username,
+          role: oldUser.role,
+          isActive: oldUser.isActive,
+        },
+        after: {
+          username: updatedUser.username,
+          role: updatedUser.role,
+          isActive: updatedUser.isActive,
+          passwordChanged: !!updateData.password,
+        },
+        metadata: {
+          targetUsername: updatedUser.username,
+        },
+      });
+
       return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'User updated successfully',
-        content: updatedUser || undefined,
+        content: updatedUser,
       };
     } catch (error: any) {
       return {
