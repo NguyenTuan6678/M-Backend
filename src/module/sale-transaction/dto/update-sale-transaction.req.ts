@@ -1,13 +1,27 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  ArrayMinSize,
+  IsArray,
   IsEmail,
   IsMongoId,
   IsNumber,
   IsOptional,
   IsString,
   Min,
+  ValidateNested,
 } from 'class-validator';
+
+export class TransactionItemDto {
+  @ApiPropertyOptional({
+    example: '',
+    description: 'Product ID',
+  })
+  @IsOptional()
+  @IsString({ message: 'productId must be a string' })
+  @IsMongoId({ message: 'productId must be a valid MongoDB ObjectId' })
+  productId: string;
+}
 
 export class UpdateTransactionDto {
   @ApiPropertyOptional({
@@ -195,14 +209,6 @@ export class UpdateTransactionDto {
 
   @ApiPropertyOptional({
     example: '',
-    description: 'Item product name',
-  })
-  @IsOptional()
-  @IsString({ message: 'inv_itemProduct must be a string' })
-  inv_itemProduct?: string;
-
-  @ApiPropertyOptional({
-    example: '',
     description: 'Agency ID',
   })
   @IsOptional({ message: 'agencyId is required' })
@@ -227,4 +233,14 @@ export class UpdateTransactionDto {
   @IsNumber()
   @Min(0)
   amountCollected?: number;
+
+  @ApiPropertyOptional({
+    type: [TransactionItemDto],
+    description: 'List of transaction items',
+  })
+  @IsArray({ message: 'items must be an array' })
+  @ArrayMinSize(1, { message: 'items must contain at least one item' })
+  @ValidateNested({ each: true })
+  @Type(() => TransactionItemDto)
+  items: TransactionItemDto[];
 }

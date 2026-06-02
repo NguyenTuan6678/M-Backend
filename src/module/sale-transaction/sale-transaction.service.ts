@@ -13,11 +13,11 @@ import { Agency } from '@schemas/agency.schema';
 import { Product } from '@schemas/product.schema';
 import { MessageResponse } from '@app-types/message.res';
 import { QuerySaleTransactionDto } from './dto/query-transaction.req';
-import { InvoiceStatus } from '@utils/transaction-status';
 import { DepartmentRepository } from '@repositories/department.repository';
 import { AuditLogService } from '@common/audit/audit-log.service';
 import { Role } from '@utils/role.enum';
 import { AuditAction } from '@common/audit/audit-action.enum';
+import { UpdateTransactionDto } from './dto/update-sale-transaction.req';
 
 interface ValidatedEntities {
   missing: string[];
@@ -299,13 +299,6 @@ export class SaleTransactionService {
       throw new Error(`Sale transaction with ID ${transactionId} not found`);
     }
 
-    // if (
-    //   (transaction as any).invoiceStatus !== InvoiceStatus.ISSUED ||
-    //   !(transaction as any).inv_invoiceCreatedId
-    // ) {
-    //   throw new Error('Only issued invoices can be marked as paid');
-    // }
-
     const bank = await this.bankRepository.findById(bankId);
 
     if (!bank) {
@@ -381,7 +374,7 @@ export class SaleTransactionService {
 
   async updateSaleTransaction(
     id: string,
-    updateData: Partial<CreateSalesTransactionDto>,
+    updateData: UpdateTransactionDto,
   ): Promise<SaleTransactionResponseDTO> {
     try {
       const updatedTransaction = await this.saleTransactionRepository.update(

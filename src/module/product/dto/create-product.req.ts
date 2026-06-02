@@ -31,6 +31,14 @@ export class CreateProductDto {
   @IsNumber()
   inv_discountAmount: number;
 
+  @ApiProperty({
+    example: '',
+    description: 'Item product name',
+  })
+  @IsNotEmpty()
+  @IsString({ message: 'inv_itemProduct must be a string' })
+  inv_itemProduct?: string;
+
   @ApiProperty({ example: '8', description: 'D — Thuế suất (%)' })
   @IsString()
   @IsNotEmpty()

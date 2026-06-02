@@ -37,6 +37,9 @@ export class Product {
 
   @Prop({ default: 0 })
   inv_TotalAmount: number;
+
+  @Prop({ required: true })
+  inv_itemProduct: string;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
