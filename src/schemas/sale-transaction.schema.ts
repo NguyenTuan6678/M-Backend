@@ -143,9 +143,6 @@ export class SalesTransaction {
   })
   items: TransactionItem[];
 
-  @Prop()
-  inv_itemProduct: string;
-
   @Prop({
     type: String,
     enum: InvoiceStatus,
