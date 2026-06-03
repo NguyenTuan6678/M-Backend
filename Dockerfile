@@ -17,7 +17,7 @@ RUN npm run build
 # =========================
 # 2. Production stage
 # =========================
-FROM --platform=linux/amd64 node:20-alpine AS builder
+FROM --platform=linux/amd64 node:20-alpine AS production
 
 WORKDIR /app
 
@@ -29,9 +29,8 @@ RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
 
-# Copy các folder cần cho static files
 RUN mkdir -p files invoice logs/audit
 
 EXPOSE 4000
 
-CMD ["node", "dist/main.js"]
+CMD ["npm", "run", "start:prod"]

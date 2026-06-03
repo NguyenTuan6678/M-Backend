@@ -83,6 +83,7 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
 
+  app.setGlobalPrefix('api');
   const config = new DocumentBuilder()
     .setTitle('M-Invoice API')
     .addBearerAuth(

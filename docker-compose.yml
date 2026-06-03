@@ -1,11 +1,32 @@
 services:
   redis:
+    platform: linux/amd64
     image: redis:7-alpine
-    container_name: redis
+    container_name: minvoice-redis
     ports:
       - '6379:6379'
+    networks:
+      - minvoice-network
 
   backend:
-    build: .
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: minvoice-backend
+    ports:
+      - '4000:4000'
+    env_file:
+      - .env.docker
     depends_on:
       - redis
+    volumes:
+      - ./files:/app/files
+      - ./invoice:/app/invoice
+      - ./logs:/app/logs
+    networks:
+      - minvoice-network
+
+networks:
+  minvoice-network:
+    driver: bridge
