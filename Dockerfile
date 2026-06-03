@@ -1,7 +1,7 @@
 # =========================
 # 1. Build stage
 # =========================
-FROM --platform=linux/amd64 node:20-alpine AS build
+FROM --platform=linux/amd64 node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ RUN npm run build
 # =========================
 # 2. Production stage
 # =========================
-FROM --platform=linux/amd64 node:20-alpine AS build
+FROM --platform=linux/amd64 node:20-alpine AS builder
 
 WORKDIR /app
 
