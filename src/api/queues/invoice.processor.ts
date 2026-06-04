@@ -8,7 +8,7 @@ import { AuditLogService } from '@common/audit/audit-log.service';
 import { AuditAction } from '@common/audit/audit-action.enum';
 
 const INVOICE_WORKER_CONCURRENCY = Number(
-  process.env.INVOICE_WORKER_CONCURRENCY ?? 5,
+  process.env.INVOICE_WORKER_CONCURRENCY ?? 1000,
 );
 
 @Processor('invoice', {
@@ -138,7 +138,7 @@ export class InvoiceProcessor extends WorkerHost {
 
   private getJobTimeoutMs(): number {
     const timeoutMinutes = Number(
-      process.env.INVOICE_JOB_TIMEOUT_MINUTES ?? 10,
+      process.env.INVOICE_JOB_TIMEOUT_MINUTES ?? 120,
     );
 
     return timeoutMinutes * 60 * 1000;
