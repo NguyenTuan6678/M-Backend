@@ -23,11 +23,11 @@ function mapTaxCode(maThue: string | number | undefined | null): number {
     .trim()
     .toUpperCase();
 
-  if (taxCode === 'KCT') {
+  if (taxCode === 'KCT' || taxCode === '-1') {
     return -1;
   }
 
-  if (taxCode === 'KKKNT') {
+  if (taxCode === 'KKKNT' || taxCode === '-2') {
     return -2;
   }
 

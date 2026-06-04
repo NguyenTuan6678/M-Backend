@@ -135,11 +135,11 @@ export class MInvoiceReceiptPostService {
   } {
     const taxCode = String(maThue).trim().toUpperCase();
 
-    if (taxCode === 'KCT') {
+    if (taxCode === 'KCT' || taxCode === '-1') {
       return { invoiceTaxCode: -1, taxRate: 0 };
     }
 
-    if (taxCode === 'KKKNT') {
+    if (taxCode === 'KKKNT' || taxCode === '-2') {
       return { invoiceTaxCode: -2, taxRate: 0 };
     }
 
@@ -337,6 +337,11 @@ export class MInvoiceReceiptPostService {
         isActive: true,
       });
     }
+
+    console.log('[M-INVOICE API RESPONSE]', {
+      status: response.status,
+      data: response.data,
+    });
 
     return response.data;
   }
