@@ -14,6 +14,7 @@ import { CreateInvoiceDto, InvoiceItemDataDto } from './dto/send-receipt.req';
 import { mapTransactionToInvoice } from '@module/sale-transaction/sale-transaction.mapper';
 import { SaleTransactionRepository } from '@repositories/sale-transaction.repository';
 import { InvoiceStatus } from '@utils/transaction-status';
+import { ERROR_RES } from '@common/constants/error.const';
 
 @Injectable()
 export class MInvoiceReceiptPostService {
@@ -291,5 +292,31 @@ export class MInvoiceReceiptPostService {
     }
 
     return response.data;
+  }
+
+  async getCompanyInfo(taxCode: string) {
+    let response: any = null;
+    try {
+      if (!taxCode) {
+        response = {
+          data: ERROR_RES.BAD_REQUEST_ERROR,
+        };
+        return response;
+      }
+
+      const url =
+        taxCode.length === 12
+          ? `https://mst.minvoice.com.vn/api/System/SearchCMND?cid=${taxCode}`
+          : `https://mst.minvoice.com.vn/api/System/SearchTaxCodeV2?tax=${taxCode}`;
+      const res = await firstValueFrom(this.httpService.get(url));
+      response = {
+        data: res.data,
+      };
+    } catch (error) {
+      response = {
+        data: error,
+      };
+    }
+    return response;
   }
 }

@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Query,
   Req,
@@ -19,6 +20,8 @@ import { CreateInvoiceFromTransactionDto } from './dto/send-receipt.req';
 import { InvoiceIssueService } from '@utils/invoice-issue/invoice-issue.service';
 import { SkipThrottle } from '@nestjs/throttler';
 import { InvoiceQueueService } from '../queues/invoice-queue.service';
+import { responseHelper } from '@utils/helper';
+import { MInvoiceReceiptPostService } from './m-invoice-receipt-post.service';
 
 @ApiTags('M-Invoice Receipt Post')
 @Controller('m-invoice-receipt-post')
@@ -26,6 +29,7 @@ import { InvoiceQueueService } from '../queues/invoice-queue.service';
 @ApiBearerAuth('authorization')
 export class MInvoiceReceiptPostController {
   constructor(
+    private readonly mInvoiceReceiptPostService: MInvoiceReceiptPostService,
     private readonly invoiceIssueService: InvoiceIssueService,
     private readonly invoiceQueueService: InvoiceQueueService,
   ) {}
@@ -67,6 +71,13 @@ export class MInvoiceReceiptPostController {
         userAgent: req.headers['user-agent'],
       },
     );
+  }
+
+  @Get('/company-info/:taxCode')
+  async getCompanyInfo(@Param('taxCode') taxCode: string) {
+    const response =
+      await this.mInvoiceReceiptPostService.getCompanyInfo(taxCode);
+    return responseHelper(response);
   }
 
   @Get('job-status')
