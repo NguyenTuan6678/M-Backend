@@ -18,6 +18,28 @@ type PopulatedSalesTransaction = Omit<SalesTransaction, 'items'> & {
   items: PopulatedTransactionItem[];
 };
 
+function mapTaxCode(maThue: string | number | undefined | null): number {
+  const taxCode = String(maThue ?? '')
+    .trim()
+    .toUpperCase();
+
+  if (taxCode === 'KCT') {
+    return -1;
+  }
+
+  if (taxCode === 'KKKNT') {
+    return -2;
+  }
+
+  const taxPercent = Number(taxCode);
+
+  if (Number.isNaN(taxPercent)) {
+    return 0;
+  }
+
+  return taxPercent;
+}
+
 export function mapTransactionToInvoice(
   transaction: PopulatedSalesTransaction,
 ): CreateInvoiceDto {
@@ -34,7 +56,7 @@ export function mapTransactionToInvoice(
         price: product.inv_unitPrice,
         inv_quantity: transaction.inv_quantity ?? 1,
         inv_discountAmount: product.inv_discountAmount,
-        ma_thue: parseFloat(product.ma_thue),
+        ma_thue: mapTaxCode(product.ma_thue),
       };
     },
   );

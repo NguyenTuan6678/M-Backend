@@ -2,6 +2,7 @@ import configuration from '@config/configuration';
 import { HttpService } from '@nestjs/axios';
 import {
   BadGatewayException,
+  BadRequestException,
   GatewayTimeoutException,
   Inject,
   Injectable,
@@ -94,29 +95,65 @@ export class MInvoiceReceiptPostService {
   }
 
   private calculateItemFields(item: InvoiceItemDataDto) {
-    const price = item.price;
-    const quantity = item.inv_quantity ?? 1;
+    const price = Number(item.price || 0);
+    const quantity = Number(item.inv_quantity ?? 1);
     const discount = 0;
-
     const discountPercentage = 0;
-    const tax = item.ma_thue / 100;
+
+    const { invoiceTaxCode, taxRate } = this.resolveTaxCodeAndRate(
+      item.ma_thue,
+    );
 
     const totalPrice = price * quantity - discount;
-    const totalAmountWithVat = totalPrice / (1 + tax);
-    const vatAmount = totalPrice - totalAmountWithVat;
 
-    const totalBeforeDiscount = totalAmountWithVat / (1 - discountPercentage);
-    const unitPrice = totalBeforeDiscount / quantity;
+    const totalAmountWithoutVat = totalPrice / (1 + taxRate);
+    const vatAmount = totalPrice - totalAmountWithoutVat;
+
+    const totalBeforeDiscount =
+      discountPercentage >= 1
+        ? totalAmountWithoutVat
+        : totalAmountWithoutVat / (1 - discountPercentage);
+
+    const unitPrice = quantity > 0 ? totalBeforeDiscount / quantity : 0;
 
     return {
       ...item,
+      ma_thue: invoiceTaxCode, // giá trị dùng để xuất hóa đơn
       inv_quantity: quantity,
       inv_discountAmount: discount,
       inv_discountPercentage: discountPercentage,
-      inv_TotalAmountWithoutVat: totalAmountWithVat,
+      inv_TotalAmountWithoutVat: totalAmountWithoutVat,
       inv_vatAmount: vatAmount,
       inv_TotalAmount: totalPrice,
       inv_unitPrice: unitPrice,
+    };
+  }
+
+  private resolveTaxCodeAndRate(maThue: string | number): {
+    invoiceTaxCode: number;
+    taxRate: number;
+  } {
+    const taxCode = String(maThue).trim().toUpperCase();
+
+    if (taxCode === 'KCT') {
+      return { invoiceTaxCode: -1, taxRate: 0 };
+    }
+
+    if (taxCode === 'KKKNT') {
+      return { invoiceTaxCode: -2, taxRate: 0 };
+    }
+
+    const taxPercent = Number(maThue);
+
+    if (Number.isNaN(taxPercent)) {
+      throw new BadRequestException(
+        `Invalid ma_thue: ${maThue}. Accepted values: KCT, KKKNT, or number.`,
+      );
+    }
+
+    return {
+      invoiceTaxCode: taxPercent,
+      taxRate: taxPercent / 100,
     };
   }
 
@@ -124,31 +161,41 @@ export class MInvoiceReceiptPostService {
     return {
       ...dto,
       data: dto.data.map((invoiceData) => {
-        const calculatedDetails = invoiceData.details.map((detail) => ({
-          ...detail,
-          data: detail.data.map((item) => this.calculateItemFields(item)),
-        }));
+        const calculatedDetails = invoiceData.details.map((detail) => {
+          const calculatedItems = detail.data.map((item) =>
+            this.calculateItemFields(item),
+          );
+
+          return {
+            ...detail,
+            data: calculatedItems,
+          };
+        });
 
         const allItems = calculatedDetails.flatMap((detail) => detail.data);
 
         const inv_quantity = allItems.reduce(
-          (sum, item) => sum + (item.inv_quantity ?? 0),
+          (sum, item) => sum + Number(item.inv_quantity || 0),
           0,
         );
+
         const inv_discountAmount = allItems.reduce(
-          (sum, item) => sum + (item.inv_discountAmount ?? 0),
+          (sum, item) => sum + Number(item.inv_discountAmount || 0),
           0,
         );
+
         const inv_TotalAmountWithoutVat = allItems.reduce(
-          (sum, item) => sum + (item.inv_TotalAmountWithoutVat ?? 0),
+          (sum, item) => sum + Number(item.inv_TotalAmountWithoutVat || 0),
           0,
         );
+
         const inv_vatAmount = allItems.reduce(
-          (sum, item) => sum + (item.inv_vatAmount ?? 0),
+          (sum, item) => sum + Number(item.inv_vatAmount || 0),
           0,
         );
+
         const inv_TotalAmount = allItems.reduce(
-          (sum, item) => sum + (item.inv_TotalAmount ?? 0),
+          (sum, item) => sum + Number(item.inv_TotalAmount || 0),
           0,
         );
 
