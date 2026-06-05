@@ -34,8 +34,8 @@ import { InvoiceQueueModule } from './api/queues/invoice-queue.module';
     ThrottlerModule.forRoot({
       throttlers: [
         {
-          ttl: 60000,
-          limit: 10,
+          ttl: 120000,
+          limit: 100,
         },
       ],
     }),

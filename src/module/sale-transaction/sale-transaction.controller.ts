@@ -74,8 +74,8 @@ export class SaleTransactionController {
     );
   }
 
-  @UseInterceptors(CacheInterceptor)
   @Get()
+  @UseInterceptors(CacheInterceptor)
   @ApiOperation({
     summary: 'Get all sale transactions with optional filters & pagination',
   })
