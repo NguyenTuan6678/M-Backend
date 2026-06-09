@@ -152,15 +152,15 @@ export class SaleTransactionReportService {
       { header: 'Tên người mua', key: 'inv_buyerDisplayName', width: 28 },
       { header: 'Tên công ty', key: 'inv_buyerLegalName', width: 32 },
       { header: 'Mã số thuế', key: 'inv_buyerTaxCode', width: 22 },
-      { header: 'Địa chỉ', key: 'inv_buyerAddressLine', width: 36 },
-      { header: 'Email người mua', key: 'inv_buyerEmail', width: 28 },
-      {
-        header: 'Phương thức thanh toán',
-        key: 'inv_paymentMethodName',
-        width: 18,
-      },
-      { header: 'Tên ngân hàng', key: 'bankName', width: 26 },
-      { header: 'Mã đại lý', key: 'agencyNumber', width: 18 },
+      // { header: 'Địa chỉ', key: 'inv_buyerAddressLine', width: 36 },
+      // { header: 'Email người mua', key: 'inv_buyerEmail', width: 28 },
+      // {
+      //   header: 'Phương thức thanh toán',
+      //   key: 'inv_paymentMethodName',
+      //   width: 18,
+      // },
+      // { header: 'Tên ngân hàng', key: 'bankName', width: 26 },
+      // { header: 'Mã đại lý', key: 'agencyNumber', width: 18 },
       { header: 'Tên đại lý', key: 'agencyName', width: 26 },
       { header: 'Nhân viên', key: 'employeeName', width: 26 },
       { header: 'Phòng ban', key: 'departmentName', width: 26 },
@@ -288,6 +288,22 @@ export class SaleTransactionReportService {
 
   private styleHeader(sheet: any) {
     const headerRow = sheet.getRow(1);
+
+    headerRow.font = {
+      bold: true,
+      color: { argb: 'FFFFFFFF' },
+    };
+
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF305496' },
+    };
+
+    headerRow.alignment = {
+      vertical: 'middle',
+      horizontal: 'center',
+    };
 
     headerRow.height = 22;
   }
