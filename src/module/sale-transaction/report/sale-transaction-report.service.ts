@@ -289,22 +289,6 @@ export class SaleTransactionReportService {
   private styleHeader(sheet: any) {
     const headerRow = sheet.getRow(1);
 
-    headerRow.font = {
-      bold: true,
-      color: { argb: 'FFFFFFFF' },
-    };
-
-    headerRow.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF305496' },
-    };
-
-    headerRow.alignment = {
-      vertical: 'middle',
-      horizontal: 'center',
-    };
-
     headerRow.height = 22;
   }
 
