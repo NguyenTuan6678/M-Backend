@@ -105,7 +105,7 @@ export class ReceiptInvoiceService {
       response = {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
-        message: 'Employee fetched successfully',
+        message: 'Receipt fetched successfully',
         content: receipt,
       };
     } catch (error: any) {
@@ -147,7 +147,7 @@ export class ReceiptInvoiceService {
       return {
         code: ERROR_RES.INTERNAL_ERROR.statusCode,
         info: ERROR_INFO.FAIL,
-        message: `An error occurred while updating the product: ${error.message}`,
+        message: `An error occurred while updating the receipt: ${error.message}`,
         content: undefined,
       };
     }
