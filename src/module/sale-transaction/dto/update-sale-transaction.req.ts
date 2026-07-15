@@ -29,8 +29,8 @@ export class UpdateTransactionDto {
       'Invoice date — neu khong truyen se tu dong lay thoi diem hien tai',
   })
   @IsOptional()
-  @IsString({ message: 'inv_invoiceIssuedDate must be a string' })
-  inv_invoiceIssuedDate?: string;
+  @IsString({ message: 'activationDate must be a string' })
+  activationDate?: string;
 
   @ApiPropertyOptional({
     example: 'VND',
