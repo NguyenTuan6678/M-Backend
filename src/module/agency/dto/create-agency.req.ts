@@ -16,6 +16,14 @@ export class CreateAgencyDto {
     example: 'Best Travel Agency',
   })
   @IsString()
+  @IsOptional()
+  inv_agencyName: string;
+
+  @ApiProperty({
+    description: 'Name of the agency',
+    example: 'Best Travel Agency',
+  })
+  @IsString()
   @IsNotEmpty()
   agencyName: string;
 

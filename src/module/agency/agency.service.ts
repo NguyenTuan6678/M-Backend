@@ -23,7 +23,7 @@ export class AgencyService {
   ): Promise<AgencyResponseDto | null> {
     let response: MessageResponse | null = null;
     try {
-      const { agencyName, commissionPercent } = createAgencyDto;
+      const { agencyName } = createAgencyDto;
 
       if (!agencyName) {
         return {
