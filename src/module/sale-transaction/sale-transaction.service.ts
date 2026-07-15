@@ -418,6 +418,10 @@ export class SaleTransactionService {
       const beforeTransaction =
         await this.saleTransactionRepository.findById(transactionId);
 
+      const today = new Date().toLocaleDateString('en-CA', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+      });
+
       if (!beforeTransaction) {
         return {
           code: ERROR_RES.NOT_FOUND_ERROR.statusCode,
@@ -448,6 +452,7 @@ export class SaleTransactionService {
           isPaid: true,
           amountCollected,
           invoiceStatus: (beforeTransaction as any).invoiceStatus,
+          paidDate: today,
         },
         metadata: {
           orderNumber: (beforeTransaction as any).orderNumber,
