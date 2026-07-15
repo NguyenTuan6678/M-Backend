@@ -111,8 +111,7 @@ export class SaleTransactionRepository {
       const dataSubmit = {
         ...createSaleTransactionDto,
         orderNumber,
-        inv_invoiceIssuedDate:
-          createSaleTransactionDto.inv_invoiceIssuedDate ?? formattedNow,
+        activationDate: createSaleTransactionDto.activationDate ?? formattedNow,
 
         ...(agencyId && { agencyId: new Types.ObjectId(agencyId) }),
         ...(departmentId && { departmentId: new Types.ObjectId(departmentId) }),

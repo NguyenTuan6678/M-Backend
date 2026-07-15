@@ -235,6 +235,14 @@ export class UpdateTransactionDto {
   amountCollected?: number;
 
   @ApiPropertyOptional({
+    example: '',
+    description: 'Paid date',
+  })
+  @IsOptional()
+  @IsString({ message: 'paidDate must be a string' })
+  paidDate?: string;
+
+  @ApiPropertyOptional({
     type: [TransactionItemDto],
     description: 'List of transaction items',
   })

@@ -472,7 +472,7 @@ export class SaleTransactionImportService {
   ): CreateSalesTransactionDto {
     return {
       inv_invoiceSeries: row.inv_invoiceSeries || '',
-      inv_invoiceIssuedDate: row.inv_invoiceIssuedDate || '',
+      activationDate: row.inv_invoiceIssuedDate || '',
 
       inv_currencyCode: row.inv_currencyCode,
       inv_exchangeRate: row.inv_exchangeRate,

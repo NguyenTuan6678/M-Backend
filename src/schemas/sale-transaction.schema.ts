@@ -153,6 +153,9 @@ export class SalesTransaction {
   @Prop({ default: false })
   isPaid: boolean;
 
+  @Prop({ default: null })
+  paidDate: string;
+
   @Prop({ type: String, default: '' })
   invoiceFilePath: string;
 
