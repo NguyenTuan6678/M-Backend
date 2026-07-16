@@ -72,4 +72,12 @@ export class QuerySaleTransactionReportDto {
   @IsOptional()
   @IsMongoId()
   bankId?: string;
+
+  @ApiPropertyOptional({
+    enum: ['unpaid', 'draft_paid'],
+    description: 'Special report type filter: unpaid or draft_paid',
+  })
+  @IsOptional()
+  @IsString()
+  reportType?: 'unpaid' | 'draft_paid';
 }

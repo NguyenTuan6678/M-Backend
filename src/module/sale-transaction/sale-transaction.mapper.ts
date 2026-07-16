@@ -53,7 +53,7 @@ export function mapTransactionToInvoice(
         inv_itemName: product.inv_itemName,
         inv_unitCode: product.inv_unitCode,
         inv_discountPercentage: transaction.inv_discountPercentage,
-        price: product.inv_unitPrice,
+        price: item.price ?? product.inv_unitPrice,
         inv_quantity: transaction.inv_quantity ?? 1,
         inv_discountAmount: product.inv_discountAmount,
         ma_thue: mapTaxCode(product.ma_thue),

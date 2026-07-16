@@ -345,14 +345,30 @@ export class SaleTransactionRepository {
         employeeId,
         departmentId,
         bankId,
+        reportType,
       } = query;
 
       const filter: Record<string, any> = {};
 
-      filter.invoiceStatus = invoiceStatus || InvoiceStatus.ISSUED;
+      if (reportType === 'unpaid') {
+        filter.invoiceStatus = InvoiceStatus.ISSUED;
+        filter.isPaid = false;
+      } else if (reportType === 'draft_paid') {
+        filter.invoiceStatus = InvoiceStatus.DRAFT;
+        filter.$or = [
+          { isPaid: true },
+          { amountCollected: { $gt: 0 } },
+        ];
+      } else {
+        if (invoiceStatus) {
+          filter.invoiceStatus = invoiceStatus;
+        } else {
+          filter.invoiceStatus = InvoiceStatus.ISSUED;
+        }
 
-      if (isPaid !== undefined) {
-        filter.isPaid = isPaid;
+        if (isPaid !== undefined) {
+          filter.isPaid = isPaid;
+        }
       }
 
       if (agencyId) {

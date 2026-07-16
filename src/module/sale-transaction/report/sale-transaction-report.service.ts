@@ -262,7 +262,7 @@ export class SaleTransactionReportService {
           productCode: product?.inv_itemCode || '',
           productName: product?.inv_itemName || '',
           unitCode: product?.inv_unitCode || '',
-          unitPrice: Number(product?.inv_unitPrice || 0),
+          unitPrice: Number(item.price ?? product?.inv_unitPrice ?? 0),
           taxRate: product?.ma_thue || '',
           revenue: Number(item.revenue || 0),
           capitalPrice: Number(item.capitalPrice || 0),

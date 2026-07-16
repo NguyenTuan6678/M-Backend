@@ -24,9 +24,16 @@ export class TransactionItem {
 
   @Prop()
   accountingAccountCode: number;
+
+  @Prop({ type: Number, default: null })
+  price?: number;
 }
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+})
 export class SalesTransaction {
   @Prop({ default: null })
   activationDate: string;
@@ -138,6 +145,7 @@ export class SalesTransaction {
         capitalPrice: Number,
         totalSalary: Number,
         accountingAccountCode: Number,
+        price: Number,
       },
     ],
   })
@@ -165,3 +173,14 @@ export class SalesTransaction {
 
 export const SalesTransactionSchema =
   SchemaFactory.createForClass(SalesTransaction);
+
+SalesTransactionSchema.virtual('invoiceStatusVi').get(function (this: any) {
+  const statusMap: Record<string, string> = {
+    DRAFT: 'CHƯA XUẤT',
+    ISSUING: 'ĐANG XUẤT',
+    ISSUED: 'ĐÃ XUẤT',
+    FAILED: 'LỖI',
+    CANCELLED: 'HUỶ',
+  };
+  return statusMap[this.invoiceStatus] || this.invoiceStatus || '';
+});

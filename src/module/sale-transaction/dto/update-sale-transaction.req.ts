@@ -20,7 +20,32 @@ export class TransactionItemDto {
   @IsOptional()
   @IsString({ message: 'productId must be a string' })
   @IsMongoId({ message: 'productId must be a valid MongoDB ObjectId' })
-  productId: string;
+  productId?: string;
+
+  @ApiPropertyOptional({ example: 100, description: 'Revenue' })
+  @IsOptional()
+  @IsNumber({}, { message: 'revenue must be a number' })
+  revenue?: number;
+
+  @ApiPropertyOptional({ example: 0.1, description: 'Capital price' })
+  @IsOptional()
+  @IsNumber({}, { message: 'capitalPrice must be a number' })
+  capitalPrice?: number;
+
+  @ApiPropertyOptional({ example: 2, description: 'Total salary' })
+  @IsOptional()
+  @IsNumber({}, { message: 'totalSalary must be a number' })
+  totalSalary?: number;
+
+  @ApiPropertyOptional({ example: 2000, description: 'Accounting account code' })
+  @IsOptional()
+  @IsNumber({}, { message: 'accountingAccountCode must be a number' })
+  accountingAccountCode?: number;
+
+  @ApiPropertyOptional({ example: 245000, description: 'Đơn giá sản phẩm tùy chỉnh cho hóa đơn' })
+  @IsOptional()
+  @IsNumber({}, { message: 'price must be a number' })
+  price?: number;
 }
 
 export class UpdateTransactionDto {
