@@ -10,7 +10,7 @@ export class Agency {
   agencyNumber: string;
 
   @Prop({ required: false })
-  inv_agencyNumber: string;
+  inv_agencyName: string;
 
   @Prop({ required: true, unique: true })
   agencyName: string;

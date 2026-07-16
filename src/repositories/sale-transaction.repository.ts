@@ -355,10 +355,7 @@ export class SaleTransactionRepository {
         filter.isPaid = false;
       } else if (reportType === 'draft_paid') {
         filter.invoiceStatus = InvoiceStatus.DRAFT;
-        filter.$or = [
-          { isPaid: true },
-          { amountCollected: { $gt: 0 } },
-        ];
+        filter.$or = [{ isPaid: true }, { amountCollected: { $gt: 0 } }];
       } else {
         if (invoiceStatus) {
           filter.invoiceStatus = invoiceStatus;

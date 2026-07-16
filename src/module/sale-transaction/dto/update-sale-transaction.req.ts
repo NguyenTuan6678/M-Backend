@@ -37,12 +37,18 @@ export class TransactionItemDto {
   @IsNumber({}, { message: 'totalSalary must be a number' })
   totalSalary?: number;
 
-  @ApiPropertyOptional({ example: 2000, description: 'Accounting account code' })
+  @ApiPropertyOptional({
+    example: 2000,
+    description: 'Accounting account code',
+  })
   @IsOptional()
   @IsNumber({}, { message: 'accountingAccountCode must be a number' })
   accountingAccountCode?: number;
 
-  @ApiPropertyOptional({ example: 245000, description: 'Đơn giá sản phẩm tùy chỉnh cho hóa đơn' })
+  @ApiPropertyOptional({
+    example: 245000,
+    description: 'Đơn giá sản phẩm tùy chỉnh cho hóa đơn',
+  })
   @IsOptional()
   @IsNumber({}, { message: 'price must be a number' })
   price?: number;

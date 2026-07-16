@@ -47,7 +47,10 @@ export class TransactionItemDto {
   @IsNumber({}, { message: 'accountingAccountCode must be a number' })
   accountingAccountCode: number;
 
-  @ApiPropertyOptional({ example: 245000, description: 'Đơn giá sản phẩm tùy chỉnh cho hóa đơn' })
+  @ApiPropertyOptional({
+    example: 245000,
+    description: 'Đơn giá sản phẩm tùy chỉnh cho hóa đơn',
+  })
   @IsOptional()
   @IsNumber({}, { message: 'price must be a number' })
   price?: number;

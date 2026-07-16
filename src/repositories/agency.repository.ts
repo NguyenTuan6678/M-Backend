@@ -43,7 +43,7 @@ export class AgencyRepository {
 
   async create(createAgencyDto: CreateAgencyDto): Promise<AgencyDocument> {
     try {
-      const { agencyEmail, employeeId } = createAgencyDto;
+      const { agencyEmail } = createAgencyDto;
 
       const agencyNumber = await this.generateAgencyNumber();
 
