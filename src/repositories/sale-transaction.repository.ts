@@ -24,6 +24,7 @@ type SaleTransactionUpdatePayload = Partial<UpdateSalesTransactionDto> & {
   inv_invoiceIssuedDate?: string;
   so_benh_an?: string;
   activationDate?: string;
+  invoiceFilePath?: string;
 };
 
 type CreateSalesTransactionPayload = Omit<

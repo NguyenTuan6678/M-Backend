@@ -9,6 +9,7 @@ import { InvoiceStatus } from '@utils/transaction-status';
 
 export type SalesTransactionDocument = SalesTransaction & Document;
 
+@Schema()
 export class TransactionItem {
   @Prop({ type: Types.ObjectId, ref: Product.name })
   productId: Types.ObjectId;
@@ -31,6 +32,8 @@ export class TransactionItem {
   @Prop({ type: Number, default: 1 })
   quantity?: number;
 }
+
+export const TransactionItemSchema = SchemaFactory.createForClass(TransactionItem);
 
 @Schema({
   timestamps: true,
@@ -140,19 +143,7 @@ export class SalesTransaction {
   @Prop({ type: Types.ObjectId, ref: Bank.name })
   bankId?: Types.ObjectId;
 
-  @Prop({
-    type: [
-      {
-        productId: { type: Types.ObjectId, ref: Product.name },
-        revenue: Number,
-        capitalPrice: Number,
-        totalSalary: Number,
-        accountingAccountCode: Number,
-        price: Number,
-        quantity: Number,
-      },
-    ],
-  })
+  @Prop({ type: [TransactionItemSchema] })
   items: TransactionItem[];
 
   @Prop({
