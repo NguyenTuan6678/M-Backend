@@ -386,18 +386,32 @@ export class SaleTransactionRepository {
       }
 
       if (startDate || endDate) {
-        filter.inv_invoiceIssuedDate = {};
+        const isDraftReport = reportType === 'draft_paid' || invoiceStatus === InvoiceStatus.DRAFT;
 
-        if (startDate) {
-          filter.inv_invoiceIssuedDate.$gte = startDate;
-        }
+        if (isDraftReport) {
+          filter.activationDate = {};
 
-        if (endDate) {
-          filter.inv_invoiceIssuedDate.$lte = `${endDate}T23:59:59.999`;
+          if (startDate) {
+            filter.activationDate.$gte = startDate;
+          }
+
+          if (endDate) {
+            filter.activationDate.$lte = endDate;
+          }
+        } else {
+          filter.inv_invoiceIssuedDate = {};
+
+          if (startDate) {
+            filter.inv_invoiceIssuedDate.$gte = startDate;
+          }
+
+          if (endDate) {
+            filter.inv_invoiceIssuedDate.$lte = `${endDate}T23:59:59.999`;
+          }
         }
       }
 
-      return await this.saleTransactionModel
+      const results = await this.saleTransactionModel
         .find(filter)
         .populate(POPULATE_OPTIONS)
         .sort({
@@ -405,6 +419,23 @@ export class SaleTransactionRepository {
           createdAt: 1,
         })
         .exec();
+
+      console.log('--- FIND FOR REPORT DIAGNOSTIC ---');
+      console.log('Query:', JSON.stringify(query));
+      console.log('Filter:', JSON.stringify(filter));
+      console.log('Matched documents count:', results.length);
+      if (results.length > 0) {
+        console.log('Sample matching document:', JSON.stringify({
+          _id: results[0]._id,
+          orderNumber: results[0].orderNumber,
+          invoiceStatus: results[0].invoiceStatus,
+          isPaid: results[0].isPaid,
+          activationDate: results[0].activationDate,
+          inv_invoiceIssuedDate: results[0].inv_invoiceIssuedDate,
+        }));
+      }
+
+      return results;
     } catch (error: any) {
       this.logger.error(
         `Error finding sale transactions for report: ${error.message}`,
