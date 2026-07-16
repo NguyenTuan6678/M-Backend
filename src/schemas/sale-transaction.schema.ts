@@ -27,6 +27,9 @@ export class TransactionItem {
 
   @Prop({ type: Number, default: null })
   price?: number;
+
+  @Prop({ type: Number, default: 1 })
+  quantity?: number;
 }
 
 @Schema({
@@ -146,6 +149,7 @@ export class SalesTransaction {
         totalSalary: Number,
         accountingAccountCode: Number,
         price: Number,
+        quantity: Number,
       },
     ],
   })

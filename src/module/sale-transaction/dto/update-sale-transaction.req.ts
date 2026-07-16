@@ -52,6 +52,12 @@ export class TransactionItemDto {
   @IsOptional()
   @IsNumber({}, { message: 'price must be a number' })
   price?: number;
+
+  @ApiPropertyOptional({ example: 1, description: 'Số lượng mua của sản phẩm này' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({}, { message: 'quantity must be a number' })
+  quantity?: number;
 }
 
 export class UpdateTransactionDto {
