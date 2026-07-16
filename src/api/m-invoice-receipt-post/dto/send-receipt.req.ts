@@ -155,13 +155,19 @@ export class CreateInvoiceFromTransactionDto {
   @IsNumber()
   editmode?: number;
 
-  @ApiPropertyOptional({ example: 950, description: 'Invoice number (for editmode = 2)' })
+  @ApiPropertyOptional({
+    example: 950,
+    description: 'Invoice number (for editmode = 2)',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   inv_invoiceNumber?: number;
 
-  @ApiPropertyOptional({ example: 'F5458A39-B278-4D90-9AAC-209BF79A23CD', description: 'Invoice Auth ID (for editmode = 2)' })
+  @ApiPropertyOptional({
+    example: 'F5458A39-B278-4D90-9AAC-209BF79A23CD',
+    description: 'Invoice Auth ID (for editmode = 2)',
+  })
   @IsOptional()
   @IsString()
   inv_invoiceAuth_id?: string;

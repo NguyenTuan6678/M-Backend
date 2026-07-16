@@ -276,7 +276,10 @@ export class MInvoiceReceiptPostService {
       key_api: saleTransactionId,
       so_benh_an: transaction.orderNumber,
       inv_invoiceAuth_id: inv_invoiceAuth_id || d.inv_invoiceAuth_id,
-      inv_invoiceNumber: inv_invoiceNumber !== undefined ? inv_invoiceNumber : d.inv_invoiceNumber,
+      inv_invoiceNumber:
+        inv_invoiceNumber !== undefined
+          ? inv_invoiceNumber
+          : d.inv_invoiceNumber,
     }));
 
     const builtPayload = this.buildPayload(invoiceDto);
@@ -340,6 +343,7 @@ export class MInvoiceReceiptPostService {
         activationDate,
         invoiceStatus: InvoiceStatus.ISSUED,
         isActive: true,
+        invoiceFilePath: '',
       });
     } else {
       await this.saleTransactionRepository.update(saleTransactionId, {
