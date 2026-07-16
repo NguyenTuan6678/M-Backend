@@ -22,6 +22,8 @@ export class InvoiceIssueService {
       inv_invoiceSeries: string;
       inv_invoiceIssuedDate?: string;
       editmode?: number;
+      inv_invoiceNumber?: number;
+      inv_invoiceAuth_id?: string;
     },
     audit?: {
       actor?: { id: string; username: string; role: Role };
@@ -110,7 +112,8 @@ export class InvoiceIssueService {
         inv_invoiceSeries: body.inv_invoiceSeries,
         inv_invoiceIssuedDate: body.inv_invoiceIssuedDate,
         editmode: body.editmode,
-
+        inv_invoiceNumber: body.inv_invoiceNumber,
+        inv_invoiceAuth_id: body.inv_invoiceAuth_id,
         actor: audit?.actor,
       });
 

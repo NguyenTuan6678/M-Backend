@@ -104,6 +104,8 @@ export class MInvoiceReceiptPostController {
         inv_invoiceSeries: body.inv_invoiceSeries,
         inv_invoiceIssuedDate: body.inv_invoiceIssuedDate,
         editmode: 2,
+        inv_invoiceNumber: body.inv_invoiceNumber,
+        inv_invoiceAuth_id: body.inv_invoiceAuth_id,
       },
       {
         actor: req.user,

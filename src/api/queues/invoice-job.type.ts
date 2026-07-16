@@ -4,4 +4,6 @@ export type IssueInvoiceJob = {
   inv_invoiceSeries: string;
   inv_invoiceIssuedDate?: string;
   editmode?: number;
+  inv_invoiceNumber?: number;
+  inv_invoiceAuth_id?: string;
 };

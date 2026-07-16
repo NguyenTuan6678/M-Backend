@@ -18,6 +18,8 @@ export class InvoiceQueueService {
     inv_invoiceSeries?: string;
     inv_invoiceIssuedDate?: string;
     editmode?: number;
+    inv_invoiceNumber?: number;
+    inv_invoiceAuth_id?: string;
     actor?: {
       id?: string;
       username?: string;

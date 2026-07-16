@@ -218,6 +218,8 @@ export class MInvoiceReceiptPostService {
     inv_invoiceSeries: string,
     inv_invoiceIssuedDate?: string,
     editmode?: number,
+    inv_invoiceNumber?: number,
+    inv_invoiceAuth_id?: string,
   ) {
     const defaultToken = this.config.mInvoiceToken.mToken;
     const baseUrl =
@@ -273,6 +275,8 @@ export class MInvoiceReceiptPostService {
       inv_invoiceIssuedDate: inv_invoiceIssuedDate || today,
       key_api: saleTransactionId,
       so_benh_an: transaction.orderNumber,
+      inv_invoiceAuth_id: inv_invoiceAuth_id || d.inv_invoiceAuth_id,
+      inv_invoiceNumber: inv_invoiceNumber !== undefined ? inv_invoiceNumber : d.inv_invoiceNumber,
     }));
 
     const builtPayload = this.buildPayload(invoiceDto);

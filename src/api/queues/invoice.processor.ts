@@ -84,6 +84,8 @@ export class InvoiceProcessor extends WorkerHost {
           job.data.inv_invoiceSeries,
           job.data.inv_invoiceIssuedDate,
           job.data.editmode,
+          job.data.inv_invoiceNumber,
+          job.data.inv_invoiceAuth_id,
         ),
         timeoutMs,
       );
