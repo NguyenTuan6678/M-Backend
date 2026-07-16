@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AgencyRepository } from '@repositories/agency.repository';
 import { CreateAgencyDto } from './dto/create-agency.req';
+import { UpdateAgencyDto } from './dto/update-agency.req';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
 import { AgencyResponseDto } from './dto/agency.res';
@@ -112,7 +113,7 @@ export class AgencyService {
 
   async updateAgency(
     id: string,
-    updateData: Partial<CreateAgencyDto>,
+    updateData: UpdateAgencyDto,
   ): Promise<AgencyResponseDto | null> {
     try {
       if (updateData.employeeId) {

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EmployeeRepository } from '@repositories/employee.repository';
 import { Employee, EmployeeDocument } from '@schemas/employee.schema';
 import { CreateEmployeeDto } from './dto/create.employee.req';
+import { UpdateEmployeeDto } from './dto/update.employee.req';
 import { EmployeeResponseDto } from './dto/employee.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
@@ -133,7 +134,7 @@ export class EmployeeService {
 
   async updateEmployee(
     id: string,
-    updateData: Partial<CreateEmployeeDto>,
+    updateData: UpdateEmployeeDto,
   ): Promise<EmployeeResponseDto> {
     try {
       if (updateData.departmentId) {

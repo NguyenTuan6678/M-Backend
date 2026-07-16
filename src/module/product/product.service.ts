@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ProductRepository } from '@repositories/product.repository';
 import { ProductDocument } from '@schemas/product.schema';
 import { CreateProductDto } from './dto/create-product.req';
+import { UpdateProductDto } from './dto/update-product.req';
 import { ProductResponseDto } from './dto/product.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
@@ -96,7 +97,7 @@ export class ProductService {
 
   async updateProduct(
     id: string,
-    updateData: Partial<CreateProductDto>,
+    updateData: UpdateProductDto,
   ): Promise<ProductResponseDto | null> {
     try {
       const updatedProduct = await this.productRepository.update(

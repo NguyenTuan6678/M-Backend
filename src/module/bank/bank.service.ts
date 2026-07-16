@@ -4,6 +4,7 @@ import { BankRepository } from '@repositories/bank.repository';
 import { Bank, BankDocument } from '@schemas/bank.schema';
 import { Model } from 'mongoose';
 import { CreateBankDto } from './dto/create-bank.req';
+import { UpdateBankDto } from './dto/update-bank.req';
 import { BankResponseDto } from './dto/bank.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
@@ -111,7 +112,7 @@ export class BankService {
 
   async updateBank(
     id: string,
-    updateData: Partial<CreateBankDto>,
+    updateData: UpdateBankDto,
   ): Promise<BankResponseDto> {
     try {
       const updatedBank = await this.bankRepository.update(id, updateData);

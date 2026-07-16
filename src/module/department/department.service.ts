@@ -4,6 +4,7 @@ import { DepartmentRepository } from '@repositories/department.repository';
 import { Department, DepartmentDocument } from '@schemas/department.schema';
 import { Model } from 'mongoose';
 import { CreateDepartmentDto } from './dto/create-department.req';
+import { UpdateDepartmentDto } from './dto/update-department.req';
 import { DepartmentResponseDto } from './dto/department.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
@@ -116,7 +117,7 @@ export class DepartmentService {
 
   async updateDepartment(
     id: string,
-    updateData: Partial<CreateDepartmentDto>,
+    updateData: UpdateDepartmentDto,
   ): Promise<DepartmentResponseDto> {
     try {
       const updatedDepartment = await this.departmentRepository.update(

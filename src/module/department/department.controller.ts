@@ -14,6 +14,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { DepartmentService } from './department.service';
 import { CreateDepartmentDto } from './dto/create-department.req';
+import { UpdateDepartmentDto } from './dto/update-department.req';
 import { DepartmentResponseDto } from './dto/department.res';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
@@ -60,13 +61,13 @@ export class DepartmentController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Updated bank by ID' })
+  @ApiOperation({ summary: 'Update department by ID' })
   async update(
     @Param('id') id: string,
     @Body()
-    updateBankDto: CreateDepartmentDto,
+    updateDepartmentDto: UpdateDepartmentDto,
   ): Promise<DepartmentResponseDto> {
-    return await this.departmentService.updateDepartment(id, updateBankDto);
+    return await this.departmentService.updateDepartment(id, updateDepartmentDto);
   }
 
   @Delete(':id')

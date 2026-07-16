@@ -14,6 +14,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.req';
+import { UpdateProductDto } from './dto/update-product.req';
 import { ProductResponseDto } from './dto/product.res';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
@@ -62,7 +63,7 @@ export class ProductController {
   async update(
     @Param('id') id: string,
     @Body()
-    updateProductDto: CreateProductDto,
+    updateProductDto: UpdateProductDto,
   ): Promise<ProductResponseDto | null> {
     return await this.productService.updateProduct(id, updateProductDto);
   }

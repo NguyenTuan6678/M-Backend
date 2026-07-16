@@ -7,6 +7,7 @@ import {
 } from '@schemas/receiptinvoice.schema';
 import { Model } from 'mongoose';
 import { CreateReceiptInvoiceDto } from './dto/create-receiptinvoice.req';
+import { UpdateReceiptInvoiceDto } from './dto/update-receiptinvoice.req';
 import { ReceiptInvoiceResponseDto } from './dto/reiptinvoice.res';
 import { MessageResponse } from '@app-types/message.res';
 import { ERROR_INFO, ERROR_RES } from '@common/constants/error.const';
@@ -120,7 +121,7 @@ export class ReceiptInvoiceService {
 
   async updateReceipt(
     id: string,
-    updateData: Partial<CreateReceiptInvoiceDto>,
+    updateData: UpdateReceiptInvoiceDto,
   ): Promise<ReceiptInvoiceResponseDto> {
     try {
       const updatedReceipt = await this.receiptInvoiceRepository.update(

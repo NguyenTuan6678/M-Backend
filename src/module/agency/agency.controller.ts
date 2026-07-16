@@ -15,6 +15,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AgencyService } from './agency.service';
 import { AgencyResponseDto } from './dto/agency.res';
 import { CreateAgencyDto } from './dto/create-agency.req';
+import { UpdateAgencyDto } from './dto/update-agency.req';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { MessageResponse } from '@app-types/message.res';
 import { QueryAgencyDto } from './dto/query-agency.req';
@@ -58,7 +59,7 @@ export class AgencyController {
   async update(
     @Param('id') id: string,
     @Body()
-    updateAgencyDto: CreateAgencyDto,
+    updateAgencyDto: UpdateAgencyDto,
   ): Promise<AgencyResponseDto | null> {
     return this.agencyService.updateAgency(id, updateAgencyDto);
   }

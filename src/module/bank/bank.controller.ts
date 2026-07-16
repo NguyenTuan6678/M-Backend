@@ -14,6 +14,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BankService } from './bank.service';
 import { CreateBankDto } from './dto/create-bank.req';
+import { UpdateBankDto } from './dto/update-bank.req';
 import { BankResponseDto } from './dto/bank.res';
 import { MessageResponse } from '@app-types/message.res';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
@@ -62,7 +63,7 @@ export class BankController {
   async update(
     @Param('id') id: string,
     @Body()
-    updateBankDto: CreateBankDto,
+    updateBankDto: UpdateBankDto,
   ): Promise<BankResponseDto | null> {
     return this.bankService.updateBank(id, updateBankDto);
   }

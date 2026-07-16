@@ -17,6 +17,7 @@ import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { QueryEmployeeDto } from './dto/query-employee.req';
 import { EmployeeService } from './employee.service';
 import { CreateEmployeeDto } from './dto/create.employee.req';
+import { UpdateEmployeeDto } from './dto/update.employee.req';
 import { EmployeeResponseDto } from './dto/employee.res';
 
 @ApiTags('Employee')
@@ -61,7 +62,7 @@ export class EmployeeController {
   @ApiOperation({ summary: 'Updated employee by ID' })
   async update(
     @Param('id') id: string,
-    @Body() updateEmployeeDto: CreateEmployeeDto,
+    @Body() updateEmployeeDto: UpdateEmployeeDto,
   ): Promise<EmployeeResponseDto> {
     return await this.employeeService.updateEmployee(id, updateEmployeeDto);
   }

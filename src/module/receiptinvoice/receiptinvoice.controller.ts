@@ -15,6 +15,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ReceiptInvoiceService } from './receiptinvoice.service';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 import { CreateReceiptInvoiceDto } from './dto/create-receiptinvoice.req';
+import { UpdateReceiptInvoiceDto } from './dto/update-receiptinvoice.req';
 import { ReceiptInvoiceResponseDto } from './dto/reiptinvoice.res';
 import { MessageResponse } from '@app-types/message.res';
 import { QueryReceiptInvoiceDto } from './dto/query-receiptinvoice.req';
@@ -64,9 +65,9 @@ export class ReceiptInvoiceController {
   async update(
     @Param('id') id: string,
     @Body()
-    updateEmployeeDto: CreateReceiptInvoiceDto,
+    updateReceiptInvoiceDto: UpdateReceiptInvoiceDto,
   ): Promise<ReceiptInvoiceResponseDto> {
-    return await this.receiptService.updateReceipt(id, updateEmployeeDto);
+    return await this.receiptService.updateReceipt(id, updateReceiptInvoiceDto);
   }
 
   @Delete(':id')
