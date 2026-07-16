@@ -81,6 +81,8 @@ export function mapTransactionToInvoice(
     mdvqhnsach_nmua: transaction.mdvqhnsach_nmua,
     ma_ch: transaction.ma_ch,
     ten_ch: transaction.ten_ch,
+    inv_invoiceAuth_id: transaction.inv_invoiceCreatedId,
+    inv_invoiceNumber: transaction.invoiceNumber,
     details: [invoiceDetail],
   };
 

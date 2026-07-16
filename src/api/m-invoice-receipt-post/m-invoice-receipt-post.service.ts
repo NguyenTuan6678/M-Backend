@@ -236,7 +236,7 @@ export class MInvoiceReceiptPostService {
       );
     }
 
-    if ((transaction as any).inv_invoiceCreatedId) {
+    if (editmode !== 2 && (transaction as any).inv_invoiceCreatedId) {
       return {
         ok: true,
         message: 'Invoice already created',
@@ -248,6 +248,12 @@ export class MInvoiceReceiptPostService {
           invoiceStatus: (transaction as any).invoiceStatus,
         },
       };
+    }
+
+    if (editmode === 2 && !(transaction as any).inv_invoiceCreatedId) {
+      throw new BadRequestException(
+        'Cannot update invoice: Invoice has not been issued yet',
+      );
     }
 
     await this.saleTransactionRepository.update(saleTransactionId, {

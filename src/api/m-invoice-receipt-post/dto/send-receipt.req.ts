@@ -107,6 +107,9 @@ export class InvoiceDataDto {
   @IsOptional() @IsString() ma_ch?: string;
   @IsOptional() @IsString() ten_ch?: string;
 
+  @IsOptional() @IsString() inv_invoiceAuth_id?: string;
+  @IsOptional() @Type(() => Number) @IsNumber() inv_invoiceNumber?: number;
+
   @ApiProperty({ type: [InvoiceDetailDto] })
   @IsArray()
   @ValidateNested({ each: true })

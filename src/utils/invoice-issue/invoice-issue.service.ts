@@ -40,12 +40,20 @@ export class InvoiceIssueService {
       };
     }
 
-    if ((transaction as any).inv_invoiceCreatedId) {
+    if (body.editmode !== 2 && (transaction as any).inv_invoiceCreatedId) {
       return {
         code: ERROR_RES.SUCCESS.statusCode,
         info: ERROR_INFO.SUCCESS,
         message: 'Invoice already issued',
         content: transaction,
+      };
+    }
+
+    if (body.editmode === 2 && !(transaction as any).inv_invoiceCreatedId) {
+      return {
+        code: ERROR_RES.BAD_REQUEST_ERROR.statusCode,
+        info: ERROR_INFO.FAIL,
+        message: 'Cannot update invoice: Invoice has not been issued yet',
       };
     }
 

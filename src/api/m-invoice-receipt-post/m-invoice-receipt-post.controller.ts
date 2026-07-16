@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Query,
   Req,
   UseGuards,
@@ -64,6 +65,45 @@ export class MInvoiceReceiptPostController {
         inv_invoiceSeries: body.inv_invoiceSeries,
         inv_invoiceIssuedDate: body.inv_invoiceIssuedDate,
         editmode: body.editmode,
+      },
+      {
+        actor: req.user,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+      },
+    );
+  }
+
+  @Put()
+  @SkipThrottle()
+  @ApiOperation({ summary: 'Update M-Invoice' })
+  @ApiQuery({
+    name: 'tax_code',
+    required: true,
+    example: '0106026495-999',
+    description: 'Tax code used to build M-Invoice API URL',
+  })
+  async updateInvoiceWithRedis(
+    @Query('tax_code') tax_code: string,
+    @Body() body: CreateInvoiceFromTransactionDto,
+    @Req() req: any,
+  ) {
+    if (!tax_code) {
+      throw new BadRequestException('tax_code is required');
+    }
+
+    console.log('[UPDATE INVOICE CONTROLLER]', {
+      tax_code,
+      body,
+    });
+
+    return await this.invoiceIssueService.enqueueIssueInvoice(
+      body.saleTransactionId,
+      {
+        tax_code,
+        inv_invoiceSeries: body.inv_invoiceSeries,
+        inv_invoiceIssuedDate: body.inv_invoiceIssuedDate,
+        editmode: 2,
       },
       {
         actor: req.user,
