@@ -33,7 +33,8 @@ export class TransactionItem {
   quantity?: number;
 }
 
-export const TransactionItemSchema = SchemaFactory.createForClass(TransactionItem);
+export const TransactionItemSchema =
+  SchemaFactory.createForClass(TransactionItem);
 
 @Schema({
   timestamps: true,
