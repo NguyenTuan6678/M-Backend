@@ -207,12 +207,28 @@ export class SaleTransactionReportService {
       { header: 'CÒN LẠI', key: 'remainingAmount', width: 18 },
     ];
 
+    let rowIndex = 2;
     transactions.forEach((transaction, index) => {
+      const commissionPercent = transaction.agencyId?.commissionPercent ?? 50;
+      const getRealQuantity = (item: any) => {
+        const price = Number(item.price ?? item.productId?.inv_unitPrice ?? 0);
+        const revenue = Number(item.revenue ?? 0);
+        if (price > 0 && commissionPercent > 0 && revenue > 0) {
+          const calculated = Math.round(
+            revenue / (price * (commissionPercent / 100)),
+          );
+          if (calculated > 0) {
+            return calculated;
+          }
+        }
+        return item.quantity ?? 1;
+      };
+
       const totalProductPrice = (transaction.items || []).reduce(
         (sum: number, item: any) =>
           sum +
           Number(item.price ?? item.productId?.inv_unitPrice ?? 0) *
-            Number(item.quantity ?? 1),
+            Number(getRealQuantity(item)),
         0,
       );
       const inv_TotalAmount = Number(transaction.inv_TotalAmount || 0);
@@ -221,57 +237,70 @@ export class SaleTransactionReportService {
       const reportDate = this.formatDateOnly(
         transaction.inv_invoiceIssuedDate || transaction.activationDate,
       );
-      const rowNum = index + 2;
 
-      const productCodes = (transaction.items || [])
-        .map((item: any) => item.productId?.inv_itemCode)
-        .filter(Boolean)
-        .join(', ');
-      const quantities = (transaction.items || [])
-        .map((item: any) => item.quantity ?? 1)
-        .join(', ');
+      const items = transaction.items || [];
+      if (items.length === 0) {
+        sheet.addRow({
+          stt: index + 1,
+          reportDate,
+          inv_buyerLegalName: transaction.inv_buyerLegalName || '',
+          inv_buyerTaxCode: transaction.inv_buyerTaxCode || '',
+          agencyName: transaction.agencyId?.agencyName || '',
+          employeeName: transaction.employeeId?.employeeName || '',
+          productCodes: '',
+          quantities: '',
+          inv_TotalAmount,
+          totalProductPrice,
+          priceDifference: { formula: `=I${rowIndex}-J${rowIndex}` },
+          inv_discountAmount,
+          amountCollected,
+          remainingAmount: { formula: `=I${rowIndex}-L${rowIndex}` },
+        });
+        rowIndex++;
+      } else {
+        items.forEach((item: any, itemIndex: number) => {
+          const productCode = item.productId?.inv_itemCode || '';
+          const quantity = getRealQuantity(item);
 
-      sheet.addRow({
-        stt: index + 1,
-        // orderNumber: transaction.orderNumber || '',
-        // inv_invoiceCreatedId: transaction.inv_invoiceCreatedId || '',
-        // inv_invoiceSeries: transaction.inv_invoiceSeries || '',
-        // inv_invoiceIssuedDate: this.formatDateTime(
-        //   transaction.inv_invoiceIssuedDate,
-        // ),
-        // invoiceStatus: this.formatInvoiceStatus(transaction.invoiceStatus),
-        // isPaid: transaction.isPaid ? 'ĐÃ THU' : 'CHƯA THU',
-        // inv_buyerDisplayName: transaction.inv_buyerDisplayName || '',
-        reportDate,
-        inv_buyerLegalName: transaction.inv_buyerLegalName || '',
-        inv_buyerTaxCode: transaction.inv_buyerTaxCode || '',
-        // inv_buyerAddressLine: transaction.inv_buyerAddressLine || '',
-        // inv_buyerEmail: transaction.inv_buyerEmail || '',
-        // inv_paymentMethodName: transaction.inv_paymentMethodName || '',
-        // bankName: transaction.bankId?.inv_buyerBankName || '',
-        // agencyNumber: transaction.agencyId?.agencyNumber || '',
-        agencyName: transaction.agencyId?.agencyName || '',
-        employeeName: transaction.employeeId?.employeeName || '',
-        productCodes,
-        quantities,
-        // departmentName:
-        //   transaction.departmentId?.departmentName ||
-        //   transaction.employeeId?.departmentId?.departmentName ||
-        //   '',
-        // inv_TotalAmountWithoutVAT: Number(
-        //   transaction.inv_TotalAmountWithoutVAT || 0,
-        // ),
-        // inv_vatAmount: Number(transaction.inv_vatAmount || 0),
-        // inv_TotalAmount: Number(transaction.inv_TotalAmount || 0),
-        // createdAt: this.formatDateTime(transaction.createdAt),
-        // updatedAt: this.formatDateTime(transaction.updatedAt),
-        inv_TotalAmount,
-        totalProductPrice,
-        priceDifference: { formula: `=I${rowNum}-J${rowNum}` },
-        inv_discountAmount,
-        amountCollected,
-        remainingAmount: { formula: `=I${rowNum}-L${rowNum}` },
-      });
+          if (itemIndex === 0) {
+            sheet.addRow({
+              stt: index + 1,
+              reportDate,
+              inv_buyerLegalName: transaction.inv_buyerLegalName || '',
+              inv_buyerTaxCode: transaction.inv_buyerTaxCode || '',
+              agencyName: transaction.agencyId?.agencyName || '',
+              employeeName: transaction.employeeId?.employeeName || '',
+              productCodes: productCode,
+              quantities: quantity,
+              inv_TotalAmount,
+              totalProductPrice,
+              priceDifference: { formula: `=I${rowIndex}-J${rowIndex}` },
+              inv_discountAmount,
+              amountCollected,
+              remainingAmount: { formula: `=I${rowIndex}-L${rowIndex}` },
+            });
+          } else {
+            const itemPrice = Number(item.price ?? item.productId?.inv_unitPrice ?? 0) * Number(quantity);
+            sheet.addRow({
+              stt: '',
+              reportDate,
+              inv_buyerLegalName: transaction.inv_buyerLegalName || '',
+              inv_buyerTaxCode: transaction.inv_buyerTaxCode || '',
+              agencyName: transaction.agencyId?.agencyName || '',
+              employeeName: transaction.employeeId?.employeeName || '',
+              productCodes: productCode,
+              quantities: quantity,
+              inv_TotalAmount: '',
+              totalProductPrice: itemPrice,
+              priceDifference: '',
+              inv_discountAmount: '',
+              amountCollected: '',
+              remainingAmount: '',
+            });
+          }
+          rowIndex++;
+        });
+      }
     });
 
     this.styleHeader(sheet);

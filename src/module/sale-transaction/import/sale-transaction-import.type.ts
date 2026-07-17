@@ -50,6 +50,8 @@ export type SaleTransactionItemExcelRow = {
   capitalPrice: number;
   totalSalary: number;
   accountingAccountCode: number;
+  quantity?: number;
+  price?: number;
 };
 
 export type ResolvedImportItem = SaleTransactionItemExcelRow & {

@@ -45,8 +45,8 @@ export class SaleTransactionImportService {
   private getCellNumberByIndex(
     row: any,
     index: number,
-    defaultValue = 0,
-  ): number {
+    defaultValue: any = 0,
+  ): any {
     const raw = this.getCellStringByIndex(row, index);
 
     if (raw === '') return defaultValue;
@@ -245,6 +245,10 @@ export class SaleTransactionImportService {
         capitalPrice: this.getCellNumberByIndex(row, 5, 0),
         totalSalary: this.getCellNumberByIndex(row, 6, 0),
         accountingAccountCode: this.getCellNumberByIndex(row, 7, 0),
+
+        // H - I
+        quantity: this.getCellNumberByIndex(row, 8, 1),
+        price: this.getCellNumberByIndex(row, 9, null),
       });
     });
 
@@ -510,6 +514,8 @@ export class SaleTransactionImportService {
         capitalPrice: item.capitalPrice,
         totalSalary: item.totalSalary,
         accountingAccountCode: item.accountingAccountCode,
+        quantity: item.quantity,
+        price: item.price,
       })),
     };
   }
