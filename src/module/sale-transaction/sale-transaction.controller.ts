@@ -105,7 +105,7 @@ export class SaleTransactionController {
     query: QuerySaleTransactionReportDto,
     @Res() res: Response,
   ) {
-    const buffer =
+    const { buffer, agencyName } =
       await this.saleTransactionReportService.exportSaleTransactionReport(
         query,
       );
@@ -113,14 +113,19 @@ export class SaleTransactionController {
     const startDate = query.startDate || 'all';
     const endDate = query.endDate || 'all';
 
-    const filename = `Transaction-report-${startDate}-to-${endDate}.xlsx`;
+    const filename = agencyName
+      ? `Báo-cáo-${agencyName}-${startDate}-to-${endDate}.xlsx`
+      : `Báo-cáo-${startDate}-to-${endDate}.xlsx`;
 
     res.setHeader(
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     );
 
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${encodeURIComponent(filename)}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
+    );
 
     return res.send(buffer);
   }

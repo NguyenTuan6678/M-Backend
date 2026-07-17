@@ -386,7 +386,8 @@ export class SaleTransactionRepository {
       }
 
       if (startDate || endDate) {
-        const isDraftReport = reportType === 'draft_paid' || invoiceStatus === InvoiceStatus.DRAFT;
+        const isDraftReport =
+          reportType === 'draft_paid' || invoiceStatus === InvoiceStatus.DRAFT;
 
         if (isDraftReport) {
           filter.activationDate = {};
@@ -425,14 +426,17 @@ export class SaleTransactionRepository {
       console.log('Filter:', JSON.stringify(filter));
       console.log('Matched documents count:', results.length);
       if (results.length > 0) {
-        console.log('Sample matching document:', JSON.stringify({
-          _id: results[0]._id,
-          orderNumber: results[0].orderNumber,
-          invoiceStatus: results[0].invoiceStatus,
-          isPaid: results[0].isPaid,
-          activationDate: results[0].activationDate,
-          inv_invoiceIssuedDate: results[0].inv_invoiceIssuedDate,
-        }));
+        console.log(
+          'Sample matching document:',
+          JSON.stringify({
+            _id: results[0]._id,
+            orderNumber: results[0].orderNumber,
+            invoiceStatus: results[0].invoiceStatus,
+            isPaid: results[0].isPaid,
+            activationDate: results[0].activationDate,
+            inv_invoiceIssuedDate: results[0].inv_invoiceIssuedDate,
+          }),
+        );
       }
 
       return results;
