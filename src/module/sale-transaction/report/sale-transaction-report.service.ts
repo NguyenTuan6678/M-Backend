@@ -200,7 +200,7 @@ export class SaleTransactionReportService {
       //   { header: 'Được tạo vào ngày', key: 'createdAt', width: 24 },
       //   { header: 'Được cập nhật vào lúc', key: 'updatedAt', width: 24 },
       { header: 'TỔNG TIỀN SAU THUẾ', key: 'inv_TotalAmount', width: 22 },
-      // { header: 'GIÁ SẢN PHẨM', key: 'totalProductPrice', width: 20 },
+      { header: 'GIÁ SẢN PHẨM', key: 'totalProductPrice', width: 20 },
       { header: 'GIÁ ĐỐI SOÁT', key: 'invReconciliation', width: 18 },
       { header: 'PHÍ VIẾT CHÊNH', key: 'priceDifference', width: 18 },
       { header: 'SỐ TIỀN CHIẾT KHẤU', key: 'inv_discountAmount', width: 22 },
@@ -251,53 +251,88 @@ export class SaleTransactionReportService {
           productCodes: '',
           quantities: '',
           inv_TotalAmount,
+          totalProductPrice: 0,
           invReconciliation: transaction.invReconciliation ?? 0,
           priceDifference: { formula: `=I${rowIndex}-J${rowIndex}` },
           inv_discountAmount,
           amountCollected,
-          remainingAmount: { formula: `=I${rowIndex}-L${rowIndex}` },
+          remainingAmount: { formula: `=I${rowIndex}-M${rowIndex}` },
+        });
+        rowIndex++;
+      } else if (items.length === 1) {
+        const item = items[0];
+        const productCode =
+          item.productId?.inv_itemCode ||
+          item.productId?.inv_itemProduct ||
+          '';
+        const quantity = getRealQuantity(item);
+        sheet.addRow({
+          stt: index + 1,
+          reportDate,
+          inv_buyerLegalName: transaction.inv_buyerLegalName || '',
+          inv_buyerTaxCode: transaction.inv_buyerTaxCode || '',
+          agencyName: transaction.agencyId?.agencyName || '',
+          employeeName: transaction.employeeId?.employeeName || '',
+          productCodes: productCode,
+          quantities: quantity,
+          inv_TotalAmount,
+          totalProductPrice,
+          invReconciliation: transaction.invReconciliation ?? 0,
+          priceDifference: { formula: `=I${rowIndex}-J${rowIndex}` },
+          inv_discountAmount,
+          amountCollected,
+          remainingAmount: { formula: `=I${rowIndex}-M${rowIndex}` },
         });
         rowIndex++;
       } else {
-        items.forEach((item: any, itemIndex: number) => {
-          const productCode = item.productId?.inv_itemProduct || '';
-          const quantity = getRealQuantity(item);
+        // Dòng tổng hợp đầu tiên cho hóa đơn nhiều sản phẩm
+        sheet.addRow({
+          stt: index + 1,
+          reportDate,
+          inv_buyerLegalName: transaction.inv_buyerLegalName || '',
+          inv_buyerTaxCode: transaction.inv_buyerTaxCode || '',
+          agencyName: transaction.agencyId?.agencyName || '',
+          employeeName: transaction.employeeId?.employeeName || '',
+          productCodes: '', // Ẩn mã sản phẩm ở dòng tổng
+          quantities: '', // Ẩn số lượng ở dòng tổng
+          inv_TotalAmount,
+          totalProductPrice,
+          invReconciliation: transaction.invReconciliation ?? 0,
+          priceDifference: { formula: `=I${rowIndex}-J${rowIndex}` },
+          inv_discountAmount,
+          amountCollected,
+          remainingAmount: { formula: `=I${rowIndex}-M${rowIndex}` },
+        });
+        rowIndex++;
 
-          if (itemIndex === 0) {
-            sheet.addRow({
-              stt: index + 1,
-              reportDate,
-              inv_buyerLegalName: transaction.inv_buyerLegalName || '',
-              inv_buyerTaxCode: transaction.inv_buyerTaxCode || '',
-              agencyName: transaction.agencyId?.agencyName || '',
-              employeeName: transaction.employeeId?.employeeName || '',
-              productCodes: productCode,
-              quantities: quantity,
-              inv_TotalAmount,
-              invReconciliation: transaction.invReconciliation ?? 0,
-              priceDifference: { formula: `=I${rowIndex}-J${rowIndex}` },
-              inv_discountAmount,
-              amountCollected,
-              remainingAmount: { formula: `=I${rowIndex}-L${rowIndex}` },
-            });
-          } else {
-            sheet.addRow({
-              stt: '',
-              reportDate,
-              inv_buyerLegalName: transaction.inv_buyerLegalName || '',
-              inv_buyerTaxCode: transaction.inv_buyerTaxCode || '',
-              agencyName: transaction.agencyId?.agencyName || '',
-              employeeName: transaction.employeeId?.employeeName || '',
-              productCodes: productCode,
-              quantities: quantity,
-              inv_TotalAmount: '',
-              invReconciliation: '',
-              priceDifference: '',
-              inv_discountAmount: '',
-              amountCollected: '',
-              remainingAmount: '',
-            });
-          }
+        // Các dòng chi tiết sản phẩm tách dòng bên dưới
+        items.forEach((item: any) => {
+          const productCode =
+            item.productId?.inv_itemCode ||
+            item.productId?.inv_itemProduct ||
+            '';
+          const quantity = getRealQuantity(item);
+          const itemPrice =
+            Number(item.price ?? item.productId?.inv_unitPrice ?? 0) *
+            Number(quantity);
+
+          sheet.addRow({
+            stt: '',
+            reportDate: '', // Ẩn ngày kích hoạt
+            inv_buyerLegalName: '', // Ẩn tên công ty
+            inv_buyerTaxCode: '', // Ẩn mã số thuế
+            agencyName: '', // Ẩn tên đại lý
+            employeeName: '', // Ẩn nhân viên
+            productCodes: productCode,
+            quantities: quantity,
+            inv_TotalAmount: '',
+            totalProductPrice: itemPrice,
+            invReconciliation: '',
+            priceDifference: '',
+            inv_discountAmount: '',
+            amountCollected: '',
+            remainingAmount: '',
+          });
           rowIndex++;
         });
       }
@@ -308,10 +343,11 @@ export class SaleTransactionReportService {
     sheet.views = [{ state: 'frozen', ySplit: 1 }];
     sheet.autoFilter = {
       from: 'A1',
-      to: 'N1',
+      to: 'O1',
     };
 
     sheet.getColumn('inv_TotalAmount').numFmt = '#,##0';
+    sheet.getColumn('totalProductPrice').numFmt = '#,##0';
     sheet.getColumn('invReconciliation').numFmt = '#,##0';
     sheet.getColumn('priceDifference').numFmt = '#,##0';
     sheet.getColumn('inv_discountAmount').numFmt = '#,##0';
@@ -355,7 +391,7 @@ export class SaleTransactionReportService {
           orderNumber: transaction.orderNumber || '',
           invoiceStatus: this.formatInvoiceStatus(transaction.invoiceStatus),
           isPaid: transaction.isPaid ? 'ĐÃ THU' : 'CHƯA THU',
-          productCode: product?.inv_itemProduct || '',
+          productCode: product?.inv_itemCode || product?.inv_itemProduct || '',
           productName: product?.inv_itemName || '',
           unitCode: product?.inv_unitCode || '',
           unitPrice: Number(item.price ?? product?.inv_unitPrice ?? 0),
