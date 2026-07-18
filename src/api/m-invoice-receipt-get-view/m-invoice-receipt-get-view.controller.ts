@@ -1,10 +1,11 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { Request } from 'express';
 import { ViewMInvoiceReceiptService } from './m-invoice-receipt-get-view.service';
 import { JwtAuthGuard } from '@users/auth/guards/auth.guard';
 
@@ -26,10 +27,13 @@ export class ViewMInvoiceReceiptController {
   async printInvoice(
     @Query('tax_code') tax_code: string,
     @Query('inv_invoiceCreatedId') inv_invoiceCreatedId: string,
+    @Req() req: Request,
   ) {
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
     return await this.mInvoiceService.viewInvoice(
       tax_code,
       inv_invoiceCreatedId,
+      baseUrl,
     );
   }
 }

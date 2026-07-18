@@ -329,10 +329,6 @@ export class MInvoiceReceiptPostService {
 
       const orderNumber = (transaction as any).orderNumber;
 
-      const activationDate = new Date().toLocaleString('vi-VN', {
-        timeZone: 'Asia/Ho_Chi_Minh',
-      });
-
       await this.saleTransactionRepository.update(saleTransactionId, {
         inv_invoiceSeries: resSeries,
         key_api: saleTransactionId,
@@ -340,7 +336,6 @@ export class MInvoiceReceiptPostService {
         inv_invoiceCreatedId: resId,
         invoiceNumber: inv_invoiceNumber || undefined,
         so_benh_an: orderNumber,
-        activationDate,
         invoiceStatus: InvoiceStatus.ISSUED,
         isActive: true,
         invoiceFilePath: '',

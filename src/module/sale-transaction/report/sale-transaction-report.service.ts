@@ -280,7 +280,9 @@ export class SaleTransactionReportService {
               remainingAmount: { formula: `=I${rowIndex}-L${rowIndex}` },
             });
           } else {
-            const itemPrice = Number(item.price ?? item.productId?.inv_unitPrice ?? 0) * Number(quantity);
+            const itemPrice =
+              Number(item.price ?? item.productId?.inv_unitPrice ?? 0) *
+              Number(quantity);
             sheet.addRow({
               stt: '',
               reportDate,

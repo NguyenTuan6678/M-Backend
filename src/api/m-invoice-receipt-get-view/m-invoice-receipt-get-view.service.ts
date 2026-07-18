@@ -23,10 +23,11 @@ export class ViewMInvoiceReceiptService {
     private readonly httpService: HttpService,
     private readonly saleTransactionRepository: SaleTransactionRepository,
     private readonly uploadInvoiceService: UploadInvoiceService,
-  ) {}
+  ) { }
 
-  private buildFileUrl(filePath: string): string {
+  private buildFileUrl(filePath: string, customBaseUrl?: string): string {
     const baseUrl =
+      customBaseUrl ||
       process.env.API_BASE_URL ||
       `http://localhost:${process.env.PORT || 4000}`;
 
@@ -118,7 +119,11 @@ export class ViewMInvoiceReceiptService {
     });
   }
 
-  async viewInvoice(tax_code: string, inv_invoiceCreatedId: string) {
+  async viewInvoice(
+    tax_code: string,
+    inv_invoiceCreatedId: string,
+    customBaseUrl?: string,
+  ) {
     const defaultToken = this.config.mInvoiceToken.mToken;
     const baseUrl =
       tax_code === '0106026495-999' ? 'minvoice.site' : 'minvoice.app';
@@ -141,7 +146,7 @@ export class ViewMInvoiceReceiptService {
     if (cachedFilePath && this.fileExists(cachedFilePath)) {
       return {
         filePath: cachedFilePath,
-        fileUrl: this.buildFileUrl(cachedFilePath),
+        fileUrl: this.buildFileUrl(cachedFilePath, customBaseUrl),
         cached: true,
       };
     }
@@ -187,7 +192,7 @@ export class ViewMInvoiceReceiptService {
 
     return {
       filePath,
-      fileUrl: this.buildFileUrl(filePath),
+      fileUrl: this.buildFileUrl(filePath, customBaseUrl),
       cached: false,
     };
   }

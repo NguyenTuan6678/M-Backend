@@ -75,7 +75,10 @@ async function bootstrap() {
   app.useGlobalFilters(allExceptionsFilter);
 
   app.enableCors({
-    origin: '*',
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      callback(null, true);
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     credentials: true,
