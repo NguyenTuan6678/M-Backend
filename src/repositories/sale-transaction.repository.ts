@@ -66,7 +66,7 @@ const POPULATE_OPTIONS = [
   },
   {
     path: 'items.productId',
-    select: 'inv_itemCode inv_itemName inv_unitCode inv_unitPrice ma_thue',
+    select: 'inv_itemProduct inv_itemName inv_unitCode inv_unitPrice ma_thue',
   },
 ];
 

@@ -196,17 +196,18 @@ export class SaleTransactionImportService {
         inv_TotalAmountWithoutVAT: this.getCellNumberByIndex(row, 17, 0),
         inv_vatAmount: this.getCellNumberByIndex(row, 18, 0),
         inv_TotalAmount: this.getCellNumberByIndex(row, 19, 0),
+        invReconciliation: this.getCellNumberByIndex(row, 20, 0),
 
         // T - X
-        cccdan: this.getCellStringByIndex(row, 20),
-        so_hchieu: this.getCellStringByIndex(row, 21),
-        mdvqhnsach_nmua: this.getCellStringByIndex(row, 22),
-        ma_ch: this.getCellStringByIndex(row, 23),
-        ten_ch: this.getCellStringByIndex(row, 24),
+        cccdan: this.getCellStringByIndex(row, 21),
+        so_hchieu: this.getCellStringByIndex(row, 22),
+        mdvqhnsach_nmua: this.getCellStringByIndex(row, 23),
+        ma_ch: this.getCellStringByIndex(row, 24),
+        ten_ch: this.getCellStringByIndex(row, 25),
 
         // Y - Z
-        inv_quantity: this.getCellNumberByIndex(row, 25, 1),
-        inv_discountPercentage: this.getCellNumberByIndex(row, 26, 0),
+        inv_quantity: this.getCellNumberByIndex(row, 26, 1),
+        inv_discountPercentage: this.getCellNumberByIndex(row, 27, 0),
       });
     });
 
@@ -495,6 +496,7 @@ export class SaleTransactionImportService {
       inv_TotalAmountWithoutVAT: row.inv_TotalAmountWithoutVAT,
       inv_vatAmount: row.inv_vatAmount,
       inv_TotalAmount: row.inv_TotalAmount,
+      invReconciliation: row.invReconciliation || 0,
 
       key_api: '',
       cccdan: row.cccdan || '',

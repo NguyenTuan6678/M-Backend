@@ -27,6 +27,7 @@ export type SaleTransactionExcelRow = {
   inv_TotalAmountWithoutVAT: number;
   inv_vatAmount: number;
   inv_TotalAmount: number;
+  invReconciliation: number;
 
   cccdan?: string;
   so_hchieu?: string;
