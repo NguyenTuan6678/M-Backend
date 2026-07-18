@@ -53,7 +53,10 @@ export class TransactionItemDto {
   @IsNumber({}, { message: 'price must be a number' })
   price?: number;
 
-  @ApiPropertyOptional({ example: 1, description: 'Số lượng mua của sản phẩm này' })
+  @ApiPropertyOptional({
+    example: 1,
+    description: 'Số lượng mua của sản phẩm này',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsNumber({}, { message: 'quantity must be a number' })
@@ -181,6 +184,15 @@ export class UpdateTransactionDto {
   @IsOptional({ message: 'inv_TotalAmount is required' })
   @IsNumber({}, { message: 'inv_TotalAmount must be a number' })
   inv_TotalAmount: number;
+
+  @ApiPropertyOptional({
+    example: 0,
+    description: 'Invoice reconciliation amount',
+  })
+  @Type(() => Number)
+  @IsOptional()
+  @IsNumber({}, { message: 'invReconciliation must be a number' })
+  invReconciliation: number;
 
   @ApiPropertyOptional({
     description: 'Key api',

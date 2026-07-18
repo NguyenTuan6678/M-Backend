@@ -103,6 +103,9 @@ export class SalesTransaction {
   inv_TotalAmount: number;
 
   @Prop()
+  invReconciliation: number;
+
+  @Prop()
   key_api: string;
 
   @Prop()
