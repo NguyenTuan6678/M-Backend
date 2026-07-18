@@ -259,7 +259,7 @@ export class SaleTransactionReportService {
         rowIndex++;
       } else {
         items.forEach((item: any, itemIndex: number) => {
-          const productCode = item.productId?.inv_itemCode || '';
+          const productCode = item.productId?.inv_itemProduct || '';
           const quantity = getRealQuantity(item);
 
           if (itemIndex === 0) {
@@ -357,7 +357,7 @@ export class SaleTransactionReportService {
           orderNumber: transaction.orderNumber || '',
           invoiceStatus: this.formatInvoiceStatus(transaction.invoiceStatus),
           isPaid: transaction.isPaid ? 'ĐÃ THU' : 'CHƯA THU',
-          productCode: product?.inv_itemCode || '',
+          productCode: product?.inv_itemProduct || '',
           productName: product?.inv_itemName || '',
           unitCode: product?.inv_unitCode || '',
           unitPrice: Number(item.price ?? product?.inv_unitPrice ?? 0),
