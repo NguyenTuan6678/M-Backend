@@ -200,7 +200,8 @@ export class SaleTransactionReportService {
       //   { header: 'Được tạo vào ngày', key: 'createdAt', width: 24 },
       //   { header: 'Được cập nhật vào lúc', key: 'updatedAt', width: 24 },
       { header: 'TỔNG TIỀN SAU THUẾ', key: 'inv_TotalAmount', width: 22 },
-      { header: 'GIÁ SẢN PHẨM', key: 'totalProductPrice', width: 20 },
+      // { header: 'GIÁ SẢN PHẨM', key: 'totalProductPrice', width: 20 },
+      { header: 'GIÁ ĐỐI SOÁT', key: 'invReconciliation', width: 18 },
       { header: 'PHÍ VIẾT CHÊNH', key: 'priceDifference', width: 18 },
       { header: 'SỐ TIỀN CHIẾT KHẤU', key: 'inv_discountAmount', width: 22 },
       { header: 'THU TIỀN', key: 'amountCollected', width: 18 },
@@ -250,7 +251,7 @@ export class SaleTransactionReportService {
           productCodes: '',
           quantities: '',
           inv_TotalAmount,
-          totalProductPrice,
+          invReconciliation: transaction.invReconciliation ?? 0,
           priceDifference: { formula: `=I${rowIndex}-J${rowIndex}` },
           inv_discountAmount,
           amountCollected,
@@ -273,16 +274,13 @@ export class SaleTransactionReportService {
               productCodes: productCode,
               quantities: quantity,
               inv_TotalAmount,
-              totalProductPrice,
+              invReconciliation: transaction.invReconciliation ?? 0,
               priceDifference: { formula: `=I${rowIndex}-J${rowIndex}` },
               inv_discountAmount,
               amountCollected,
               remainingAmount: { formula: `=I${rowIndex}-L${rowIndex}` },
             });
           } else {
-            const itemPrice =
-              Number(item.price ?? item.productId?.inv_unitPrice ?? 0) *
-              Number(quantity);
             sheet.addRow({
               stt: '',
               reportDate,
@@ -293,7 +291,7 @@ export class SaleTransactionReportService {
               productCodes: productCode,
               quantities: quantity,
               inv_TotalAmount: '',
-              totalProductPrice: itemPrice,
+              invReconciliation: '',
               priceDifference: '',
               inv_discountAmount: '',
               amountCollected: '',
@@ -314,7 +312,7 @@ export class SaleTransactionReportService {
     };
 
     sheet.getColumn('inv_TotalAmount').numFmt = '#,##0';
-    sheet.getColumn('totalProductPrice').numFmt = '#,##0';
+    sheet.getColumn('invReconciliation').numFmt = '#,##0';
     sheet.getColumn('priceDifference').numFmt = '#,##0';
     sheet.getColumn('inv_discountAmount').numFmt = '#,##0';
     sheet.getColumn('amountCollected').numFmt = '#,##0';
