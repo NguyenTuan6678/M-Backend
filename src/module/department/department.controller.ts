@@ -67,7 +67,10 @@ export class DepartmentController {
     @Body()
     updateDepartmentDto: UpdateDepartmentDto,
   ): Promise<DepartmentResponseDto> {
-    return await this.departmentService.updateDepartment(id, updateDepartmentDto);
+    return await this.departmentService.updateDepartment(
+      id,
+      updateDepartmentDto,
+    );
   }
 
   @Delete(':id')

@@ -23,7 +23,7 @@ export class ViewMInvoiceReceiptService {
     private readonly httpService: HttpService,
     private readonly saleTransactionRepository: SaleTransactionRepository,
     private readonly uploadInvoiceService: UploadInvoiceService,
-  ) { }
+  ) {}
 
   private buildFileUrl(filePath: string, customBaseUrl?: string): string {
     const baseUrl =

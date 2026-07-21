@@ -51,7 +51,10 @@ export class InvoiceProcessor extends WorkerHost {
         );
       }
 
-      if (job.data?.editmode !== 2 && (currentTransaction as any).inv_invoiceCreatedId) {
+      if (
+        job.data?.editmode !== 2 &&
+        (currentTransaction as any).inv_invoiceCreatedId
+      ) {
         this.logger.log(
           `[INVOICE JOB SKIPPED] Invoice already created for transaction = ${saleTransactionId}`,
         );
@@ -63,8 +66,13 @@ export class InvoiceProcessor extends WorkerHost {
         };
       }
 
-      if (job.data?.editmode === 2 && !(currentTransaction as any).inv_invoiceCreatedId) {
-        throw new Error('Cannot update invoice: Invoice has not been issued yet');
+      if (
+        job.data?.editmode === 2 &&
+        !(currentTransaction as any).inv_invoiceCreatedId
+      ) {
+        throw new Error(
+          'Cannot update invoice: Invoice has not been issued yet',
+        );
       }
 
       const waitingMs = Date.now() - job.timestamp;
