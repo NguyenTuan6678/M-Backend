@@ -8,7 +8,7 @@ export class Product {
   @Prop({ unique: true })
   inv_itemCode: string;
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   inv_itemName: string;
 
   @Prop()

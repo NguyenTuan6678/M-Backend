@@ -190,19 +190,11 @@ export class SaleTransactionReportService {
       { header: 'MÃ SẢN PHẨM', key: 'productCodes', width: 20 },
       { header: 'SỐ LƯỢNG', key: 'quantities', width: 12 },
       // { header: 'PHÒNG BAN', key: 'departmentName', width: 26 },
-      // {
-      //   header: 'TIỀN TRƯỚC THUẾ',
-      //   key: 'inv_TotalAmountWithoutVAT',
-      //   width: 22,
-      // },
-      // { header: 'TIỀN THUẾ', key: 'inv_vatAmount', width: 18 },
-      // { header: 'TỔNG TIỀN', key: 'inv_TotalAmount', width: 18 },
-      //   { header: 'Được tạo vào ngày', key: 'createdAt', width: 24 },
-      //   { header: 'Được cập nhật vào lúc', key: 'updatedAt', width: 24 },
       { header: 'TỔNG TIỀN SAU THUẾ', key: 'inv_TotalAmount', width: 22 },
-      { header: 'GIÁ SẢN PHẨM', key: 'totalProductPrice', width: 20 },
       { header: 'GIÁ ĐỐI SOÁT', key: 'invReconciliation', width: 18 },
-      { header: 'PHÍ VIẾT CHÊNH', key: 'priceDifference', width: 18 },
+      { header: 'DOANH THU VIẾT CHÊNH', key: 'diffRevenue', width: 24 },
+      { header: 'PHÍ VIẾT CHÊNH', key: 'diffFee', width: 18 },
+      { header: 'DOANH THU CHÊNH LỆCH', key: 'diffNetRevenue', width: 24 },
       { header: 'SỐ TIỀN CHIẾT KHẤU', key: 'inv_discountAmount', width: 22 },
       { header: 'THU TIỀN', key: 'amountCollected', width: 18 },
       { header: 'CÒN LẠI', key: 'remainingAmount', width: 18 },
@@ -225,13 +217,6 @@ export class SaleTransactionReportService {
         return item.quantity ?? 1;
       };
 
-      const totalProductPrice = (transaction.items || []).reduce(
-        (sum: number, item: any) =>
-          sum +
-          Number(item.price ?? item.productId?.inv_unitPrice ?? 0) *
-            Number(getRealQuantity(item)),
-        0,
-      );
       const inv_TotalAmount = Number(transaction.inv_TotalAmount || 0);
       const inv_discountAmount = Number(transaction.inv_discountAmount || 0);
       const amountCollected = Number(transaction.amountCollected || 0);
@@ -251,20 +236,18 @@ export class SaleTransactionReportService {
           productCodes: '',
           quantities: '',
           inv_TotalAmount,
-          totalProductPrice: 0,
           invReconciliation: transaction.invReconciliation ?? 0,
-          priceDifference: { formula: `=I${rowIndex}-J${rowIndex}` },
+          diffRevenue: { formula: `=I${rowIndex}-J${rowIndex}` },
+          diffFee: { formula: `=K${rowIndex}*15%` },
+          diffNetRevenue: { formula: `=K${rowIndex}-L${rowIndex}` },
           inv_discountAmount,
           amountCollected,
-          remainingAmount: { formula: `=I${rowIndex}-M${rowIndex}` },
+          remainingAmount: { formula: `=I${rowIndex}-N${rowIndex}` },
         });
         rowIndex++;
       } else if (items.length === 1) {
         const item = items[0];
-        const productCode =
-          item.productId?.inv_itemCode ||
-          item.productId?.inv_itemProduct ||
-          '';
+        const productCode = item.productId?.inv_itemProduct || '';
         const quantity = getRealQuantity(item);
         sheet.addRow({
           stt: index + 1,
@@ -276,12 +259,13 @@ export class SaleTransactionReportService {
           productCodes: productCode,
           quantities: quantity,
           inv_TotalAmount,
-          totalProductPrice,
           invReconciliation: transaction.invReconciliation ?? 0,
-          priceDifference: { formula: `=I${rowIndex}-J${rowIndex}` },
+          diffRevenue: { formula: `=I${rowIndex}-J${rowIndex}` },
+          diffFee: { formula: `=K${rowIndex}*15%` },
+          diffNetRevenue: { formula: `=K${rowIndex}-L${rowIndex}` },
           inv_discountAmount,
           amountCollected,
-          remainingAmount: { formula: `=I${rowIndex}-M${rowIndex}` },
+          remainingAmount: { formula: `=I${rowIndex}-N${rowIndex}` },
         });
         rowIndex++;
       } else {
@@ -296,39 +280,35 @@ export class SaleTransactionReportService {
           productCodes: '', // Ẩn mã sản phẩm ở dòng tổng
           quantities: '', // Ẩn số lượng ở dòng tổng
           inv_TotalAmount,
-          totalProductPrice,
           invReconciliation: transaction.invReconciliation ?? 0,
-          priceDifference: { formula: `=I${rowIndex}-J${rowIndex}` },
+          diffRevenue: { formula: `=I${rowIndex}-J${rowIndex}` },
+          diffFee: { formula: `=K${rowIndex}*15%` },
+          diffNetRevenue: { formula: `=K${rowIndex}-L${rowIndex}` },
           inv_discountAmount,
           amountCollected,
-          remainingAmount: { formula: `=I${rowIndex}-M${rowIndex}` },
+          remainingAmount: { formula: `=I${rowIndex}-N${rowIndex}` },
         });
         rowIndex++;
 
-        // Các dòng chi tiết sản phẩm tách dòng bên dưới
+        // Các dòng chi tiết sản phẩm tách dòng bên dưới (hiển thị lại thông tin metadata chung)
         items.forEach((item: any) => {
-          const productCode =
-            item.productId?.inv_itemCode ||
-            item.productId?.inv_itemProduct ||
-            '';
+          const productCode = item.productId?.inv_itemProduct || '';
           const quantity = getRealQuantity(item);
-          const itemPrice =
-            Number(item.price ?? item.productId?.inv_unitPrice ?? 0) *
-            Number(quantity);
 
           sheet.addRow({
             stt: '',
-            reportDate: '', // Ẩn ngày kích hoạt
-            inv_buyerLegalName: '', // Ẩn tên công ty
-            inv_buyerTaxCode: '', // Ẩn mã số thuế
-            agencyName: '', // Ẩn tên đại lý
-            employeeName: '', // Ẩn nhân viên
+            reportDate,
+            inv_buyerLegalName: transaction.inv_buyerLegalName || '',
+            inv_buyerTaxCode: transaction.inv_buyerTaxCode || '',
+            agencyName: transaction.agencyId?.agencyName || '',
+            employeeName: transaction.employeeId?.employeeName || '',
             productCodes: productCode,
             quantities: quantity,
             inv_TotalAmount: '',
-            totalProductPrice: itemPrice,
             invReconciliation: '',
-            priceDifference: '',
+            diffRevenue: '',
+            diffFee: '',
+            diffNetRevenue: '',
             inv_discountAmount: '',
             amountCollected: '',
             remainingAmount: '',
@@ -343,13 +323,14 @@ export class SaleTransactionReportService {
     sheet.views = [{ state: 'frozen', ySplit: 1 }];
     sheet.autoFilter = {
       from: 'A1',
-      to: 'O1',
+      to: 'P1',
     };
 
     sheet.getColumn('inv_TotalAmount').numFmt = '#,##0';
-    sheet.getColumn('totalProductPrice').numFmt = '#,##0';
     sheet.getColumn('invReconciliation').numFmt = '#,##0';
-    sheet.getColumn('priceDifference').numFmt = '#,##0';
+    sheet.getColumn('diffRevenue').numFmt = '#,##0';
+    sheet.getColumn('diffFee').numFmt = '#,##0';
+    sheet.getColumn('diffNetRevenue').numFmt = '#,##0';
     sheet.getColumn('inv_discountAmount').numFmt = '#,##0';
     sheet.getColumn('amountCollected').numFmt = '#,##0';
     sheet.getColumn('remainingAmount').numFmt = '#,##0';
@@ -391,7 +372,7 @@ export class SaleTransactionReportService {
           orderNumber: transaction.orderNumber || '',
           invoiceStatus: this.formatInvoiceStatus(transaction.invoiceStatus),
           isPaid: transaction.isPaid ? 'ĐÃ THU' : 'CHƯA THU',
-          productCode: product?.inv_itemCode || product?.inv_itemProduct || '',
+          productCode: product?.inv_itemProduct || '',
           productName: product?.inv_itemName || '',
           unitCode: product?.inv_unitCode || '',
           unitPrice: Number(item.price ?? product?.inv_unitPrice ?? 0),
