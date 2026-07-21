@@ -204,6 +204,13 @@ export class SaleTransactionReportService {
     transactions.forEach((transaction, index) => {
       const commissionPercent = transaction.agencyId?.commissionPercent ?? 50;
       const getRealQuantity = (item: any) => {
+        if (
+          item.quantity !== undefined &&
+          item.quantity !== null &&
+          Number(item.quantity) > 0
+        ) {
+          return Number(item.quantity);
+        }
         const price = Number(item.price ?? item.productId?.inv_unitPrice ?? 0);
         const revenue = Number(item.revenue ?? 0);
         if (price > 0 && commissionPercent > 0 && revenue > 0) {
@@ -214,7 +221,7 @@ export class SaleTransactionReportService {
             return calculated;
           }
         }
-        return item.quantity ?? 1;
+        return 1;
       };
 
       const inv_TotalAmount = Number(transaction.inv_TotalAmount || 0);
